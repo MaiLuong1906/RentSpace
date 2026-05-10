@@ -247,8 +247,6 @@ Hệ thống được chia thành **4 phân hệ (Epic)** chính:
 | **Realtime** | WebSocket (Spring WebSocket / STOMP) | Tính năng chat realtime giữa người dùng |
 | **Map SDK** | Mapbox GL JS *(hoặc Leaflet.js + OpenStreetMap)* | Hiển thị bản đồ phòng trọ phía Frontend |
 
-> ⚠️ **Lưu ý lựa chọn Backend:** Nếu bạn chưa thành thạo Java, hãy cân nhắc thay thế bằng **NestJS (TypeScript)** để đồng nhất tech stack với Frontend, giảm context switching và tăng tốc độ phát triển tính năng khi làm solo.
-
 ### Tích hợp Dịch vụ Bên thứ ba (Third-party Services)
 
 | Mục đích | Dịch vụ | Ghi chú |
@@ -327,8 +325,8 @@ java --version         # >= 17 (LTS)
 
 ```bash
 # 1. Clone repository
-git clone https://github.com/your-username/rentspace.git
-cd rentspace
+git clone https://github.com/MaiLuong1906/RentSpace.git
+cd RentSpace
 
 # 2. Sao chép file cấu hình môi trường
 cp .env.example .env
@@ -368,13 +366,11 @@ rentspace/
 │   └── Dockerfile
 │
 ├── backend/                # Java Spring Boot
-│   ├── src/main/java/
-│   │   ├── controller/     # REST API Controllers
-│   │   ├── service/        # Business logic
-│   │   ├── repository/     # Data access layer
-│   │   ├── model/          # JPA Entities
-│   │   ├── dto/            # Data Transfer Objects
-│   │   └── security/       # JWT, Spring Security config
+│   ├── src/main/java/com/rentspace/
+│   │   ├── config/         # Security, Swagger, WebSocket configs
+│   │   ├── domain/         # Domain-driven modules (user, listing...)
+│   │   ├── infrastructure/ # AWS S3, Email, JWT Token
+│   │   └── common/         # Global exceptions, responses
 │   └── Dockerfile
 │
 ├── nginx/

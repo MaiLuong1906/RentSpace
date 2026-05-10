@@ -1,0 +1,3 @@
+// Placeholder for future UI components
+// ui/Button.tsx, ui/Input.tsx, ui/Modal.tsx, etc.
+export {};

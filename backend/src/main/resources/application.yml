@@ -1,0 +1,101 @@
+# Application Configuration — RentSpace Backend
+# ⚠️ Các giá trị nhạy cảm (secrets) đặt trong application-dev.yml hoặc biến môi trường
+
+spring:
+  application:
+    name: rentspace-backend
+
+  # ===== Database =====
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/rentspace}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:password}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+      connection-timeout: 30000
+
+  # ===== JPA / Hibernate =====
+  jpa:
+    hibernate:
+      ddl-auto: validate  # Flyway quản lý schema, không để Hibernate tự tạo
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+    show-sql: false  # Bật trong dev profile
+
+  # ===== Flyway Migration =====
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+
+  # ===== Redis =====
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+
+  # ===== Email =====
+  mail:
+    host: ${MAIL_HOST:smtp.gmail.com}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+  # ===== File Upload =====
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 50MB
+
+# ===== Server =====
+server:
+  port: 8080
+  servlet:
+    context-path: /
+
+# ===== Swagger / SpringDoc =====
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui
+    try-it-out-enabled: true
+    operations-sorter: method
+
+# ===== Actuator =====
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: when-authorized
+
+# ===== App Custom Config =====
+app:
+  jwt:
+    secret: ${JWT_SECRET}
+    expiration-ms: 900000          # 15 phút
+    refresh-expiration-ms: 604800000  # 7 ngày
+  frontend-url: ${FRONTEND_URL:http://localhost:3000}
+
+# ===== AWS S3 =====
+aws:
+  s3:
+    bucket-name: ${AWS_S3_BUCKET:rentspace-uploads}
+    region: ${AWS_REGION:ap-southeast-1}
+  credentials:
+    access-key: ${AWS_ACCESS_KEY}
+    secret-key: ${AWS_SECRET_KEY}
