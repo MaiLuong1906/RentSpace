@@ -1,42 +1,35 @@
-import { withAuth } from "next-auth/middleware";
+import { auth } from "@/auth";
 import { NextResponse } from "next/server";
 
-export default withAuth(
-  function middleware(req) {
-    const token = req.nextauth.token;
-    const pathname = req.nextUrl.pathname;
+export default auth((req) => {
+  const token = req.auth; // Trong v5, req.auth chứa session token
+  const pathname = req.nextUrl.pathname;
 
-    // Admin routes — chỉ ADMIN
-    if (pathname.startsWith("/admin") && token?.role !== "ADMIN") {
-      return NextResponse.redirect(new URL("/", req.url));
-    }
+  // Nếu truy cập route được bảo vệ mà chưa đăng nhập
+  const protectedRoutes = ["/dashboard", "/admin", "/chat", "/profile"];
+  const isProtectedRoute = protectedRoutes.some((route) => pathname.startsWith(route));
 
-    // Dashboard routes — chỉ LANDLORD và ADMIN
-    if (
-      pathname.startsWith("/dashboard") &&
-      token?.role !== "LANDLORD" &&
-      token?.role !== "ADMIN"
-    ) {
-      return NextResponse.redirect(new URL("/", req.url));
-    }
-
-    return NextResponse.next();
-  },
-  {
-    callbacks: {
-      authorized: ({ token, req }) => {
-        const pathname = req.nextUrl.pathname;
-        // Các routes cần đăng nhập
-        const protectedRoutes = ["/dashboard", "/admin", "/chat", "/profile"];
-        if (protectedRoutes.some((route) => pathname.startsWith(route))) {
-          return !!token;
-        }
-        return true;
-      },
-    },
+  if (isProtectedRoute && !token) {
+    return NextResponse.redirect(new URL("/login", req.url));
   }
-);
+
+  // Phân quyền Role: Admin routes — chỉ ADMIN
+  if (pathname.startsWith("/admin") && token?.user?.role !== "ADMIN") {
+    return NextResponse.redirect(new URL("/", req.url));
+  }
+
+  // Phân quyền Role: Dashboard routes — chỉ LANDLORD và ADMIN
+  if (
+    pathname.startsWith("/dashboard") &&
+    token?.user?.role !== "LANDLORD" &&
+    token?.user?.role !== "ADMIN"
+  ) {
+    return NextResponse.redirect(new URL("/", req.url));
+  }
+
+  return NextResponse.next();
+});
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/admin/:path*", "/chat/:path*", "/profile/:path*"],
+  matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)"],
 };

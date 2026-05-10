@@ -1,7 +1,6 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
-import axios from "axios";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   providers: [
@@ -17,18 +16,21 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       },
       async authorize(credentials) {
         try {
-          // Gọi sang Backend Spring Boot của bạn
-          const response = await axios.post(
-            `${process.env.NEXT_PUBLIC_API_URL}/auth/login`,
-            {
+          const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/login`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
               email: credentials?.email,
               password: credentials?.password,
-            }
-          );
+            }),
+          });
 
-          if (response.data.success) {
-            const { user, accessToken, refreshToken } = response.data.data;
-            // Phẳng hóa dữ liệu để khớp với interface User đã khai báo
+          const data = await response.json();
+
+          if (data.success) {
+            const { user, accessToken, refreshToken } = data.data;
             return {
               ...user,
               accessToken,
@@ -36,13 +38,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             };
           }
           return null;
-        } catch (error) {
+        } catch {
           return null;
         }
       },
     }),
   ],
   callbacks: {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     async jwt({ token, user }: { token: any; user?: any }) {
       if (user) {
         token.id = user.id;
@@ -53,6 +56,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       }
       return token;
     },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     async session({ session, token }: { session: any; token: any }) {
       if (token) {
         session.user.id = token.id;
