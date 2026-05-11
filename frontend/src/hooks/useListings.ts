@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery, useInfiniteQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { listingApi } from "@/lib/api/listing.api";
 import type { ListingSearchParams } from "@/types/listing.types";
 

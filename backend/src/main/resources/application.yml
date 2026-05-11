@@ -2,14 +2,16 @@
 # ⚠️ Các giá trị nhạy cảm (secrets) đặt trong application-dev.yml hoặc biến môi trường
 
 spring:
+  profiles:
+    active: dev
   application:
     name: rentspace-backend
 
   # ===== Database =====
   datasource:
-    url: ${DB_URL:jdbc:postgresql://localhost:5432/rentspace}
+    url: ${DB_URL:jdbc:postgresql://localhost:5433/rentspace}
     username: ${DB_USERNAME:postgres}
-    password: ${DB_PASSWORD:password}
+    password: ${DB_PASSWORD:123456}
     driver-class-name: org.postgresql.Driver
     hikari:
       maximum-pool-size: 10
@@ -86,7 +88,7 @@ management:
 # ===== App Custom Config =====
 app:
   jwt:
-    secret: ${JWT_SECRET}
+    secret: ${JWT_SECRET:dev_secret_please_change_me_to_64_chars_minimum_length_ok_for_local_test}
     expiration-ms: 900000          # 15 phút
     refresh-expiration-ms: 604800000  # 7 ngày
   frontend-url: ${FRONTEND_URL:http://localhost:3000}
@@ -97,5 +99,5 @@ aws:
     bucket-name: ${AWS_S3_BUCKET:rentspace-uploads}
     region: ${AWS_REGION:ap-southeast-1}
   credentials:
-    access-key: ${AWS_ACCESS_KEY}
-    secret-key: ${AWS_SECRET_KEY}
+    access-key: ${AWS_ACCESS_KEY:none}
+    secret-key: ${AWS_SECRET_KEY:none}

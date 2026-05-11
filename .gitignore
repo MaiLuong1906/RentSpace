@@ -39,3 +39,6 @@ backend/src/main/resources/application-dev.yml
 # Test artifacts
 *.html
 surefire-reports/
+
+# Local-only documentation (không đẩy lên Git)
+CODING_RULES.md

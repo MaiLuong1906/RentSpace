@@ -29,13 +29,14 @@ public class SecurityConfig {
     private final UserDetailsService userDetailsService;
 
     private static final String[] PUBLIC_ENDPOINTS = {
+            "/**",             // TODO: XÓA dòng này sau khi AUTH hoàn thiện — đang permit all để dev
             "/api/v1/auth/**",
             "/api/v1/listings/**",
             "/swagger-ui/**",
             "/swagger-ui.html",
             "/v3/api-docs/**",
             "/actuator/health",
-            "/ws/**"  // WebSocket endpoint
+            "/ws/**"
     };
 
     @Bean

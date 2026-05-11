@@ -6,7 +6,7 @@ import { signIn, signOut } from "next-auth/react";
 import type { RegisterRequest } from "@/types/user.types";
 
 export function useAuth() {
-  const { user, isAuthenticated, isLoading, setUser, clearAuth, setLoading } =
+  const { user, isAuthenticated, isLoading, clearAuth, setLoading } =
     useAuthStore();
 
   const register = async (data: RegisterRequest) => {

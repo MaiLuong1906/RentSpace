@@ -9,7 +9,7 @@ import { useAuthStore } from "@/store/authStore";
 export function useChat() {
   const stompClientRef = useRef<Client | null>(null);
   const { accessToken } = useAuthStore();
-  const { setConnected, addMessage, activeConversationId } = useChatStore();
+  const { setConnected, addMessage } = useChatStore();
 
   useEffect(() => {
     if (!accessToken) return;
@@ -38,7 +38,7 @@ export function useChat() {
     return () => {
       client.deactivate();
     };
-  }, [accessToken]);
+  }, [accessToken, setConnected, addMessage]);
 
   const sendMessage = useCallback(
     (receiverId: number, content: string) => {
