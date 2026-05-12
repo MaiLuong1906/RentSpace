@@ -1,7 +1,6 @@
 package com.rentspace.domain.user;
 
 import com.rentspace.common.response.ApiResponse;
-import com.rentspace.domain.user.dto.RegisterRequest;
 import com.rentspace.domain.user.dto.UserProfileResponse;
 import java.util.List;
 import io.swagger.v3.oas.annotations.Operation;

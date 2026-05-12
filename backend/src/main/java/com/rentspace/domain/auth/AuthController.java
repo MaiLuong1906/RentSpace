@@ -1,0 +1,32 @@
+package com.rentspace.domain.auth;
+
+import com.rentspace.common.response.ApiResponse;
+import com.rentspace.domain.auth.dto.RegisterRequest;
+import com.rentspace.domain.auth.dto.RegisterResponse;
+import com.rentspace.domain.auth.dto.VerifyOtpRequest;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping("/api/v1/auth")
+@RequiredArgsConstructor
+public class AuthController {
+
+    private final AuthService authService;
+
+    @PostMapping("/register")
+    public ResponseEntity<RegisterResponse> register(@Valid @RequestBody RegisterRequest request) {
+        authService.register(request);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(new RegisterResponse("Vui lòng kiểm tra email để xác minh tài khoản"));
+    }
+
+    @PostMapping("/verify-otp")
+    public ResponseEntity<ApiResponse<String>> verifyOtp(@Valid @RequestBody VerifyOtpRequest request) {
+        authService.verifyOtp(request);
+        return ResponseEntity.ok(ApiResponse.success("Xác thực tài khoản thành công. Bạn đã có thể đăng nhập."));
+    }
+}

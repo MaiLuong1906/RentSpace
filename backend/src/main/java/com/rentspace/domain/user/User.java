@@ -5,7 +5,10 @@ import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import com.rentspace.domain.user.enums.KycStatus;
+import com.rentspace.domain.user.enums.Role;
 import java.time.LocalDateTime;
+
 
 @Entity
 @Table(name = "users")
@@ -65,17 +68,4 @@ public class User {
     @UpdateTimestamp
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
-
-    public enum Role {
-        TENANT,    // Người thuê
-        LANDLORD,  // Chủ trọ
-        ADMIN
-    }
-
-    public enum KycStatus {
-        PENDING,   // Chưa xác thực
-        SUBMITTED, // Đã nộp CCCD, chờ duyệt
-        VERIFIED,  // Đã xác thực
-        REJECTED   // Bị từ chối
-    }
 }
