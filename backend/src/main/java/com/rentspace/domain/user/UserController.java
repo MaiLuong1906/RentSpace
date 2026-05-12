@@ -3,6 +3,7 @@ package com.rentspace.domain.user;
 import com.rentspace.common.response.ApiResponse;
 import com.rentspace.domain.user.dto.RegisterRequest;
 import com.rentspace.domain.user.dto.UserProfileResponse;
+import java.util.List;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -35,5 +36,12 @@ public class UserController {
     public ResponseEntity<ApiResponse<UserProfileResponse>> getUserProfile(@PathVariable Long userId) {
         UserProfileResponse profile = userService.getProfile(userId);
         return ResponseEntity.ok(ApiResponse.success(profile));
+    }
+
+    @GetMapping("/all")
+    @Operation(summary = "Lấy danh sách tất cả người dùng (Dùng cho dev test)")
+    public ResponseEntity<ApiResponse<List<UserProfileResponse>>> getAllUsers() {
+        List<UserProfileResponse> profiles = userService.getAllUsers();
+        return ResponseEntity.ok(ApiResponse.success(profiles));
     }
 }
