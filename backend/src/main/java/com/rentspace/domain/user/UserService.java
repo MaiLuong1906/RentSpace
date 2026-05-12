@@ -4,6 +4,8 @@ import com.rentspace.common.exception.BusinessException;
 import com.rentspace.common.exception.ResourceNotFoundException;
 import com.rentspace.domain.user.dto.UserProfileResponse;
 import com.rentspace.domain.user.enums.Role;
+import java.util.List;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -42,5 +44,11 @@ public class UserService {
                 .isEmailVerified(user.getIsEmailVerified())
                 .createdAt(user.getCreatedAt())
                 .build();
+    }
+
+    public List<UserProfileResponse> getAllUsers() {
+        return userRepository.findAll().stream()
+                .map(this::mapToProfileResponse)
+                .collect(Collectors.toList());
     }
 }
