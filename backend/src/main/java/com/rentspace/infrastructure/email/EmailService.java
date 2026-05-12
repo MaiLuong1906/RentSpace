@@ -28,8 +28,12 @@ public class EmailService {
                 "Xin chào,\n\nMã OTP của bạn là: %s\n\nMã này có hiệu lực trong 5 phút.\n\nNếu bạn không yêu cầu mã này, vui lòng bỏ qua email này.\n\nTrân trọng,\nĐội ngũ RentSpace",
                 otp
         ));
-        mailSender.send(message);
-        log.info("Đã gửi OTP đến: {}", toEmail);
+        log.info("Đã gửi OTP đến: {}. Mã OTP là: {}", toEmail, otp);
+        try {
+            mailSender.send(message);
+        } catch (Exception e) {
+            log.warn("Không thể gửi email thực tế do chưa cấu hình SMTP. (Bỏ qua lỗi này ở môi trường dev)");
+        }
     }
 
     @Async

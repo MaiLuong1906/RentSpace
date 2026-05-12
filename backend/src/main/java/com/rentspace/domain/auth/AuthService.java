@@ -2,6 +2,7 @@ package com.rentspace.domain.auth;
 
 import com.rentspace.common.exception.BusinessException;
 import com.rentspace.domain.auth.dto.RegisterRequest;
+import com.rentspace.domain.auth.dto.VerifyOtpRequest;
 import com.rentspace.domain.user.User;
 import com.rentspace.domain.user.UserRepository;
 import com.rentspace.domain.user.enums.Role;
@@ -45,5 +46,29 @@ public class AuthService {
         emailService.sendOtpEmail(user.getEmail(), otp);
         
         log.info("Đăng ký thành công, chờ xác minh: email={}", user.getEmail());
+    }
+
+    @Transactional
+    public void verifyOtp(VerifyOtpRequest request) {
+        if (!otpService.validateOtp(request.getEmail(), request.getOtp())) {
+            throw new BusinessException("Mã OTP không hợp lệ hoặc đã hết hạn");
+        }
+
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new BusinessException("Không tìm thấy người dùng với email: " + request.getEmail()));
+
+        if (user.getIsActive() && user.getIsEmailVerified()) {
+            throw new BusinessException("Tài khoản này đã được xác thực trước đó.");
+        }
+
+        user.setIsActive(true);
+        user.setIsEmailVerified(true);
+        userRepository.save(user);
+
+        otpService.clearOtp(request.getEmail());
+
+        emailService.sendWelcomeEmail(user.getEmail(), user.getFullName());
+
+        log.info("Xác thực email thành công: email={}", user.getEmail());
     }
 }
