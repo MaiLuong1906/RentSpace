@@ -29,7 +29,6 @@ public class SecurityConfig {
     private final UserDetailsService userDetailsService;
 
     private static final String[] PUBLIC_ENDPOINTS = {
-            "/**",             // TODO: XÓA dòng này sau khi AUTH hoàn thiện — đang permit all để dev
             "/api/v1/auth/**",
             "/api/v1/listings/**",
             "/swagger-ui/**",
@@ -71,6 +70,6 @@ public class SecurityConfig {
 
     @Bean
     public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
+        return new BCryptPasswordEncoder(12);
     }
 }

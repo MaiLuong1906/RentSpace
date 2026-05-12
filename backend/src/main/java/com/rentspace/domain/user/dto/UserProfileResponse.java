@@ -1,6 +1,7 @@
 package com.rentspace.domain.user.dto;
 
-import com.rentspace.domain.user.User;
+import com.rentspace.domain.user.enums.KycStatus;
+import com.rentspace.domain.user.enums.Role;
 import lombok.Builder;
 import lombok.Data;
 
@@ -14,8 +15,8 @@ public class UserProfileResponse {
     private String fullName;
     private String phoneNumber;
     private String avatarUrl;
-    private User.Role role;
-    private User.KycStatus kycStatus;
+    private Role role;
+    private KycStatus kycStatus;
     private Boolean isEmailVerified;
     private LocalDateTime createdAt;
 }
