@@ -46,7 +46,11 @@ public class EmailService {
                 "Xin chào %s,\n\nChào mừng bạn đến với RentSpace — Nền tảng tìm phòng trọ an toàn và minh bạch.\n\nHãy bắt đầu khám phá hàng nghìn phòng trọ chất lượng tại địa chỉ: https://rentspace.vn\n\nTrân trọng,\nĐội ngũ RentSpace",
                 fullName
         ));
-        mailSender.send(message);
-        log.info("Đã gửi email chào mừng đến: {}", toEmail);
+        try {
+            mailSender.send(message);
+            log.info("Đã gửi email chào mừng đến: {}", toEmail);
+        } catch (Exception e) {
+            log.warn("Không thể gửi email chào mừng thực tế do chưa cấu hình SMTP. (Bỏ qua lỗi này ở môi trường dev)");
+        }
     }
 }

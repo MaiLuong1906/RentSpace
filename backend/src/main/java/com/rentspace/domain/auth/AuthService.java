@@ -10,9 +10,15 @@ import com.rentspace.infrastructure.email.EmailService;
 import com.rentspace.infrastructure.redis.OtpService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.concurrent.TimeUnit;
 
 @Service
 @RequiredArgsConstructor
@@ -23,6 +29,9 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final OtpService otpService;
     private final EmailService emailService;
+    private final AuthenticationManager authenticationManager;
+    private final com.rentspace.infrastructure.security.JwtTokenProvider jwtTokenProvider;
+    private final StringRedisTemplate redisTemplate;
 
     @Transactional
     public void register(RegisterRequest request) {
@@ -85,5 +94,87 @@ public class AuthService {
         emailService.sendOtpEmail(email, otp);
 
         log.info("Đã gửi lại mã OTP cho email: {}", email);
+    }
+
+    public com.rentspace.domain.auth.dto.AuthResponse login(com.rentspace.domain.auth.dto.LoginRequest request) {
+        // 1. Xác thực mật khẩu
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
+        );
+
+        // 2. Lấy thông tin user
+        com.rentspace.domain.user.CustomUserDetails userDetails = (com.rentspace.domain.user.CustomUserDetails) authentication.getPrincipal();
+        User user = userDetails.getUser();
+
+        // 3. Kiểm tra trạng thái kích hoạt
+        if (!user.getIsActive() || !user.getIsEmailVerified()) {
+            throw new BusinessException("Tài khoản chưa được xác thực email. Vui lòng kiểm tra email của bạn.");
+        }
+
+        // 4. Sinh Token
+        String accessToken = jwtTokenProvider.generateAccessToken(userDetails);
+        String refreshToken = jwtTokenProvider.generateRefreshToken(userDetails);
+
+        // 5. Lưu Refresh Token vào Redis (7 ngày)
+        redisTemplate.opsForValue().set(
+                "RT:" + user.getEmail(),
+                refreshToken,
+                7,
+                TimeUnit.DAYS
+        );
+
+        log.info("Đăng nhập thành công: email={}", user.getEmail());
+
+        // 6. Trả về Response
+        return com.rentspace.domain.auth.dto.AuthResponse.builder()
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .user(com.rentspace.domain.auth.dto.AuthResponse.UserSummary.from(user))
+                .build();
+    }
+
+    public com.rentspace.domain.auth.dto.AuthResponse refreshToken(com.rentspace.domain.auth.dto.RefreshTokenRequest request) {
+        try {
+            // 1. Lấy email từ token (Sẽ quăng lỗi nếu token hết hạn hoặc sai chữ ký)
+            String email = jwtTokenProvider.extractUsername(request.getRefreshToken());
+
+            // 2. Kiểm tra Redis xem token còn hợp lệ / khớp không
+            String savedRefreshToken = redisTemplate.opsForValue().get("RT:" + email);
+            if (savedRefreshToken == null || !savedRefreshToken.equals(request.getRefreshToken())) {
+                throw new BusinessException("Refresh Token không hợp lệ hoặc đã bị thu hồi. Vui lòng đăng nhập lại.");
+            }
+
+            // 3. Lấy thông tin User
+            User user = userRepository.findByEmail(email)
+                    .orElseThrow(() -> new BusinessException("Không tìm thấy người dùng"));
+
+            com.rentspace.domain.user.CustomUserDetails userDetails = new com.rentspace.domain.user.CustomUserDetails(user);
+
+            // 4. Sinh cặp Token mới (Refresh Token Rotation)
+            String newAccessToken = jwtTokenProvider.generateAccessToken(userDetails);
+            String newRefreshToken = jwtTokenProvider.generateRefreshToken(userDetails);
+
+            // 5. Cập nhật lại Redis với Refresh Token mới
+            redisTemplate.opsForValue().set(
+                    "RT:" + email,
+                    newRefreshToken,
+                    7,
+                    TimeUnit.DAYS
+            );
+
+            log.info("Làm mới token thành công: email={}", email);
+
+            // 6. Trả về Response
+            return com.rentspace.domain.auth.dto.AuthResponse.builder()
+                    .accessToken(newAccessToken)
+                    .refreshToken(newRefreshToken)
+                    .user(com.rentspace.domain.auth.dto.AuthResponse.UserSummary.from(user))
+                    .build();
+
+        } catch (io.jsonwebtoken.ExpiredJwtException e) {
+            throw new BusinessException("Refresh Token đã hết hạn. Vui lòng đăng nhập lại.");
+        } catch (io.jsonwebtoken.JwtException | IllegalArgumentException e) {
+            throw new BusinessException("Refresh Token không hợp lệ. Vui lòng đăng nhập lại.");
+        }
     }
 }
