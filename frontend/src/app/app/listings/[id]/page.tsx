@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { useParams, Link } from "react-router";
+import { useParams } from "next/navigation";
+import Link from "next/link";
 import {
   MapPin,
   Star,
@@ -9,7 +10,6 @@ import {
   Heart,
   MessageCircle,
   Phone,
-  Mail,
   ArrowLeft,
   CheckCircle,
   AlertTriangle,
@@ -22,10 +22,11 @@ import {
   getRoomTypeLabel,
 } from "@/lib/mockData";
 
-export default function ListingDetailPage({ params }: { params: { id: string } }) {
-  const { id } = useParams();
-  const listing = getListingById(id!);
-  const reviews = getReviewsByListingId(id!);
+export default function ListingDetailPage() {
+  const params = useParams();
+  const id = params?.id as string;
+  const listing = getListingById(id);
+  const reviews = getReviewsByListingId(id);
 
   const [selectedImage, setSelectedImage] = useState(0);
   const [showContactModal, setShowContactModal] = useState(false);
@@ -93,11 +94,10 @@ export default function ListingDetailPage({ params }: { params: { id: string } }
                     <button
                       key={index}
                       onClick={() => setSelectedImage(index)}
-                      className={`flex-shrink-0 w-24 h-20 rounded-lg overflow-hidden border-2 transition-all ${
-                        selectedImage === index
+                      className={`flex-shrink-0 w-24 h-20 rounded-lg overflow-hidden border-2 transition-all ${selectedImage === index
                           ? "border-blue-600"
                           : "border-transparent hover:border-gray-300"
-                      }`}
+                        }`}
                     >
                       <img
                         src={image}
@@ -128,11 +128,10 @@ export default function ListingDetailPage({ params }: { params: { id: string } }
                 <div className="flex gap-2">
                   <button
                     onClick={() => setIsSaved(!isSaved)}
-                    className={`p-3 rounded-lg border-2 transition-colors ${
-                      isSaved
+                    className={`p-3 rounded-lg border-2 transition-colors ${isSaved
                         ? "border-red-600 bg-red-50 text-red-600"
                         : "border-gray-300 hover:border-gray-400"
-                    }`}
+                      }`}
                   >
                     <Heart className={`h-5 w-5 ${isSaved ? "fill-current" : ""}`} />
                   </button>
@@ -225,11 +224,10 @@ export default function ListingDetailPage({ params }: { params: { id: string } }
                               {[...Array(5)].map((_, i) => (
                                 <Star
                                   key={i}
-                                  className={`h-4 w-4 ${
-                                    i < review.rating
+                                  className={`h-4 w-4 ${i < review.rating
                                       ? "fill-yellow-400 text-yellow-400"
                                       : "text-gray-300"
-                                  }`}
+                                    }`}
                                 />
                               ))}
                             </div>
