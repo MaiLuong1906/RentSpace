@@ -1,3 +1,5 @@
+"use client";
+
 import { Flag, CheckCircle, XCircle } from "lucide-react";
 
 interface Report {
