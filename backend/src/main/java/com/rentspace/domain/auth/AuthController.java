@@ -3,6 +3,7 @@ package com.rentspace.domain.auth;
 import com.rentspace.common.response.ApiResponse;
 import com.rentspace.domain.auth.dto.RegisterRequest;
 import com.rentspace.domain.auth.dto.RegisterResponse;
+import com.rentspace.domain.auth.dto.ResendOtpRequest;
 import com.rentspace.domain.auth.dto.VerifyOtpRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -28,5 +29,11 @@ public class AuthController {
     public ResponseEntity<ApiResponse<String>> verifyOtp(@Valid @RequestBody VerifyOtpRequest request) {
         authService.verifyOtp(request);
         return ResponseEntity.ok(ApiResponse.success("Xác thực tài khoản thành công. Bạn đã có thể đăng nhập."));
+    }
+
+    @PostMapping("/resend-otp")
+    public ResponseEntity<ApiResponse<String>> resendOtp(@Valid @RequestBody ResendOtpRequest request) {
+        authService.resendOtp(request.getEmail());
+        return ResponseEntity.ok(ApiResponse.success("Mã OTP mới đã được gửi vào email của bạn."));
     }
 }
