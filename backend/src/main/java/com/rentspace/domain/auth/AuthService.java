@@ -177,4 +177,57 @@ public class AuthService {
             throw new BusinessException("Refresh Token không hợp lệ. Vui lòng đăng nhập lại.");
         }
     }
+
+    @Transactional
+    public void forgotPassword(com.rentspace.domain.auth.dto.ForgotPasswordRequest request) {
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new BusinessException("Không tìm thấy tài khoản với email này."));
+
+        if (!user.getIsActive()) {
+            throw new BusinessException("Tài khoản chưa được kích hoạt. Vui lòng xác thực email trước.");
+        }
+
+        String otp = otpService.generateAndSaveOtp(user.getEmail());
+        emailService.sendOtpEmail(user.getEmail(), otp);
+
+        log.info("Đã gửi OTP khôi phục mật khẩu cho email: {}", user.getEmail());
+    }
+
+    @Transactional
+    public void resetPassword(com.rentspace.domain.auth.dto.ResetPasswordRequest request) {
+        if (!otpService.validateOtp(request.getEmail(), request.getOtp())) {
+            throw new BusinessException("Mã OTP không hợp lệ hoặc đã hết hạn.");
+        }
+
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new BusinessException("Không tìm thấy tài khoản với email này."));
+
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        userRepository.save(user);
+
+        otpService.clearOtp(request.getEmail());
+
+        // Hủy toàn bộ session cũ (Xóa Refresh Token trong Redis)
+        redisTemplate.delete("RT:" + user.getEmail());
+
+        log.info("Đổi mật khẩu thành công cho email: {}", user.getEmail());
+    }
+
+    @Transactional
+    public void changePassword(String email, com.rentspace.domain.auth.dto.ChangePasswordRequest request) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new BusinessException("Không tìm thấy tài khoản."));
+
+        if (!passwordEncoder.matches(request.getOldPassword(), user.getPassword())) {
+            throw new BusinessException("Mật khẩu hiện tại không chính xác.");
+        }
+
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        userRepository.save(user);
+
+        // Hủy toàn bộ session cũ (tùy chọn, bắt user đăng nhập lại)
+        redisTemplate.delete("RT:" + user.getEmail());
+
+        log.info("Người dùng chủ động đổi mật khẩu thành công: email={}", user.getEmail());
+    }
 }
