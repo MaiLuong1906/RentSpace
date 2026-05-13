@@ -71,4 +71,19 @@ public class AuthService {
 
         log.info("Xác thực email thành công: email={}", user.getEmail());
     }
+
+    @Transactional
+    public void resendOtp(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new BusinessException("Không tìm thấy người dùng với email: " + email));
+
+        if (user.getIsActive() && user.getIsEmailVerified()) {
+            throw new BusinessException("Tài khoản này đã được xác thực trước đó.");
+        }
+
+        String otp = otpService.generateAndSaveOtp(email);
+        emailService.sendOtpEmail(email, otp);
+
+        log.info("Đã gửi lại mã OTP cho email: {}", email);
+    }
 }
