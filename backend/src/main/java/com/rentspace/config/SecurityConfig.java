@@ -28,17 +28,24 @@ public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final UserDetailsService userDetailsService;
 
+    // Các endpoint hoàn toàn public (không cần đăng nhập)
     private static final String[] PUBLIC_ENDPOINTS = {
-            // "/**", // TODO: XÓA dòng này sau khi AUTH hoàn thiện — đang permit all để dev
             "/api/v1/auth/**",
-            "/api/v1/users/all", // Dev only - xem tất cả user
-            "/api/v1/users/{userId}", // Public - xem hồ sơ công khai của user
-            "/api/v1/listings/**",
+            "/api/v1/users/all",           // Dev only - xem tất cả user
+            "/api/v1/users/{userId}",       // Public - xem hồ sơ công khai
+            "/uploads/**",                  // Static files (ảnh upload local)
             "/swagger-ui/**",
             "/swagger-ui.html",
             "/v3/api-docs/**",
             "/actuator/health",
             "/ws/**"
+    };
+
+    // Các endpoint GET của listings public (không cần đăng nhập để xem)
+    private static final String[] PUBLIC_LISTING_GET_ENDPOINTS = {
+            "/api/v1/listings",             // GET - tìm kiếm
+            "/api/v1/listings/nearby",      // GET - tìm gần đây
+            "/api/v1/listings/*"            // GET - xem chi tiết
     };
 
     @Bean
@@ -47,7 +54,11 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(PUBLIC_ENDPOINTS).permitAll()
+                        // GET listings public, nhưng POST/PUT/PATCH/DELETE phải authenticate
+                        .requestMatchers(org.springframework.http.HttpMethod.GET, PUBLIC_LISTING_GET_ENDPOINTS).permitAll()
+                        // Admin routes (dùng @PreAuthorize bổ sung tại controller)
                         .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/api/v1/kyc/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated())
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))

@@ -68,7 +68,7 @@ public class ListingService {
         }
 
         // Kiểm tra KYC sau
-        if (landlord.getKycStatus() != KycStatus.APPROVED) {
+        if (landlord.getKycStatus() != KycStatus.VERIFIED) {
             throw new BusinessException("Bạn cần hoàn thành xác thực danh tính (KYC) trước khi đăng tin");
         }
 
