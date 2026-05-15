@@ -1,5 +1,6 @@
 package com.rentspace.config;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -14,6 +15,7 @@ import java.nio.file.Paths;
  */
 @Configuration
 @Profile("dev")
+@Slf4j
 public class WebMvcConfig implements WebMvcConfigurer {
 
     @Value("${app.storage.upload-dir:uploads}")
@@ -21,10 +23,16 @@ public class WebMvcConfig implements WebMvcConfigurer {
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        // Resolve absolute path của thư mục uploads
-        String absoluteUploadPath = Paths.get(uploadDir).toAbsolutePath().toUri().toString();
+        // Resolve absolute path, đảm bảo kết thúc bằng "/" (Spring yêu cầu)
+        String absoluteUploadPath = Paths.get(uploadDir).toAbsolutePath().normalize().toUri().toString();
+        if (!absoluteUploadPath.endsWith("/")) {
+            absoluteUploadPath = absoluteUploadPath + "/";
+        }
+
+        log.info("Serving static files from: {}", absoluteUploadPath);
 
         registry.addResourceHandler("/uploads/**")
-                .addResourceLocations(absoluteUploadPath);
+                .addResourceLocations(absoluteUploadPath)
+                .setCachePeriod(0);  // Không cache khi dev
     }
 }

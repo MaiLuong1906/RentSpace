@@ -10,6 +10,7 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -56,6 +57,14 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse<Void>> handleAccessDenied(AccessDeniedException ex) {
         return ResponseEntity.status(HttpStatus.FORBIDDEN)
                 .body(ApiResponse.error("Bạn không có quyền thực hiện hành động này"));
+    }
+
+    // Cho phép Spring tự xử lý NoResourceFoundException (static files, 404)
+    // Không bắt ở đây để tránh trả về JSON thay vì 404 thật
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<ApiResponse<Void>> handleNoResourceFound(NoResourceFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(ApiResponse.error("Không tìm thấy tài nguyên: " + ex.getResourcePath()));
     }
 
     @ExceptionHandler(Exception.class)
