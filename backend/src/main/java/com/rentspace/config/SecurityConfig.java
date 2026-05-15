@@ -56,7 +56,9 @@ public class SecurityConfig {
                         .requestMatchers(PUBLIC_ENDPOINTS).permitAll()
                         // GET listings public, nhưng POST/PUT/PATCH/DELETE phải authenticate
                         .requestMatchers(org.springframework.http.HttpMethod.GET, PUBLIC_LISTING_GET_ENDPOINTS).permitAll()
+                        // Admin routes (dùng @PreAuthorize bổ sung tại controller)
                         .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/api/v1/kyc/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated())
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
