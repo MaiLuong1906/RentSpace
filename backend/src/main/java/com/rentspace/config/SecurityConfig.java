@@ -29,9 +29,9 @@ public class SecurityConfig {
     private final UserDetailsService userDetailsService;
 
     private static final String[] PUBLIC_ENDPOINTS = {
-            // "/**", // TODO: XÓA dòng này sau khi AUTH hoàn thiện — đang permit all để dev
             "/api/v1/auth/**",
-            "/api/v1/users/all",
+            "/api/v1/users/all",         // Dev only - xem tất cả user
+            "/api/v1/users/{userId}",    // Public - xem hồ sơ công khai của user
             "/api/v1/listings/**",
             "/swagger-ui/**",
             "/swagger-ui.html",
@@ -45,6 +45,7 @@ public class SecurityConfig {
         return http
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/api/v1/users/me", "/api/v1/users/me/**").authenticated()
                         .requestMatchers(PUBLIC_ENDPOINTS).permitAll()
                         .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated())
