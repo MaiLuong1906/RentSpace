@@ -28,7 +28,7 @@ public class KycController {
     private final KycService kycService;
 
     // ===== USER: Nộp hồ sơ KYC =====
-    @PostMapping("/submit")
+    @PostMapping(value = "/submit", consumes = org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "Nộp hồ sơ KYC (ảnh CCCD)")
     @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<ApiResponse<String>> submitKyc(
