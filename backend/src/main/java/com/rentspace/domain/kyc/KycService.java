@@ -25,7 +25,7 @@ public class KycService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException("User không tồn tại"));
 
-        if (user.getKycStatus() == KycStatus.APPROVED) {
+        if (user.getKycStatus() == KycStatus.VERIFIED) {
             throw new IllegalStateException("Hồ sơ KYC đã được duyệt, không thể nộp lại.");
         }
 
