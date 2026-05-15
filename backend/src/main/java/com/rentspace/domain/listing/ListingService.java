@@ -7,6 +7,7 @@ import com.rentspace.domain.listing.enums.ListingStatus;
 import com.rentspace.domain.user.User;
 import com.rentspace.domain.user.UserRepository;
 import com.rentspace.domain.user.enums.KycStatus;
+import com.rentspace.domain.user.enums.Role;
 import com.rentspace.infrastructure.storage.S3StorageService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -61,8 +62,14 @@ public class ListingService {
         User landlord = userRepository.findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy người dùng"));
 
+        // Kiểm tra role trước
+        if (landlord.getRole() != Role.LANDLORD) {
+            throw new BusinessException("Chỉ tài khoản Chủ trọ (LANDLORD) mới được đăng tin. Vui lòng liên hệ hỗ trợ để nâng cấp tài khoản.");
+        }
+
+        // Kiểm tra KYC sau
         if (landlord.getKycStatus() != KycStatus.APPROVED) {
-            throw new BusinessException("Bạn cần xác thực danh tính (KYC) trước khi đăng tin");
+            throw new BusinessException("Bạn cần hoàn thành xác thực danh tính (KYC) trước khi đăng tin");
         }
 
         Listing listing = Listing.builder()
