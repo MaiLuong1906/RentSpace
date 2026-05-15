@@ -1,6 +1,6 @@
 package com.rentspace.domain.kyc;
 
-import com.rentspace.common.dto.ApiResponse;
+import com.rentspace.common.response.ApiResponse;
 import com.rentspace.domain.kyc.dto.KycStatusResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
