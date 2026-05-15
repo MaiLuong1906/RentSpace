@@ -5,7 +5,7 @@ import com.rentspace.common.exception.ResourceNotFoundException;
 import com.rentspace.domain.user.dto.PublicProfileResponse;
 import com.rentspace.domain.user.dto.UpdateProfileRequest;
 import com.rentspace.domain.user.dto.UserProfileResponse;
-import com.rentspace.infrastructure.storage.S3StorageService;
+import com.rentspace.infrastructure.storage.StorageService;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -24,7 +24,7 @@ import org.springframework.web.multipart.MultipartFile;
 public class UserService {
 
     private final UserRepository userRepository;
-    private final S3StorageService s3StorageService;
+    private final StorageService storageService;
 
     // ===== GET /api/v1/users/me =====
     public UserProfileResponse getProfileByEmail(String email) {
@@ -70,16 +70,16 @@ public class UserService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy người dùng: " + email));
 
-        // Xóa avatar cũ trên S3 nếu có
+        // Xóa avatar cũ nếu có
         if (StringUtils.hasText(user.getAvatarUrl())) {
             try {
-                s3StorageService.deleteFile(user.getAvatarUrl());
+                storageService.deleteFile(user.getAvatarUrl());
             } catch (Exception e) {
-                log.warn("Không thể xóa avatar cũ trên S3, bỏ qua: {}", e.getMessage());
+                log.warn("Không thể xóa avatar cũ, bỏ qua: {}", e.getMessage());
             }
         }
 
-        String newAvatarUrl = s3StorageService.uploadFile(file, "avatars");
+        String newAvatarUrl = storageService.uploadFile(file, "avatars");
         user.setAvatarUrl(newAvatarUrl);
 
         User saved = userRepository.save(user);

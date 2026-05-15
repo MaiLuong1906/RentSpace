@@ -3,6 +3,7 @@ package com.rentspace.infrastructure.storage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import software.amazon.awssdk.core.sync.RequestBody;
@@ -14,9 +15,10 @@ import java.io.IOException;
 import java.util.UUID;
 
 @Service
+@Profile("!dev")  // Chỉ dùng S3 khi không phải dev (production, staging)
 @RequiredArgsConstructor
 @Slf4j
-public class S3StorageService {
+public class S3StorageService implements StorageService {
 
     private final S3Client s3Client;
 
