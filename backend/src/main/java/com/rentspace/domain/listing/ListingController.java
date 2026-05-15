@@ -141,7 +141,7 @@ public class ListingController {
     }
 
     // ===== POST /api/v1/listings/{id}/images =====
-    @PostMapping("/{id}/images")
+    @PostMapping(value = "/{id}/images", consumes = org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "Upload ảnh cho tin đăng")
     @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<ApiResponse<ListingImageResponse>> addImage(
