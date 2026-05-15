@@ -1,60 +1,75 @@
 package com.rentspace.infrastructure.storage;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-import software.amazon.awssdk.core.sync.RequestBody;
-import software.amazon.awssdk.services.s3.S3Client;
-import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
-import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.*;
 import java.util.UUID;
 
 @Service
-@RequiredArgsConstructor
 @Slf4j
 public class S3StorageService {
 
-    private final S3Client s3Client;
+    private final Path rootLocation;
 
-    @Value("${aws.s3.bucket-name}")
-    private String bucketName;
-
-    @Value("${aws.s3.region}")
-    private String region;
+    public S3StorageService() {
+        // Thư mục lưu file mặc định ở root project: "uploads"
+        this.rootLocation = Paths.get("uploads");
+        try {
+            Files.createDirectories(rootLocation);
+        } catch (IOException e) {
+            throw new RuntimeException("Could not initialize local storage", e);
+        }
+    }
 
     public String uploadFile(MultipartFile file, String folder) {
-        String fileName = folder + "/" + UUID.randomUUID() + "_" + file.getOriginalFilename();
-
         try {
-            PutObjectRequest request = PutObjectRequest.builder()
-                    .bucket(bucketName)
-                    .key(fileName)
-                    .contentType(file.getContentType())
-                    .contentLength(file.getSize())
-                    .build();
+            if (file.isEmpty()) {
+                throw new RuntimeException("Failed to store empty file.");
+            }
+            // Tạo thư mục con (VD: uploads/avatars)
+            Path folderPath = this.rootLocation.resolve(folder);
+            if (!Files.exists(folderPath)) {
+                Files.createDirectories(folderPath);
+            }
 
-            s3Client.putObject(request, RequestBody.fromBytes(file.getBytes()));
-            String fileUrl = String.format("https://%s.s3.%s.amazonaws.com/%s", bucketName, region, fileName);
-            log.info("Upload file thành công: {}", fileUrl);
+            // Đổi tên file để tránh trùng lặp
+            String filename = UUID.randomUUID() + "_" + file.getOriginalFilename().replace(" ", "_");
+            Path destinationFile = folderPath.resolve(Paths.get(filename))
+                    .normalize().toAbsolutePath();
+
+            // Lưu file
+            try (InputStream inputStream = file.getInputStream()) {
+                Files.copy(inputStream, destinationFile, StandardCopyOption.REPLACE_EXISTING);
+            }
+
+            // Sinh URL trả về Frontend (Ví dụ: http://localhost:8080/uploads/avatars/123.jpg)
+            String baseUrl = ServletUriComponentsBuilder.fromCurrentContextPath().build().toUriString();
+            String fileUrl = baseUrl + "/uploads/" + folder + "/" + filename;
+            
+            log.info("Lưu file local thành công: {}", fileUrl);
             return fileUrl;
 
         } catch (IOException e) {
-            log.error("Lỗi khi upload file lên S3: {}", e.getMessage());
-            throw new RuntimeException("Không thể upload file: " + e.getMessage());
+            log.error("Lỗi khi lưu file local: {}", e.getMessage());
+            throw new RuntimeException("Lỗi lưu file: " + e.getMessage());
         }
     }
 
     public void deleteFile(String fileUrl) {
-        String key = fileUrl.substring(fileUrl.indexOf(".amazonaws.com/") + 15);
-        DeleteObjectRequest request = DeleteObjectRequest.builder()
-                .bucket(bucketName)
-                .key(key)
-                .build();
-        s3Client.deleteObject(request);
-        log.info("Xóa file S3 thành công: {}", key);
+        try {
+            // fileUrl có dạng: http://localhost:8080/uploads/avatars/123.jpg
+            // Cắt lấy phần sau /uploads/
+            String pathStr = fileUrl.substring(fileUrl.indexOf("/uploads/") + 9);
+            Path filePath = this.rootLocation.resolve(pathStr).normalize().toAbsolutePath();
+            Files.deleteIfExists(filePath);
+            log.info("Xóa file local thành công: {}", pathStr);
+        } catch (Exception e) {
+            log.warn("Không thể xóa file local: {}", e.getMessage());
+        }
     }
 }
