@@ -65,6 +65,9 @@ public interface ListingRepository extends JpaRepository<Listing, Long> {
     // Tìm listing theo ID (chỉ lấy các tin không bị DELETED)
     Optional<Listing> findByIdAndStatusNot(Long id, ListingStatus status);
 
-    // Lấy tất cả tin của một landlord
+    // Lấy tất cả tin của một landlord qua ID
     Page<Listing> findByLandlordIdAndStatusNot(Long landlordId, ListingStatus status, Pageable pageable);
+
+    // Lấy tất cả tin của một landlord qua Email (dành cho API getMyListings)
+    Page<Listing> findByLandlord_EmailAndStatusNot(String email, ListingStatus status, Pageable pageable);
 }

@@ -56,6 +56,17 @@ public class ListingController {
         return ResponseEntity.ok(ApiResponse.success(result));
     }
 
+    // ===== GET /api/v1/listings/my =====
+    @GetMapping("/my")
+    @Operation(summary = "Danh sách tin của chủ trọ đang đăng nhập")
+    @SecurityRequirement(name = "bearerAuth")
+    public ResponseEntity<ApiResponse<Page<ListingResponse>>> getMyListings(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+        Page<ListingResponse> result = listingService.getMyListings(userDetails.getUsername(), pageable);
+        return ResponseEntity.ok(ApiResponse.success(result));
+    }
+
     // ===== GET /api/v1/listings/{id} =====
     @GetMapping("/{id}")
     @Operation(summary = "Xem chi tiết 1 tin đăng")
