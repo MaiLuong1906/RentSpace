@@ -49,6 +49,12 @@ public class ListingService {
                 .collect(Collectors.toList());
     }
 
+    // ===== GET /api/v1/listings/my =====
+    public Page<ListingResponse> getMyListings(String email, Pageable pageable) {
+        return listingRepository.findByLandlord_EmailAndStatusNot(email, ListingStatus.DELETED, pageable)
+                .map(this::mapToResponse);
+    }
+
     // ===== GET /api/v1/listings/{id} =====
     public ListingResponse getById(Long id) {
         Listing listing = listingRepository.findByIdAndStatusNot(id, ListingStatus.DELETED)
