@@ -18,6 +18,22 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -81,6 +97,9 @@ public class ListingController {
     public ResponseEntity<ApiResponse<ListingResponse>> create(
             @AuthenticationPrincipal UserDetails userDetails,
             @Valid @RequestBody CreateListingRequest request) {
+        if (userDetails == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Bạn cần đăng nhập để đăng tin");
+        }
         ListingResponse response = listingService.create(userDetails.getUsername(), request);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.success("Đăng tin thành công", response));
@@ -94,6 +113,9 @@ public class ListingController {
             @PathVariable Long id,
             @AuthenticationPrincipal UserDetails userDetails,
             @Valid @RequestBody CreateListingRequest request) {
+        if (userDetails == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Bạn cần đăng nhập");
+        }
         ListingResponse response = listingService.update(id, userDetails.getUsername(), request);
         return ResponseEntity.ok(ApiResponse.success("Cập nhật tin đăng thành công", response));
     }
@@ -106,6 +128,9 @@ public class ListingController {
             @PathVariable Long id,
             @AuthenticationPrincipal UserDetails userDetails,
             @Valid @RequestBody UpdateListingStatusRequest request) {
+        if (userDetails == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Bạn cần đăng nhập");
+        }
         ListingResponse response = listingService.updateStatus(id, userDetails.getUsername(), request.getStatus());
         return ResponseEntity.ok(ApiResponse.success("Cập nhật trạng thái thành công", response));
     }
@@ -117,6 +142,9 @@ public class ListingController {
     public ResponseEntity<ApiResponse<Void>> delete(
             @PathVariable Long id,
             @AuthenticationPrincipal UserDetails userDetails) {
+        if (userDetails == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Bạn cần đăng nhập");
+        }
         boolean isAdmin = userDetails.getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
         listingService.delete(id, userDetails.getUsername(), isAdmin);
@@ -124,13 +152,16 @@ public class ListingController {
     }
 
     // ===== POST /api/v1/listings/{id}/images =====
-    @PostMapping("/{id}/images")
+    @PostMapping(value = "/{id}/images", consumes = org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "Upload ảnh cho tin đăng")
     @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<ApiResponse<ListingImageResponse>> addImage(
             @PathVariable Long id,
             @AuthenticationPrincipal UserDetails userDetails,
             @RequestParam("image") MultipartFile image) {
+        if (userDetails == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Bạn cần đăng nhập");
+        }
         ListingImageResponse response = listingService.addImage(id, userDetails.getUsername(), image);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.success("Upload ảnh thành công", response));
@@ -144,6 +175,9 @@ public class ListingController {
             @PathVariable Long id,
             @PathVariable Long imageId,
             @AuthenticationPrincipal UserDetails userDetails) {
+        if (userDetails == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Bạn cần đăng nhập");
+        }
         listingService.deleteImage(id, imageId, userDetails.getUsername());
         return ResponseEntity.ok(ApiResponse.success("Xóa ảnh thành công", null));
     }

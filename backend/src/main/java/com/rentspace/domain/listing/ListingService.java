@@ -8,7 +8,7 @@ import com.rentspace.domain.user.User;
 import com.rentspace.domain.user.UserRepository;
 import com.rentspace.domain.user.enums.KycStatus;
 import com.rentspace.domain.user.enums.Role;
-import com.rentspace.infrastructure.storage.S3StorageService;
+import com.rentspace.infrastructure.storage.StorageService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -30,7 +30,7 @@ public class ListingService {
     private final ListingRepository listingRepository;
     private final ListingImageRepository listingImageRepository;
     private final UserRepository userRepository;
-    private final S3StorageService storageService;
+    private final StorageService storageService;
 
     // ===== GET /api/v1/listings =====
     public Page<ListingResponse> search(String city, String district,
@@ -197,7 +197,7 @@ public class ListingService {
         try {
             storageService.deleteFile(image.getImageUrl());
         } catch (Exception e) {
-            log.warn("Không thể xóa ảnh trên S3: {}", e.getMessage());
+            log.warn("Không thể xóa ảnh: {}", e.getMessage());
         }
 
         listingImageRepository.delete(image);
