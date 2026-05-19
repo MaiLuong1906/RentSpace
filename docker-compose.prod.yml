@@ -1,0 +1,116 @@
+services:
+  # ===== PostgreSQL + PostGIS =====
+  postgres:
+    image: postgis/postgis:16-3.4
+    container_name: rentspace-postgres-prod
+    environment:
+      POSTGRES_DB: rentspace
+      POSTGRES_USER: ${DB_USERNAME:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    # Trong môi trường Production, không expose cổng DB ra ngoài để bảo mật
+    # Chỉ các service trong mạng nội bộ mới kết nối được
+    volumes:
+      - postgres_prod_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - rentspace-prod-network
+    restart: always
+
+  # ===== Redis =====
+  redis:
+    image: redis:7-alpine
+    container_name: rentspace-redis-prod
+    environment:
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+    command: /bin/sh -c 'if [ -n "$$REDIS_PASSWORD" ]; then redis-server --requirepass "$$REDIS_PASSWORD"; else redis-server; fi'
+    # Bảo mật: Không expose port Redis ra ngoài
+    volumes:
+      - redis_prod_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - rentspace-prod-network
+    restart: always
+
+  # ===== Backend (Spring Boot) =====
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: rentspace-backend-prod
+    environment:
+      SPRING_PROFILES_ACTIVE: prod  # Sử dụng prod profile
+      DB_URL: jdbc:postgresql://postgres:5432/rentspace
+      DB_USERNAME: ${DB_USERNAME:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
+      MAIL_USERNAME: ${MAIL_USERNAME}
+      MAIL_PASSWORD: ${MAIL_PASSWORD}
+      AWS_ACCESS_KEY: ${AWS_ACCESS_KEY}
+      AWS_SECRET_KEY: ${AWS_SECRET_KEY}
+      AWS_S3_BUCKET: ${AWS_S3_BUCKET}
+      AWS_REGION: ${AWS_REGION:-ap-southeast-1}
+      FRONTEND_URL: ${FRONTEND_URL}
+    # Chỉ giao tiếp thông qua Nginx Reverse Proxy ở port 8080 nội bộ
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - rentspace-prod-network
+    restart: always
+
+  # ===== Frontend (Next.js) =====
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: rentspace-frontend-prod
+    environment:
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL} # Sử dụng URL Production (ví dụ: https://rentspace.vn/api/v1)
+      NEXTAUTH_URL: ${NEXTAUTH_URL}
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+      NEXT_PUBLIC_MAPBOX_TOKEN: ${NEXT_PUBLIC_MAPBOX_TOKEN}
+    # Chỉ giao tiếp thông qua Nginx Reverse Proxy ở port 3000 nội bộ
+    depends_on:
+      - backend
+    networks:
+      - rentspace-prod-network
+    restart: always
+
+  # ===== Nginx Reverse Proxy =====
+  nginx:
+    image: nginx:alpine
+    container_name: rentspace-nginx-prod
+    ports:
+      - "80:80"
+      # - "443:443" # Bật khi cấu hình SSL/HTTPS thực tế
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - backend
+      - frontend
+    networks:
+      - rentspace-prod-network
+    restart: always
+
+volumes:
+  postgres_prod_data:
+  redis_prod_data:
+
+networks:
+  rentspace-prod-network:
+    driver: bridge

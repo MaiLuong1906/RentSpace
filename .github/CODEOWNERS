@@ -1,0 +1,30 @@
+# CODEOWNERS — RentSpace
+# Định nghĩa ai là người review bắt buộc cho từng phần của codebase.
+# Tài liệu: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+#
+# Format: <pattern> <@github-username hoặc @org/team>
+
+# ── Mặc định: Mọi file đều cần review ────────────────────────────
+*                                                    @MaiLuong1906
+
+# ── Backend (Spring Boot) ─────────────────────────────────────────
+/backend/                                            @MaiLuong1906
+
+# Security config — Cực kỳ nhạy cảm, cần review kỹ
+/backend/src/main/java/com/rentspace/security/       @MaiLuong1906
+/backend/src/main/java/com/rentspace/config/         @MaiLuong1906
+
+# Database migrations — Không thể rollback dễ dàng
+/backend/src/main/resources/db/migration/            @MaiLuong1906
+
+# ── Frontend (Next.js) ────────────────────────────────────────────
+/frontend/                                           @MaiLuong1906
+
+# ── Infrastructure & DevOps ───────────────────────────────────────
+/.github/                                            @MaiLuong1906
+/docker-compose*.yml                                 @MaiLuong1906
+/nginx/                                              @MaiLuong1906
+
+# ── AI Configuration ─────────────────────────────────────────────
+/GEMINI.md                                           @MaiLuong1906
+/.gemini/                                            @MaiLuong1906
