@@ -55,9 +55,13 @@ jobs:
           TRIVY_SKIP_DIRS: "frontend/node_modules,.git,backend/target"
 
       # --- Upload kết quả lên GitHub Security tab ---
+      # Lưu ý: Tính năng này yêu cầu GitHub Advanced Security
+      # (miễn phí với public repo, cần trả phí với private repo)
+      # continue-on-error: true để pipeline không crash trên Free plan
       - name: Upload Trivy SARIF to GitHub Security
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         if: always()  # Upload dù scan fail hay pass
+        continue-on-error: true  # Không fail job nếu repo private + Free plan
         with:
           sarif_file: "trivy-results.sarif"
           category: "trivy-fs-scan"
