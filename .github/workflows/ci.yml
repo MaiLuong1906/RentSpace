@@ -130,7 +130,7 @@ jobs:
 
       # Gộp compile + test + package vào 1 lệnh để tránh biên dịch 2 lần
       - name: Build, Test & Package
-        run: ./mvnw clean package -B
+        run: chmod +x ./mvnw && ./mvnw clean package -B
         working-directory: ./backend
         env:
           # Database — trỏ vào service container
