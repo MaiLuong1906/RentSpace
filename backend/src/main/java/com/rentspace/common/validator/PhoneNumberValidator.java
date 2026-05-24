@@ -7,8 +7,8 @@ import java.util.regex.Pattern;
 
 public class PhoneNumberValidator implements ConstraintValidator<ValidPhoneNumber, String> {
 
-    // Vietnamese phone number pattern: 10 digits, starts with 03|05|07|08|09
-    private static final Pattern PHONE_PATTERN = Pattern.compile("^(03|05|07|08|09)[0-9]{8}$");
+    // Vietnamese phone number pattern: supports local 0 and international +84 starting digits
+    private static final Pattern PHONE_PATTERN = Pattern.compile("^(\\+84|0)[3-9]\\d{8}$");
 
     @Override
     public boolean isValid(String phoneNumber, ConstraintValidatorContext context) {

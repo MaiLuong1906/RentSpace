@@ -1,5 +1,6 @@
 package com.rentspace.domain.auth.dto;
 
+import com.rentspace.common.validator.ValidPhoneNumber;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
@@ -21,6 +22,7 @@ public class RegisterRequest {
     @NotBlank(message = "Họ tên không được để trống")
     private String fullName;
 
+    @ValidPhoneNumber
     private String phoneNumber;
 
     @NotBlank(message = "Vai trò không được để trống")
