@@ -46,6 +46,42 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   ],
   callbacks: {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    async signIn({ user, account }: any) {
+      if (account?.provider === "google") {
+        try {
+          const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api/v1"}/auth/google`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              googleId: user.id,
+              email: user.email,
+              fullName: user.name,
+              avatarUrl: user.image,
+            }),
+          });
+
+          const data = await response.json();
+
+          if (data.success) {
+            // Lưu JWT và thông tin user từ Backend vào đối tượng user của NextAuth
+            user.id = data.data.user.id;
+            user.role = data.data.user.role;
+            user.fullName = data.data.user.fullName;
+            user.accessToken = data.data.accessToken;
+            user.refreshToken = data.data.refreshToken;
+            return true;
+          }
+          return false;
+        } catch (error) {
+          console.error("Exchange Google token error:", error);
+          return false;
+        }
+      }
+      return true;
+    },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     async jwt({ token, user }: { token: any; user?: any }) {
       if (user) {
         token.id = user.id;
