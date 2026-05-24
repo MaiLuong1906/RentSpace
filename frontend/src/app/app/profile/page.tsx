@@ -28,6 +28,12 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"profile" | "security" | "notifications">("profile");
 
+  // State chỉnh sửa hồ sơ
+  const [isEditing, setIsEditing] = useState(false);
+  const [fullName, setFullName] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   // Fetch dữ liệu profile trực tiếp từ Backend sử dụng accessToken của Session
   useEffect(() => {
     const fetchProfile = async () => {
@@ -52,6 +58,8 @@ export default function ProfilePage() {
 
         if (response.ok && result.success) {
           setProfile(result.data);
+          setFullName(result.data.fullName);
+          setPhoneNumber(result.data.phoneNumber || "");
         } else {
           toast.error(result.message || "Không thể tải thông tin hồ sơ!");
         }
@@ -78,6 +86,63 @@ export default function ProfilePage() {
       });
     } catch {
       return dateString;
+    }
+  };
+
+  // Hủy bỏ chỉnh sửa hồ sơ (Khôi phục thông tin cũ)
+  const handleCancelEdit = () => {
+    if (profile) {
+      setFullName(profile.fullName);
+      setPhoneNumber(profile.phoneNumber || "");
+    }
+    setIsEditing(false);
+  };
+
+  // Gửi yêu cầu cập nhật hồ sơ đến API PUT /api/v1/users/me
+  const handleUpdateProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!fullName.trim() || fullName.length < 2 || fullName.length > 100) {
+      toast.error("Họ tên phải từ 2 đến 100 ký tự!");
+      return;
+    }
+
+    const phoneRegex = /^(\+84|0)[3-9]\d{8}$/;
+    if (phoneNumber && !phoneRegex.test(phoneNumber)) {
+      toast.error("Số điện thoại không hợp lệ! (Ví dụ: 0987654321 hoặc +84987654321)");
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api/v1";
+      const response = await fetch(`${apiBaseUrl}/users/me`, {
+        method: "PUT",
+        headers: {
+          "Authorization": `Bearer ${session?.accessToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          fullName,
+          phoneNumber,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (response.ok && result.success) {
+        toast.success("Cập nhật thông tin cá nhân thành công!");
+        setProfile(result.data);
+        setIsEditing(false);
+      } else {
+        toast.error(result.message || "Không thể cập nhật thông tin!");
+      }
+    } catch (error) {
+      console.error("Update profile error:", error);
+      toast.error("Lỗi kết nối khi cập nhật hồ sơ!");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -314,7 +379,7 @@ export default function ProfilePage() {
             {/* Content Tabs */}
             <AnimatePresence mode="wait">
               {activeTab === "profile" && (
-                /* TAB 1: HIỂN THỊ THÔNG TIN CHI TIẾT */
+                /* TAB 1: HIỂN THỊ / CẬP NHẬT THÔNG TIN CHI TIẾT */
                 <motion.div
                   key="profile-tab"
                   initial={{ opacity: 0, x: -10 }}
@@ -323,54 +388,159 @@ export default function ProfilePage() {
                   transition={{ duration: 0.2 }}
                   className="space-y-6"
                 >
-                  <div className="flex justify-between items-center mb-4">
-                    <h3 className="text-lg font-bold text-gray-800">Chi tiết hồ sơ</h3>
-                    <button
-                      onClick={() => toast.info("Tính năng cập nhật hồ sơ sẽ sớm được triển khai ở bước tiếp theo!")}
-                      className="inline-flex items-center gap-1.5 text-xs font-bold text-blue-600 hover:bg-blue-50 px-3.5 py-2 rounded-xl border border-blue-100 transition-all active:scale-95"
-                    >
-                      <Edit2 className="h-3.5 w-3.5" />
-                      <span>Chỉnh sửa hồ sơ</span>
-                    </button>
-                  </div>
-
-                  <div className="grid sm:grid-cols-2 gap-6">
-                    {/* Họ và tên */}
-                    <div className="p-4 bg-gray-50/50 border border-gray-100 rounded-2xl">
-                      <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1.5">Họ và tên</label>
-                      <div className="flex items-center gap-2.5 text-gray-700 font-semibold text-sm">
-                        <User className="h-4.5 w-4.5 text-gray-400" />
-                        <span>{profile?.fullName}</span>
+                  {!isEditing ? (
+                    /* CHẾ ĐỘ HIỂN THỊ HỒ SƠ */
+                    <>
+                      <div className="flex justify-between items-center mb-4">
+                        <h3 className="text-lg font-bold text-gray-800">Chi tiết hồ sơ</h3>
+                        <button
+                          onClick={() => setIsEditing(true)}
+                          className="inline-flex items-center gap-1.5 text-xs font-bold text-blue-600 hover:bg-blue-50 px-3.5 py-2 rounded-xl border border-blue-100 transition-all active:scale-95"
+                        >
+                          <Edit2 className="h-3.5 w-3.5" />
+                          <span>Chỉnh sửa hồ sơ</span>
+                        </button>
                       </div>
-                    </div>
 
-                    {/* Email */}
-                    <div className="p-4 bg-gray-50/50 border border-gray-100 rounded-2xl">
-                      <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1.5">Email đăng nhập</label>
-                      <div className="flex items-center gap-2.5 text-gray-700 font-semibold text-sm break-all">
-                        <Mail className="h-4.5 w-4.5 text-gray-400" />
-                        <span>{profile?.email}</span>
-                      </div>
-                    </div>
+                      <div className="grid sm:grid-cols-2 gap-6">
+                        {/* Họ và tên */}
+                        <div className="p-4 bg-gray-50/50 border border-gray-100 rounded-2xl">
+                          <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1.5">Họ và tên</label>
+                          <div className="flex items-center gap-2.5 text-gray-700 font-semibold text-sm">
+                            <User className="h-4.5 w-4.5 text-gray-400" />
+                            <span>{profile?.fullName}</span>
+                          </div>
+                        </div>
 
-                    {/* Số điện thoại */}
-                    <div className="p-4 bg-gray-50/50 border border-gray-100 rounded-2xl">
-                      <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1.5">Số điện thoại</label>
-                      <div className="flex items-center gap-2.5 text-gray-700 font-semibold text-sm">
-                        <Phone className="h-4.5 w-4.5 text-gray-400" />
-                        <span>{profile?.phoneNumber || "Chưa thiết lập"}</span>
-                      </div>
-                    </div>
+                        {/* Email */}
+                        <div className="p-4 bg-gray-50/50 border border-gray-100 rounded-2xl">
+                          <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1.5">Email đăng nhập</label>
+                          <div className="flex items-center gap-2.5 text-gray-700 font-semibold text-sm break-all">
+                            <Mail className="h-4.5 w-4.5 text-gray-400" />
+                            <span>{profile?.email}</span>
+                          </div>
+                        </div>
 
-                    {/* Ngày tham gia */}
-                    <div className="p-4 bg-gray-50/50 border border-gray-100 rounded-2xl">
-                      <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1.5">Thành viên từ ngày</label>
-                      <div className="flex items-center gap-2.5 text-gray-700 font-semibold text-sm">
-                        <Calendar className="h-4.5 w-4.5 text-gray-400" />
-                        <span>{formatDate(profile?.createdAt)}</span>
+                        {/* Số điện thoại */}
+                        <div className="p-4 bg-gray-50/50 border border-gray-100 rounded-2xl">
+                          <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1.5">Số điện thoại</label>
+                          <div className="flex items-center gap-2.5 text-gray-700 font-semibold text-sm">
+                            <Phone className="h-4.5 w-4.5 text-gray-400" />
+                            <span>{profile?.phoneNumber || "Chưa thiết lập"}</span>
+                          </div>
+                        </div>
+
+                        {/* Ngày tham gia */}
+                        <div className="p-4 bg-gray-50/50 border border-gray-100 rounded-2xl">
+                          <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1.5">Thành viên từ ngày</label>
+                          <div className="flex items-center gap-2.5 text-gray-700 font-semibold text-sm">
+                            <Calendar className="h-4.5 w-4.5 text-gray-400" />
+                            <span>{formatDate(profile?.createdAt)}</span>
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  </div>
+                    </>
+                  ) : (
+                    /* CHẾ ĐỘ CHỈNH SỬA HỒ SƠ */
+                    <form onSubmit={handleUpdateProfile} className="space-y-6">
+                      <div className="flex justify-between items-center mb-4">
+                        <h3 className="text-lg font-bold text-gray-800">Chỉnh sửa thông tin</h3>
+                        <span className="text-xs font-medium text-gray-400">Đang chỉnh sửa...</span>
+                      </div>
+
+                      <div className="grid sm:grid-cols-2 gap-6">
+                        {/* Nhập Họ và tên */}
+                        <div className="p-4 bg-gray-50/50 border border-gray-100 rounded-2xl">
+                          <label htmlFor="editFullName" className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">
+                            Họ và tên
+                          </label>
+                          <div className="relative">
+                            <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4.5 w-4.5 text-gray-400" />
+                            <input
+                              type="text"
+                              id="editFullName"
+                              disabled={isSubmitting}
+                              value={fullName}
+                              onChange={(e) => setFullName(e.target.value)}
+                              className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all bg-white/50 text-gray-700 font-semibold text-sm disabled:opacity-50"
+                              placeholder="Họ và tên đầy đủ"
+                              required
+                            />
+                          </div>
+                        </div>
+
+                        {/* Email (Không cho sửa) */}
+                        <div className="p-4 bg-gray-100/50 border border-gray-100 rounded-2xl opacity-75">
+                          <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">
+                            Email đăng nhập (Không thể thay đổi)
+                          </label>
+                          <div className="flex items-center gap-2.5 text-gray-500 font-semibold text-sm break-all py-2">
+                            <Mail className="h-4.5 w-4.5 text-gray-400" />
+                            <span>{profile?.email}</span>
+                          </div>
+                        </div>
+
+                        {/* Nhập Số điện thoại */}
+                        <div className="p-4 bg-gray-50/50 border border-gray-100 rounded-2xl">
+                          <label htmlFor="editPhone" className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">
+                            Số điện thoại
+                          </label>
+                          <div className="relative">
+                            <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4.5 w-4.5 text-gray-400" />
+                            <input
+                              type="tel"
+                              id="editPhone"
+                              disabled={isSubmitting}
+                              value={phoneNumber}
+                              onChange={(e) => setPhoneNumber(e.target.value)}
+                              className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all bg-white/50 text-gray-700 font-semibold text-sm disabled:opacity-50"
+                              placeholder="Số điện thoại cá nhân"
+                            />
+                          </div>
+                        </div>
+
+                        {/* Ngày tham gia (Đọc duy nhất) */}
+                        <div className="p-4 bg-gray-100/50 border border-gray-100 rounded-2xl opacity-75">
+                          <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">
+                            Thành viên từ ngày
+                          </label>
+                          <div className="flex items-center gap-2.5 text-gray-500 font-semibold text-sm py-2">
+                            <Calendar className="h-4.5 w-4.5 text-gray-400" />
+                            <span>{formatDate(profile?.createdAt)}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Các nút bấm hành động */}
+                      <div className="flex gap-4 justify-end border-t border-gray-100 pt-6 mt-4">
+                        <button
+                          type="button"
+                          disabled={isSubmitting}
+                          onClick={handleCancelEdit}
+                          className="px-4 py-2.5 border border-gray-200 hover:bg-gray-50 text-gray-600 rounded-xl text-xs font-bold transition-all active:scale-95 disabled:opacity-50"
+                        >
+                          Hủy bỏ
+                        </button>
+                        <button
+                          type="submit"
+                          disabled={isSubmitting}
+                          className="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl text-xs font-bold shadow-md shadow-blue-500/10 hover:shadow-lg active:scale-95 transition-all flex items-center gap-1.5 disabled:opacity-50"
+                        >
+                          {isSubmitting ? (
+                            <>
+                              <svg className="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                              </svg>
+                              <span>Đang lưu...</span>
+                            </>
+                          ) : (
+                            <span>Lưu thay đổi</span>
+                          )}
+                        </button>
+                      </div>
+                    </form>
+                  )}
                 </motion.div>
               )}
 
