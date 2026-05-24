@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useSession } from "next-auth/react";
-import { User, Mail, Phone, Calendar, Shield, ShieldCheck, ShieldAlert, ShieldEllipsis, ShieldX, KeyRound, Bell, Edit2, Camera } from "lucide-react";
+import { useSession, signOut } from "next-auth/react";
+import { User, Mail, Phone, Calendar, Shield, ShieldCheck, ShieldAlert, ShieldEllipsis, ShieldX, KeyRound, Bell, Edit2, Camera, Lock, Eye, EyeOff } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 
@@ -33,6 +33,133 @@ export default function ProfilePage() {
   const [fullName, setFullName] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // State upload avatar
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+
+  const handleAvatarClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Kích thước ảnh không được vượt quá 5MB!");
+      return;
+    }
+
+    if (!file.type.startsWith("image/")) {
+      toast.error("Chỉ chấp nhận file ảnh (PNG, JPG, WEBP)!");
+      return;
+    }
+
+    setUploadingAvatar(true);
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api/v1";
+      const response = await fetch(`${apiBaseUrl}/users/me/avatar`, {
+        method: "PATCH",
+        headers: {
+          "Authorization": `Bearer ${session?.accessToken}`,
+        },
+        body: formData,
+      });
+
+      const result = await response.json();
+
+      if (response.ok && result.success) {
+        toast.success("Cập nhật ảnh đại diện thành công!");
+        setProfile(result.data);
+      } else {
+        toast.error(result.message || "Không thể tải lên ảnh đại diện!");
+      }
+    } catch (error) {
+      console.error("Upload avatar error:", error);
+      toast.error("Lỗi kết nối khi tải lên ảnh đại diện!");
+    } finally {
+      setUploadingAvatar(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
+  };
+
+  // State đổi mật khẩu chủ động
+  const [oldPassword, setOldPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showOldPassword, setShowOldPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const [isSecurityFormOpen, setIsSecurityFormOpen] = useState(false);
+
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!oldPassword) {
+      toast.error("Vui lòng nhập mật khẩu hiện tại!");
+      return;
+    }
+
+    if (newPassword.length < 8) {
+      toast.error("Mật khẩu mới phải có ít nhất 8 ký tự!");
+      return;
+    }
+
+    if (newPassword === oldPassword) {
+      toast.error("Mật khẩu mới không được trùng với mật khẩu hiện tại!");
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      toast.error("Xác nhận mật khẩu mới không trùng khớp!");
+      return;
+    }
+
+    setIsChangingPassword(true);
+
+    try {
+      const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api/v1";
+      const response = await fetch(`${apiBaseUrl}/auth/change-password`, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${session?.accessToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          oldPassword,
+          newPassword,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (response.ok && result.success) {
+        toast.success("Thay đổi mật khẩu thành công! Vui lòng đăng nhập lại.");
+        setOldPassword("");
+        setNewPassword("");
+        setConfirmPassword("");
+        setIsSecurityFormOpen(false);
+        
+        setTimeout(() => {
+          signOut({ callbackUrl: "/auth/login" });
+        }, 1500);
+      } else {
+        toast.error(result.message || "Không thể thay đổi mật khẩu!");
+      }
+    } catch (error) {
+      console.error("Change password error:", error);
+      toast.error("Lỗi kết nối khi thay đổi mật khẩu!");
+    } finally {
+      setIsChangingPassword(false);
+    }
+  };
 
   // Fetch dữ liệu profile trực tiếp từ Backend sử dụng accessToken của Session
   useEffect(() => {
@@ -284,23 +411,41 @@ export default function ProfilePage() {
           >
             {/* Vòng tròn Avatar với hover trigger */}
             <div className="relative group mb-6">
-              <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-blue-50/50 shadow-inner bg-gray-100 flex items-center justify-center">
+              <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-blue-50/50 shadow-inner bg-gray-100 flex items-center justify-center relative">
                 {profile?.avatarUrl ? (
                   <img
                     src={profile.avatarUrl}
                     alt={profile.fullName}
-                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                    className={`w-full h-full object-cover transition-transform duration-300 group-hover:scale-110 ${uploadingAvatar ? "blur-[2px]" : ""}`}
                   />
                 ) : (
                   <User className="h-16 w-16 text-gray-300" />
                 )}
+
+                {/* Hiệu ứng loading quay vòng khi đang upload */}
+                {uploadingAvatar && (
+                  <div className="absolute inset-0 bg-black/40 backdrop-blur-[1px] flex items-center justify-center">
+                    <div className="h-8 w-8 border-3 border-white border-t-transparent animate-spin rounded-full" />
+                  </div>
+                )}
               </div>
               <button
-                className="absolute bottom-0 right-0 p-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg border border-white transition-all scale-95 group-hover:scale-105 active:scale-95"
+                onClick={handleAvatarClick}
+                disabled={uploadingAvatar}
+                className="absolute bottom-0 right-0 p-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white rounded-full shadow-lg border border-white transition-all scale-95 group-hover:scale-105 active:scale-95 flex items-center justify-center"
                 title="Thay đổi ảnh đại diện"
               >
                 <Camera className="h-4 w-4" />
               </button>
+
+              {/* Ô input chọn file ẩn */}
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleAvatarChange}
+                accept="image/*"
+                className="hidden"
+              />
             </div>
 
             {/* Thông tin Cơ bản */}
@@ -545,7 +690,7 @@ export default function ProfilePage() {
               )}
 
               {activeTab === "security" && (
-                /* TAB 2: CÀI ĐẶT BẢO MẬT (MOCK UI CHỜ TÍCH HỢP) */
+                /* TAB 2: CÀI ĐẶT BẢO MẬT */
                 <motion.div
                   key="security-tab"
                   initial={{ opacity: 0, x: -10 }}
@@ -554,21 +699,172 @@ export default function ProfilePage() {
                   transition={{ duration: 0.2 }}
                   className="space-y-6"
                 >
-                  <h3 className="text-lg font-bold text-gray-800">Cài đặt bảo mật</h3>
-                  <div className="p-6 bg-gray-50/50 border border-gray-100 rounded-2xl space-y-4">
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <h4 className="text-sm font-bold text-gray-700">Đổi mật khẩu chủ động</h4>
-                        <p className="text-xs text-gray-500 mt-0.5">Thay đổi mật khẩu đăng nhập định kỳ để tăng mức an toàn tài khoản.</p>
-                      </div>
-                      <button
-                        onClick={() => toast.info("Tính năng Đổi mật khẩu chủ động sẽ được kích hoạt ở bước tiếp theo!")}
-                        className="px-4 py-2 bg-gray-900 hover:bg-gray-800 text-white rounded-xl text-xs font-bold transition-all active:scale-95"
-                      >
-                        Đổi mật khẩu
-                      </button>
-                    </div>
+                  <div className="flex justify-between items-center">
+                    <h3 className="text-lg font-bold text-gray-800">Cài đặt bảo mật</h3>
+                    {isSecurityFormOpen && (
+                      <span className="text-xs font-medium text-gray-400">Đang thay đổi mật khẩu...</span>
+                    )}
                   </div>
+
+                  {!isSecurityFormOpen ? (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="p-6 bg-gray-50/50 border border-gray-100 rounded-2xl space-y-4"
+                    >
+                      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+                        <div>
+                          <h4 className="text-sm font-bold text-gray-700 flex items-center gap-2">
+                            <KeyRound className="h-4.5 w-4.5 text-blue-600" />
+                            <span>Đổi mật khẩu chủ động</span>
+                          </h4>
+                          <p className="text-xs text-gray-500 mt-1">
+                            Thay đổi mật khẩu đăng nhập định kỳ để tăng mức an toàn cho tài khoản.
+                          </p>
+                        </div>
+                        <button
+                          onClick={() => setIsSecurityFormOpen(true)}
+                          className="px-4 py-2.5 bg-gray-900 hover:bg-gray-800 text-white rounded-xl text-xs font-bold transition-all active:scale-95 whitespace-nowrap"
+                        >
+                          Đổi mật khẩu
+                        </button>
+                      </div>
+                    </motion.div>
+                  ) : (
+                    <motion.form
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      onSubmit={handleChangePassword}
+                      className="space-y-5"
+                    >
+                      <div className="grid sm:grid-cols-2 gap-5">
+                        {/* Mật khẩu hiện tại */}
+                        <div className="p-4 bg-gray-50/50 border border-gray-100 rounded-2xl">
+                          <label htmlFor="oldPass" className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">
+                            Mật khẩu hiện tại
+                          </label>
+                          <div className="relative">
+                            <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 h-4.5 w-4.5 text-gray-400" />
+                            <input
+                              type={showOldPassword ? "text" : "password"}
+                              id="oldPass"
+                              disabled={isChangingPassword}
+                              value={oldPassword}
+                              onChange={(e) => setOldPassword(e.target.value)}
+                              className="w-full pl-10 pr-10 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all bg-white/50 text-gray-700 font-semibold text-sm disabled:opacity-50"
+                              placeholder="••••••••"
+                              required
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setShowOldPassword(!showOldPassword)}
+                              tabIndex={-1}
+                              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                            >
+                              {showOldPassword ? <EyeOff className="h-4.5 w-4.5" /> : <Eye className="h-4.5 w-4.5" />}
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Mẹo an toàn */}
+                        <div className="p-4 bg-blue-50/20 border border-blue-50/50 rounded-2xl flex items-center">
+                          <div className="text-xs text-blue-600/80 font-semibold leading-relaxed">
+                            💡 Mẹo an toàn: Mật khẩu mạnh nên chứa ít nhất 8 ký tự, bao gồm cả chữ hoa, chữ thường và chữ số để có độ an toàn tốt nhất.
+                          </div>
+                        </div>
+
+                        {/* Mật khẩu mới */}
+                        <div className="p-4 bg-gray-50/50 border border-gray-100 rounded-2xl">
+                          <label htmlFor="newPass" className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">
+                            Mật khẩu mới
+                          </label>
+                          <div className="relative">
+                            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4.5 w-4.5 text-gray-400" />
+                            <input
+                              type={showNewPassword ? "text" : "password"}
+                              id="newPass"
+                              disabled={isChangingPassword}
+                              value={newPassword}
+                              onChange={(e) => setNewPassword(e.target.value)}
+                              className="w-full pl-10 pr-10 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all bg-white/50 text-gray-700 font-semibold text-sm disabled:opacity-50"
+                              placeholder="••••••••"
+                              required
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setShowNewPassword(!showNewPassword)}
+                              tabIndex={-1}
+                              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                            >
+                              {showNewPassword ? <EyeOff className="h-4.5 w-4.5" /> : <Eye className="h-4.5 w-4.5" />}
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Xác nhận mật khẩu mới */}
+                        <div className="p-4 bg-gray-50/50 border border-gray-100 rounded-2xl">
+                          <label htmlFor="confirmPass" className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">
+                            Xác nhận mật khẩu mới
+                          </label>
+                          <div className="relative">
+                            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4.5 w-4.5 text-gray-400" />
+                            <input
+                              type={showConfirmPassword ? "text" : "password"}
+                              id="confirmPass"
+                              disabled={isChangingPassword}
+                              value={confirmPassword}
+                              onChange={(e) => setConfirmPassword(e.target.value)}
+                              className="w-full pl-10 pr-10 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all bg-white/50 text-gray-700 font-semibold text-sm disabled:opacity-50"
+                              placeholder="••••••••"
+                              required
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                              tabIndex={-1}
+                              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                            >
+                              {showConfirmPassword ? <EyeOff className="h-4.5 w-4.5" /> : <Eye className="h-4.5 w-4.5" />}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Các nút bấm hành động */}
+                      <div className="flex gap-4 justify-end border-t border-gray-100 pt-6 mt-4">
+                        <button
+                          type="button"
+                          disabled={isChangingPassword}
+                          onClick={() => {
+                            setOldPassword("");
+                            setNewPassword("");
+                            setConfirmPassword("");
+                            setIsSecurityFormOpen(false);
+                          }}
+                          className="px-4 py-2.5 border border-gray-200 hover:bg-gray-50 text-gray-600 rounded-xl text-xs font-bold transition-all active:scale-95 disabled:opacity-50"
+                        >
+                          Hủy bỏ
+                        </button>
+                        <button
+                          type="submit"
+                          disabled={isChangingPassword}
+                          className="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl text-xs font-bold shadow-md shadow-blue-500/10 hover:shadow-lg active:scale-95 transition-all flex items-center gap-1.5 disabled:opacity-50"
+                        >
+                          {isChangingPassword ? (
+                            <>
+                              <svg className="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                              </svg>
+                              <span>Đang cập nhật...</span>
+                            </>
+                          ) : (
+                            <span>Cập nhật mật khẩu</span>
+                          )}
+                        </button>
+                      </div>
+                    </motion.form>
+                  )}
                 </motion.div>
               )}
 
