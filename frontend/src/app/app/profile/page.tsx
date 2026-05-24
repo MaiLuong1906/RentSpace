@@ -492,7 +492,7 @@ export default function ProfilePage() {
                               id="editPhone"
                               disabled={isSubmitting}
                               value={phoneNumber}
-                              onChange={(e) => setPhoneNumber(e.target.value)}
+                              onChange={(e) => setPhoneNumber(e.target.value.replace(/(?!^\+)[^\d]/g, ""))}
                               className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all bg-white/50 text-gray-700 font-semibold text-sm disabled:opacity-50"
                               placeholder="Số điện thoại cá nhân"
                             />
