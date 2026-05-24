@@ -72,10 +72,11 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<RegisterResponse> register(@Valid @RequestBody RegisterRequest request) {
+    public ResponseEntity<ApiResponse<RegisterResponse>> register(@Valid @RequestBody RegisterRequest request) {
         authService.register(request);
+        RegisterResponse response = new RegisterResponse("Vui lòng kiểm tra email để xác minh tài khoản");
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(new RegisterResponse("Vui lòng kiểm tra email để xác minh tài khoản"));
+                .body(ApiResponse.success(response));
     }
 
     @PostMapping("/verify-otp")
