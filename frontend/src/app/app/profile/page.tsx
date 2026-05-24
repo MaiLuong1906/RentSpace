@@ -264,7 +264,18 @@ export default function ProfilePage() {
             className="md:col-span-2 bg-white border border-gray-100 shadow-xl shadow-gray-200/10 rounded-3xl p-8"
           >
             {/* Header Tabs */}
-            <div className="flex border-b border-gray-100 pb-4 mb-8 overflow-x-auto gap-2">
+            <div 
+              className="flex border-b border-gray-100 pb-4 mb-8 overflow-x-auto gap-2 no-scrollbar"
+              style={{
+                scrollbarWidth: "none",
+                msOverflowStyle: "none",
+              }}
+            >
+              <style>{`
+                .no-scrollbar::-webkit-scrollbar {
+                  display: none;
+                }
+              `}</style>
               <button
                 onClick={() => setActiveTab("profile")}
                 className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all whitespace-nowrap ${
