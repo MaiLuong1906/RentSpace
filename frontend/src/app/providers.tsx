@@ -24,7 +24,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
     <SessionProvider>
       <QueryClientProvider client={queryClient}>
         <AntdRegistry>{children}</AntdRegistry>
-        <Toaster richColors position="top-right" />
+        <Toaster richColors position="top-right" closeButton />
       </QueryClientProvider>
     </SessionProvider>
   );
