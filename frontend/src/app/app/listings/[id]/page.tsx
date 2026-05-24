@@ -250,14 +250,19 @@ export default function ListingDetailPage() {
           <div className="space-y-6">
             {/* Landlord Info Card */}
             <div className="bg-white rounded-xl shadow-md p-6 sticky top-20">
-              <div className="flex items-center gap-4 mb-6">
+              <Link 
+                href={`/app/profile/${listing.landlordId}`}
+                className="flex items-center gap-4 mb-6 group hover:opacity-95 transition-all cursor-pointer"
+              >
                 <img
                   src={listing.landlordAvatar}
                   alt={listing.landlordName}
-                  className="w-16 h-16 rounded-full"
+                  className="w-16 h-16 rounded-full border border-gray-100 shadow-sm"
                 />
                 <div>
-                  <div className="font-semibold text-lg">{listing.landlordName}</div>
+                  <div className="font-semibold text-lg group-hover:text-blue-600 transition-colors">
+                    {listing.landlordName}
+                  </div>
                   <div className="text-sm text-gray-600">Chủ trọ</div>
                   {listing.landlordVerified && (
                     <div className="flex items-center gap-1 text-green-600 text-sm mt-1">
@@ -266,7 +271,7 @@ export default function ListingDetailPage() {
                     </div>
                   )}
                 </div>
-              </div>
+              </Link>
 
               <div className="space-y-3">
                 <button
