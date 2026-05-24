@@ -5,6 +5,8 @@ import { SessionProvider } from "next-auth/react";
 import { AntdRegistry } from "@ant-design/nextjs-registry";
 import { useState } from "react";
 
+import { Toaster } from "sonner";
+
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(
     () =>
@@ -22,6 +24,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
     <SessionProvider>
       <QueryClientProvider client={queryClient}>
         <AntdRegistry>{children}</AntdRegistry>
+        <Toaster richColors position="top-right" />
       </QueryClientProvider>
     </SessionProvider>
   );
