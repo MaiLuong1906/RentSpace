@@ -200,7 +200,7 @@ export default function ProfilePage() {
   // ===== GIAO DIỆN HIỂN THỊ THẬT SỰ =====
   return (
     <div className="min-h-screen bg-gray-50/50 py-10 px-4">
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-5xl mx-auto">
         <motion.h1
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
@@ -265,7 +265,7 @@ export default function ProfilePage() {
           >
             {/* Header Tabs */}
             <div 
-              className="flex border-b border-gray-100 pb-4 mb-8 overflow-x-auto gap-2 no-scrollbar"
+              className="flex md:grid md:grid-cols-3 w-full border-b border-gray-100 pb-4 mb-8 overflow-x-auto md:overflow-visible gap-2 no-scrollbar"
               style={{
                 scrollbarWidth: "none",
                 msOverflowStyle: "none",
@@ -278,7 +278,7 @@ export default function ProfilePage() {
               `}</style>
               <button
                 onClick={() => setActiveTab("profile")}
-                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all whitespace-nowrap ${
+                className={`flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-xs md:text-sm font-bold transition-all whitespace-nowrap ${
                   activeTab === "profile"
                     ? "bg-blue-50 text-blue-600"
                     : "text-gray-500 hover:bg-gray-50"
@@ -289,7 +289,7 @@ export default function ProfilePage() {
               </button>
               <button
                 onClick={() => setActiveTab("security")}
-                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all whitespace-nowrap ${
+                className={`flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-xs md:text-sm font-bold transition-all whitespace-nowrap ${
                   activeTab === "security"
                     ? "bg-blue-50 text-blue-600"
                     : "text-gray-500 hover:bg-gray-50"
@@ -300,7 +300,7 @@ export default function ProfilePage() {
               </button>
               <button
                 onClick={() => setActiveTab("notifications")}
-                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all whitespace-nowrap ${
+                className={`flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-xs md:text-sm font-bold transition-all whitespace-nowrap ${
                   activeTab === "notifications"
                     ? "bg-blue-50 text-blue-600"
                     : "text-gray-500 hover:bg-gray-50"
