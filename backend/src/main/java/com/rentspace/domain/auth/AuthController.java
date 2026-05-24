@@ -3,6 +3,7 @@ package com.rentspace.domain.auth;
 import com.rentspace.common.response.ApiResponse;
 import com.rentspace.domain.auth.dto.RegisterRequest;
 import com.rentspace.domain.auth.dto.LoginRequest;
+import com.rentspace.domain.auth.dto.GoogleLoginRequest;
 import com.rentspace.domain.auth.dto.AuthResponse;
 import com.rentspace.domain.auth.dto.RefreshTokenRequest;
 import com.rentspace.domain.auth.dto.ForgotPasswordRequest;
@@ -27,6 +28,12 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<AuthResponse>> login(@Valid @RequestBody LoginRequest request) {
         AuthResponse response = authService.login(request);
+        return ResponseEntity.ok(ApiResponse.success(response));
+    }
+
+    @PostMapping("/google")
+    public ResponseEntity<ApiResponse<AuthResponse>> googleLogin(@Valid @RequestBody GoogleLoginRequest request) {
+        AuthResponse response = authService.googleLogin(request);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
