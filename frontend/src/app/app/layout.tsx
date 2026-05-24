@@ -33,6 +33,24 @@ export default function DashboardLayout({
 
   const isActive = (path: string) => pathname?.startsWith(path);
 
+  const handleLogout = async () => {
+    try {
+      const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api/v1";
+      if (session?.accessToken) {
+        await fetch(`${apiBaseUrl}/auth/logout`, {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${session.accessToken}`,
+          },
+        });
+      }
+    } catch (error) {
+      console.error("Logout API error:", error);
+    } finally {
+      signOut({ callbackUrl: "/auth/login" });
+    }
+  };
+
   const navItems = [
     { path: "/app", icon: Home, label: "Trang chủ", roles: ["tenant", "landlord", "admin"], exact: true },
     { path: "/app/search", icon: Search, label: "Tìm phòng", roles: ["tenant", "landlord", "admin"], exact: false },
@@ -138,7 +156,7 @@ export default function DashboardLayout({
                       <span>Hồ sơ</span>
                     </Link>
                     <button
-                      onClick={() => signOut({ callbackUrl: "/auth/login" })}
+                      onClick={handleLogout}
                       className="flex items-center gap-2 px-3.5 py-2 rounded-xl hover:bg-gray-50 text-red-600 font-bold text-sm transition-all active:scale-95"
                     >
                       <LogOut className="h-4.5 w-4.5" />
@@ -258,7 +276,7 @@ export default function DashboardLayout({
                   <button
                     onClick={() => {
                       setIsMobileMenuOpen(false);
-                      signOut({ callbackUrl: "/auth/login" });
+                      handleLogout();
                     }}
                     className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-600 hover:bg-gray-50 font-semibold text-sm transition-all text-left"
                   >

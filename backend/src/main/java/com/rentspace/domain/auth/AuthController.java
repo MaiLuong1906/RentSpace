@@ -71,6 +71,17 @@ public class AuthController {
         return ResponseEntity.ok(ApiResponse.success("Chủ động đổi mật khẩu thành công. Vui lòng đăng nhập lại trên các thiết bị."));
     }
 
+    @PostMapping("/logout")
+    public ResponseEntity<ApiResponse<String>> logout(
+            @org.springframework.security.core.annotation.AuthenticationPrincipal org.springframework.security.core.userdetails.UserDetails userDetails) {
+        if (userDetails == null) {
+            return org.springframework.http.ResponseEntity.status(org.springframework.http.HttpStatus.UNAUTHORIZED)
+                    .body(ApiResponse.error("Vui lòng đăng nhập để sử dụng tính năng này."));
+        }
+        authService.logout(userDetails.getUsername());
+        return ResponseEntity.ok(ApiResponse.success("Đăng xuất thành công"));
+    }
+
     @PostMapping("/register")
     public ResponseEntity<ApiResponse<RegisterResponse>> register(@Valid @RequestBody RegisterRequest request) {
         authService.register(request);
