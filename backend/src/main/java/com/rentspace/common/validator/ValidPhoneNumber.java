@@ -10,7 +10,7 @@ import java.lang.annotation.*;
 @Target({ElementType.METHOD, ElementType.FIELD})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface ValidPhoneNumber {
-    String message() default "Số điện thoại không hợp lệ (phải là số điện thoại Việt Nam 10 chữ số)";
+    String message() default "Số điện thoại không hợp lệ";
     Class<?>[] groups() default {};
     Class<? extends Payload>[] payload() default {};
 }

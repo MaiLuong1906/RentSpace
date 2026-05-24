@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { useSession, signOut } from "next-auth/react";
 import {
   Home,
   Search,
@@ -22,17 +23,15 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const { data: session, status } = useSession();
+  const rawRole = session?.user?.role;
+  const userRole = (rawRole?.toLowerCase() || "tenant") as "tenant" | "landlord" | "admin";
+
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  // Temporary hardcoded role for UI migration
-  const [userRole, setUserRole] = useState<"tenant" | "landlord" | "admin">("tenant");
   const pathname = usePathname();
   const router = useRouter();
 
   const isActive = (path: string) => pathname?.startsWith(path);
-
-  const handleLogout = () => {
-    router.push("/auth/login");
-  };
 
   const navItems = [
     { path: "/app", icon: Home, label: "Trang chủ", roles: ["tenant", "landlord", "admin"], exact: true },
@@ -129,20 +128,41 @@ export default function DashboardLayout({
             <div className="flex items-center gap-4">
               {/* User Menu */}
               <div className="hidden md:flex items-center gap-3">
-                <Link
-                  href="/app/profile"
-                  className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-50"
-                >
-                  <User className="h-5 w-5" />
-                  <span>Hồ sơ</span>
-                </Link>
-                <button
-                  onClick={handleLogout}
-                  className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-50 text-red-600"
-                >
-                  <LogOut className="h-5 w-5" />
-                  <span>Đăng xuất</span>
-                </button>
+                {status === "authenticated" ? (
+                  <>
+                    <Link
+                      href="/app/profile"
+                      className="flex items-center gap-2 px-3.5 py-2 rounded-xl hover:bg-gray-50 text-gray-700 font-bold text-sm transition-all"
+                    >
+                      <User className="h-4.5 w-4.5 text-gray-500" />
+                      <span>Hồ sơ</span>
+                    </Link>
+                    <button
+                      onClick={() => signOut({ callbackUrl: "/auth/login" })}
+                      className="flex items-center gap-2 px-3.5 py-2 rounded-xl hover:bg-gray-50 text-red-600 font-bold text-sm transition-all active:scale-95"
+                    >
+                      <LogOut className="h-4.5 w-4.5" />
+                      <span>Đăng xuất</span>
+                    </button>
+                  </>
+                ) : status === "unauthenticated" ? (
+                  <>
+                    <Link
+                      href="/auth/login"
+                      className="px-4 py-2 rounded-xl text-sm font-bold text-gray-600 hover:bg-gray-50 transition-all"
+                    >
+                      Đăng nhập
+                    </Link>
+                    <Link
+                      href="/auth/register"
+                      className="px-4 py-2 rounded-xl text-sm font-bold bg-blue-600 text-white hover:bg-blue-700 transition-all shadow-md shadow-blue-500/10 active:scale-95"
+                    >
+                      Đăng ký
+                    </Link>
+                  </>
+                ) : (
+                  <div className="h-8 w-24 bg-gray-100 animate-pulse rounded-xl" />
+                )}
               </div>
 
               {/* Mobile menu button */}
@@ -225,24 +245,45 @@ export default function DashboardLayout({
               )}
 
               <div className="h-px bg-gray-200 my-2" />
-              <Link
-                href="/app/profile"
-                onClick={() => setIsMobileMenuOpen(false)}
-                className="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-700 hover:bg-gray-50"
-              >
-                <User className="h-5 w-5" />
-                <span>Hồ sơ</span>
-              </Link>
-              <button
-                onClick={() => {
-                  setIsMobileMenuOpen(false);
-                  handleLogout();
-                }}
-                className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-red-600 hover:bg-gray-50"
-              >
-                <LogOut className="h-5 w-5" />
-                <span>Đăng xuất</span>
-              </button>
+              {status === "authenticated" ? (
+                <>
+                  <Link
+                    href="/app/profile"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-700 hover:bg-gray-50 font-semibold text-sm transition-all"
+                  >
+                    <User className="h-5 w-5 text-gray-500" />
+                    <span>Hồ sơ</span>
+                  </Link>
+                  <button
+                    onClick={() => {
+                      setIsMobileMenuOpen(false);
+                      signOut({ callbackUrl: "/auth/login" });
+                    }}
+                    className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-600 hover:bg-gray-50 font-semibold text-sm transition-all text-left"
+                  >
+                    <LogOut className="h-5 w-5" />
+                    <span>Đăng xuất</span>
+                  </button>
+                </>
+              ) : status === "unauthenticated" ? (
+                <div className="grid grid-cols-2 gap-3 px-4 py-2">
+                  <Link
+                    href="/auth/login"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="flex justify-center items-center py-2.5 rounded-xl text-sm font-bold text-gray-700 border border-gray-200 hover:bg-gray-50 transition-all"
+                  >
+                    Đăng nhập
+                  </Link>
+                  <Link
+                    href="/auth/register"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="flex justify-center items-center py-2.5 rounded-xl text-sm font-bold bg-blue-600 text-white hover:bg-blue-700 transition-all shadow-md shadow-blue-500/10 active:scale-95"
+                  >
+                    Đăng ký
+                  </Link>
+                </div>
+              ) : null}
             </nav>
           </div>
         )}
