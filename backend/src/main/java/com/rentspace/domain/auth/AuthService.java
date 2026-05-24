@@ -3,6 +3,7 @@ package com.rentspace.domain.auth;
 import com.rentspace.common.exception.BusinessException;
 import com.rentspace.domain.auth.dto.RegisterRequest;
 import com.rentspace.domain.auth.dto.VerifyOtpRequest;
+import com.rentspace.domain.auth.dto.GoogleLoginRequest;
 import com.rentspace.domain.user.User;
 import com.rentspace.domain.user.UserRepository;
 import com.rentspace.domain.user.enums.Role;
@@ -124,6 +125,61 @@ public class AuthService {
         );
 
         log.info("Đăng nhập thành công: email={}", user.getEmail());
+
+        // 6. Trả về Response
+        return com.rentspace.domain.auth.dto.AuthResponse.builder()
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .user(com.rentspace.domain.auth.dto.AuthResponse.UserSummary.from(user))
+                .build();
+    }
+
+    @Transactional
+    public com.rentspace.domain.auth.dto.AuthResponse googleLogin(GoogleLoginRequest request) {
+        // 1. Tìm user theo googleId
+        User user = userRepository.findByGoogleId(request.getGoogleId())
+                .orElseGet(() -> {
+                    // 2. Nếu không tìm thấy googleId, check theo email
+                    return userRepository.findByEmail(request.getEmail())
+                            .map(existingUser -> {
+                                // Liên kết tài khoản Google ID mới vào tài khoản sẵn có
+                                existingUser.setGoogleId(request.getGoogleId());
+                                if (request.getAvatarUrl() != null && existingUser.getAvatarUrl() == null) {
+                                    existingUser.setAvatarUrl(request.getAvatarUrl());
+                                }
+                                return userRepository.save(existingUser);
+                            })
+                            .orElseGet(() -> {
+                                // 3. Nếu chưa có tài khoản nào trùng email -> Đăng ký mới tự động
+                                String randomPassword = java.util.UUID.randomUUID().toString();
+                                User newUser = User.builder()
+                                        .email(request.getEmail())
+                                        .password(passwordEncoder.encode(randomPassword))
+                                        .fullName(request.getFullName())
+                                        .avatarUrl(request.getAvatarUrl())
+                                        .googleId(request.getGoogleId())
+                                        .role(Role.TENANT) // Mặc định là TENANT
+                                        .isActive(true) // Tài khoản xác thực qua Google được kích hoạt ngay
+                                        .isEmailVerified(true) // Email đã được xác thực qua Google
+                                        .build();
+                                return userRepository.save(newUser);
+                            });
+                });
+
+        // 4. Sinh cặp JWT Token mới
+        com.rentspace.domain.user.CustomUserDetails userDetails = new com.rentspace.domain.user.CustomUserDetails(user);
+        String accessToken = jwtTokenProvider.generateAccessToken(userDetails);
+        String refreshToken = jwtTokenProvider.generateRefreshToken(userDetails);
+
+        // 5. Lưu Refresh Token vào Redis (7 ngày)
+        redisTemplate.opsForValue().set(
+                "RT:" + user.getEmail(),
+                refreshToken,
+                7,
+                TimeUnit.DAYS
+        );
+
+        log.info("Đăng nhập Google thành công: email={}, googleId={}", user.getEmail(), user.getGoogleId());
 
         // 6. Trả về Response
         return com.rentspace.domain.auth.dto.AuthResponse.builder()
