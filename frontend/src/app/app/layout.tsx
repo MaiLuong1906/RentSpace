@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import {
   Home,
@@ -29,11 +29,10 @@ export default function DashboardLayout({
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const pathname = usePathname();
-  const router = useRouter();
 
   // Tự động đăng xuất nếu Refresh Token hết hạn hoặc không hợp lệ (Silent Session Expiration)
   useEffect(() => {
-    if ((session as any)?.error === "RefreshAccessTokenError") {
+    if ((session as { error?: string })?.error === "RefreshAccessTokenError") {
       signOut({ callbackUrl: "/auth/login" });
     }
   }, [session]);

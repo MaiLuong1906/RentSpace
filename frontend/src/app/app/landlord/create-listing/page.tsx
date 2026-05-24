@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Upload, X, Plus } from "lucide-react";
+import { Upload, X } from "lucide-react";
 
 export default function CreateListingPage() {
   const router = useRouter();

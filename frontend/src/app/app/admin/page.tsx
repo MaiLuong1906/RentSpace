@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Users, Home, Shield, Flag, TrendingUp, Clock } from "lucide-react";
+import { Users, Home, Shield, Flag, Clock } from "lucide-react";
 
 export default function AdminDashboard() {
   return (

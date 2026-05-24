@@ -9,7 +9,6 @@ import {
   Star,
   Map,
   List,
-  X,
 } from "lucide-react";
 import { mockListings, formatPrice, getRoomTypeLabel } from "@/lib/mockData";
 
