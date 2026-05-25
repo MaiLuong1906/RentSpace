@@ -15,7 +15,8 @@ interface UserProfile {
   phoneNumber: string;
   avatarUrl: string | null;
   role: "TENANT" | "LANDLORD" | "ADMIN";
-  kycStatus: "UNVERIFIED" | "PENDING" | "APPROVED" | "REJECTED";
+  kycStatus: "PENDING" | "SUBMITTED" | "VERIFIED" | "REJECTED";
+  cccdImageUrl?: string | null;
   isEmailVerified: boolean;
   createdAt: string;
 }
@@ -25,7 +26,7 @@ export default function ProfilePage() {
   const { data: session, status } = useSession();
   
   const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<"profile" | "security" | "notifications">("profile");
 
   // State chỉnh sửa hồ sơ
@@ -162,6 +163,8 @@ export default function ProfilePage() {
   };
 
   // Fetch dữ liệu profile trực tiếp từ Backend sử dụng accessToken của Session
+  const profileFetchedRef = useRef(false);
+
   useEffect(() => {
     const fetchProfile = async () => {
       if (status === "loading") return;
@@ -170,6 +173,9 @@ export default function ProfilePage() {
         setLoading(false);
         return;
       }
+
+      if (profileFetchedRef.current) return;
+      profileFetchedRef.current = true;
 
       try {
         const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api/v1";
@@ -184,7 +190,31 @@ export default function ProfilePage() {
         const result = await response.json();
 
         if (response.ok && result.success) {
-          setProfile(result.data);
+          let kycStatus = result.data.kycStatus;
+          let cccdImageUrl = null;
+
+          try {
+            const kycResponse = await fetch(`${apiBaseUrl}/kyc/status`, {
+              method: "GET",
+              headers: {
+                "Authorization": `Bearer ${session.accessToken}`,
+                "Content-Type": "application/json",
+              },
+            });
+            const kycResult = await kycResponse.json();
+            if (kycResponse.ok && kycResult.success && kycResult.data) {
+              kycStatus = kycResult.data.status;
+              cccdImageUrl = kycResult.data.cccdImageUrl;
+            }
+          } catch (err) {
+            console.error("Fetch KYC status error in profile page:", err);
+          }
+
+          setProfile({
+            ...result.data,
+            kycStatus,
+            cccdImageUrl,
+          });
           setFullName(result.data.fullName);
           setPhoneNumber(result.data.phoneNumber || "");
         } else {
@@ -276,7 +306,7 @@ export default function ProfilePage() {
   // Trả về Badge tương ứng với trạng thái KYC của người dùng
   const renderKycBadge = (status: UserProfile["kycStatus"]) => {
     switch (status) {
-      case "APPROVED":
+      case "VERIFIED":
         return (
           <div className="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-50 border border-emerald-100 text-emerald-700 rounded-2xl text-xs font-bold shadow-sm shadow-emerald-500/5">
             <ShieldCheck className="h-4 w-4 text-emerald-600 animate-pulse" />
@@ -284,28 +314,33 @@ export default function ProfilePage() {
           </div>
         );
       case "PENDING":
-        return (
-          <div className="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-50 border border-blue-100 text-blue-700 rounded-2xl text-xs font-bold shadow-sm shadow-blue-500/5 animate-pulse">
-            <ShieldEllipsis className="h-4 w-4 text-blue-600" />
-            <span>Hồ sơ KYC đang chờ duyệt</span>
-          </div>
-        );
-      case "REJECTED":
-        return (
-          <div className="flex flex-col items-center gap-2">
-            <div className="inline-flex items-center gap-1.5 px-4 py-2 bg-red-50 border border-red-100 text-red-700 rounded-2xl text-xs font-bold shadow-sm shadow-red-500/5">
-              <ShieldX className="h-4 w-4 text-red-600" />
-              <span>Yêu cầu KYC bị từ chối</span>
+        if (profile?.cccdImageUrl) {
+          return (
+            <div className="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-50 border border-blue-100 text-blue-700 rounded-2xl text-xs font-bold shadow-sm shadow-blue-500/5 animate-pulse">
+              <ShieldEllipsis className="h-4 w-4 text-blue-600" />
+              <span>Hồ sơ KYC đang chờ duyệt</span>
             </div>
-            <Link
-              href="/app/kyc"
-              className="text-xs text-blue-600 hover:underline font-bold transition-all"
-            >
-              Gửi lại yêu cầu xác thực →
-            </Link>
-          </div>
-        );
-      case "UNVERIFIED":
+          );
+        }
+        // Nếu kycStatus là PENDING nhưng chưa có ảnh CCCD (mặc định đăng ký mới) -> Xem như chưa nộp
+        // Sẽ rơi xuống block default tiếp theo
+      case "REJECTED":
+        if (status === "REJECTED") {
+          return (
+            <div className="flex flex-col items-center gap-2">
+              <div className="inline-flex items-center gap-1.5 px-4 py-2 bg-rose-50 border border-rose-100 text-rose-700 rounded-2xl text-xs font-bold shadow-sm shadow-rose-500/5">
+                <ShieldX className="h-4 w-4 text-rose-600" />
+                <span>Yêu cầu KYC bị từ chối</span>
+              </div>
+              <Link
+                href="/app/kyc"
+                className="text-xs text-blue-600 hover:underline font-bold transition-all"
+              >
+                Gửi lại yêu cầu xác thực →
+              </Link>
+            </div>
+          );
+        }
       default:
         return (
           <div className="flex flex-col items-center gap-3">
