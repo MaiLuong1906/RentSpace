@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import Link from "next/link";
 import { useSession } from "next-auth/react";
-import { CheckCircle, XCircle, Eye, ShieldAlert, RefreshCw, Calendar, Mail, Phone, User, AlertCircle } from "lucide-react";
+import { CheckCircle, XCircle, Eye, ShieldAlert, RefreshCw, Calendar, Mail, User, AlertCircle } from "lucide-react";
 import { kycApi } from "@/lib/api/kyc.api";
 import { KycReviewItem } from "@/types/kyc.types";
 import { toast } from "sonner";
@@ -11,11 +12,11 @@ import { motion, AnimatePresence } from "framer-motion";
 export default function AdminKYCPage() {
   const { data: session, status: authStatus } = useSession();
   const fetchedRef = useRef(false);
-
+  
   const [submissions, setSubmissions] = useState<KycReviewItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedSubmission, setSelectedSubmission] = useState<KycReviewItem | null>(null);
-
+  
   // Trạng thái từ chối (Reject)
   const [isRejectMode, setIsRejectMode] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
@@ -32,7 +33,7 @@ export default function AdminKYCPage() {
       } else {
         toast.error("Không thể tải danh sách KYC chờ duyệt.");
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error("Lỗi lấy danh sách KYC admin:", error);
       toast.error("Đã xảy ra lỗi kết nối khi tải dữ liệu.");
     } finally {
@@ -43,14 +44,23 @@ export default function AdminKYCPage() {
   useEffect(() => {
     if (authStatus === "loading") return;
 
-    if (authStatus === "authenticated" && session?.user?.role === "ADMIN") {
-      if (session?.accessToken && !fetchedRef.current) {
+    if (authStatus === "authenticated") {
+      if (session?.user?.role !== "ADMIN") {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setLoading(false);
+      } else if (session?.accessToken && !fetchedRef.current) {
         fetchedRef.current = true;
         fetchPendingSubmissions();
+      } else if (!session?.accessToken) {
+        const timer = setTimeout(() => {
+          setLoading(false);
+        }, 1500);
+        return () => clearTimeout(timer);
       }
     } else if (authStatus === "unauthenticated") {
       setLoading(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session, authStatus]);
 
   // Phê duyệt KYC
@@ -65,7 +75,7 @@ export default function AdminKYCPage() {
       } else {
         toast.error(res.message || "Không thể phê duyệt KYC.");
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error("Lỗi phê duyệt:", error);
       toast.error("Lỗi kết nối máy chủ khi phê duyệt.");
     } finally {
@@ -94,7 +104,7 @@ export default function AdminKYCPage() {
       } else {
         toast.error(res.message || "Không thể từ chối KYC.");
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error("Lỗi từ chối KYC:", error);
       toast.error("Lỗi kết nối khi gửi yêu cầu từ chối.");
     } finally {
@@ -122,12 +132,12 @@ export default function AdminKYCPage() {
           <p className="text-gray-500 text-sm mb-6">
             Bạn cần đăng nhập tài khoản có quyền quản trị viên (ADMIN) để xem trang quản trị duyệt KYC này.
           </p>
-          <a
+          <Link
             href="/"
             className="block w-full bg-gray-900 text-white py-3 rounded-2xl font-bold hover:bg-gray-800 transition-all text-sm"
           >
             Trở về trang chủ
-          </a>
+          </Link>
         </div>
       </div>
     );

@@ -48,7 +48,7 @@ export default function KYCPage() {
           setKycStatus("not_submitted");
         }
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error("Lỗi khi tải trạng thái KYC:", error);
       toast.error("Không thể tải trạng thái KYC của bạn.");
     } finally {
@@ -71,8 +71,10 @@ export default function KYCPage() {
         return () => clearTimeout(timer);
       }
     } else if (authStatus === "unauthenticated") {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setLoading(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session, authStatus]);
 
   // Xử lý chọn tệp tin ảnh
@@ -118,9 +120,9 @@ export default function KYCPage() {
       } else {
         toast.error(res.message || "Đã xảy ra lỗi khi nộp hồ sơ.");
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error("Lỗi submit KYC:", error);
-      toast.error(error.response?.data?.message || "Lỗi kết nối khi nộp hồ sơ KYC.");
+      toast.error((error as { response?: { data?: { message?: string } } }).response?.data?.message || "Lỗi kết nối khi nộp hồ sơ KYC.");
     } finally {
       setIsSubmitting(false);
     }
