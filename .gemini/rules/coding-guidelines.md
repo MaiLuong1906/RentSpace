@@ -1,3 +1,7 @@
+---
+trigger: always_on
+---
+
 # 📏 Coding Guidelines — RentSpace
 
 > Quy chuẩn viết code áp dụng cho toàn bộ dự án. AI Agent PHẢI tuân thủ 100%.

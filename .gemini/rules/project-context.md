@@ -1,3 +1,7 @@
+---
+trigger: always_on
+---
+
 # 📚 Project Context — RentSpace
 
 > **Dành cho AI Agent:** Đây là tài liệu kỹ thuật cốt lõi. Đọc và ghi nhớ toàn bộ trước khi thực hiện bất kỳ thay đổi nào.
