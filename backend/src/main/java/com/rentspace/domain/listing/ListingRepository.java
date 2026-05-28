@@ -70,4 +70,10 @@ public interface ListingRepository extends JpaRepository<Listing, Long> {
 
     // Lấy tất cả tin của một landlord qua Email (dành cho API getMyListings)
     Page<Listing> findByLandlord_EmailAndStatusNot(String email, ListingStatus status, Pageable pageable);
+
+    // [ADMIN] Lấy tất cả listing theo status cụ thể
+    Page<Listing> findByStatus(ListingStatus status, Pageable pageable);
+
+    // [ADMIN] Lấy tất cả listing trừ một status nhất định
+    Page<Listing> findByStatusNot(ListingStatus status, Pageable pageable);
 }
