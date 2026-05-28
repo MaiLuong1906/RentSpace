@@ -42,3 +42,6 @@ surefire-reports/
 
 # Local-only documentation (không đẩy lên Git)
 CODING_RULES.md
+
+# Local file storage (ảnh upload trong môi trường dev - không commit lên Git)
+backend/uploads/

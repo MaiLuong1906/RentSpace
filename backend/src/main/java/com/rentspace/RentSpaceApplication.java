@@ -2,10 +2,13 @@ package com.rentspace;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.data.web.config.EnableSpringDataWebSupport;
 import org.springframework.scheduling.annotation.EnableAsync;
 
 @SpringBootApplication
 @EnableAsync
+// Bật serialization PageImpl ổn định dưới dạng DTO thay vì raw PageImpl
+@EnableSpringDataWebSupport(pageSerializationMode = EnableSpringDataWebSupport.PageSerializationMode.VIA_DTO)
 public class RentSpaceApplication {
 
     public static void main(String[] args) {

@@ -19,7 +19,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -31,6 +30,7 @@ public class ListingService {
     private final ListingImageRepository listingImageRepository;
     private final UserRepository userRepository;
     private final StorageService storageService;
+    private final ListingMapper listingMapper;
 
     // ===== GET /api/v1/listings =====
     public Page<ListingResponse> search(String city, String district,
@@ -38,28 +38,28 @@ public class ListingService {
                                         BigDecimal minArea, Pageable pageable) {
         return listingRepository
                 .search(ListingStatus.ACTIVE, city, district, minPrice, maxPrice, minArea, pageable)
-                .map(this::mapToResponse);
+                .map(listingMapper::toResponse);
     }
 
     // ===== GET /api/v1/listings/nearby =====
     public List<ListingResponse> findNearby(double lat, double lng, double radiusKm, int limit) {
         return listingRepository.findNearby(lat, lng, radiusKm, limit)
                 .stream()
-                .map(this::mapToResponse)
-                .collect(Collectors.toList());
+                .map(listingMapper::toResponse)
+                .toList();
     }
 
     // ===== GET /api/v1/listings/my =====
     public Page<ListingResponse> getMyListings(String email, Pageable pageable) {
         return listingRepository.findByLandlord_EmailAndStatusNot(email, ListingStatus.DELETED, pageable)
-                .map(this::mapToResponse);
+                .map(listingMapper::toResponse);
     }
 
     // ===== GET /api/v1/listings/{id} =====
     public ListingResponse getById(Long id) {
         Listing listing = listingRepository.findByIdAndStatusNot(id, ListingStatus.DELETED)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy tin đăng với id: " + id));
-        return mapToResponse(listing);
+        return listingMapper.toResponse(listing);
     }
 
     // ===== POST /api/v1/listings =====
@@ -102,7 +102,7 @@ public class ListingService {
 
         Listing saved = listingRepository.save(listing);
         log.info("Tạo tin đăng thành công: listingId={}, landlord={}", saved.getId(), email);
-        return mapToResponse(saved);
+        return listingMapper.toResponse(saved);
     }
 
     // ===== PUT /api/v1/listings/{id} =====
@@ -128,7 +128,7 @@ public class ListingService {
         listing.setHasWashingMachine(Boolean.TRUE.equals(request.getHasWashingMachine()));
         listing.setAllowPets(Boolean.TRUE.equals(request.getAllowPets()));
 
-        return mapToResponse(listingRepository.save(listing));
+        return listingMapper.toResponse(listingRepository.save(listing));
     }
 
     // ===== PATCH /api/v1/listings/{id}/status =====
@@ -141,7 +141,7 @@ public class ListingService {
         }
 
         listing.setStatus(newStatus);
-        return mapToResponse(listingRepository.save(listing));
+        return listingMapper.toResponse(listingRepository.save(listing));
     }
 
     // ===== DELETE /api/v1/listings/{id} (Soft Delete) =====
@@ -179,7 +179,7 @@ public class ListingService {
 
         ListingImage saved = listingImageRepository.save(image);
         log.info("Upload ảnh thành công cho listing id={}", id);
-        return mapToImageResponse(saved);
+        return listingMapper.toImageResponse(saved);
     }
 
     // ===== DELETE /api/v1/listings/{id}/images/{imageId} =====
@@ -211,43 +211,5 @@ public class ListingService {
             throw new BusinessException("Bạn không có quyền chỉnh sửa tin đăng này");
         }
         return listing;
-    }
-
-    private ListingResponse mapToResponse(Listing listing) {
-        return ListingResponse.builder()
-                .id(listing.getId())
-                .landlordId(listing.getLandlord().getId())
-                .landlordName(listing.getLandlord().getFullName())
-                .landlordAvatar(listing.getLandlord().getAvatarUrl())
-                .title(listing.getTitle())
-                .description(listing.getDescription())
-                .address(listing.getAddress())
-                .ward(listing.getWard())
-                .district(listing.getDistrict())
-                .city(listing.getCity())
-                .latitude(listing.getLatitude())
-                .longitude(listing.getLongitude())
-                .pricePerMonth(listing.getPricePerMonth())
-                .areaM2(listing.getAreaM2())
-                .numBedrooms(listing.getNumBedrooms())
-                .numBathrooms(listing.getNumBathrooms())
-                .hasWifi(listing.getHasWifi())
-                .hasParking(listing.getHasParking())
-                .hasAirConditioner(listing.getHasAirConditioner())
-                .hasWashingMachine(listing.getHasWashingMachine())
-                .allowPets(listing.getAllowPets())
-                .status(listing.getStatus())
-                .images(listing.getImages().stream().map(this::mapToImageResponse).collect(Collectors.toList()))
-                .createdAt(listing.getCreatedAt())
-                .updatedAt(listing.getUpdatedAt())
-                .build();
-    }
-
-    private ListingImageResponse mapToImageResponse(ListingImage image) {
-        return ListingImageResponse.builder()
-                .id(image.getId())
-                .imageUrl(image.getImageUrl())
-                .displayOrder(image.getDisplayOrder())
-                .build();
     }
 }

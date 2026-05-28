@@ -1,3 +1,7 @@
+---
+trigger: always_on
+---
+
 # 📚 Project Context — RentSpace
 
 > **Dành cho AI Agent:** Đây là tài liệu kỹ thuật cốt lõi. Đọc và ghi nhớ toàn bộ trước khi thực hiện bất kỳ thay đổi nào.
@@ -21,7 +25,7 @@
 
 | Thành phần | Công nghệ | Version |
 |---|---|---|
-| **Runtime** | Java | 17 (LTS) |
+| **Runtime** | Java | 21 (LTS) |
 | **Framework** | Spring Boot | 3.3.5 |
 | **Web** | Spring MVC (REST) | - |
 | **Security** | Spring Security + JJWT | 0.12.5 |
