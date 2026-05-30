@@ -2,7 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { listingApi } from "@/lib/api/listing.api";
-import type { ListingSearchParams } from "@/types/listing.types";
+import type { ListingSearchParams, NearbySearchParams } from "@/types/listing.types";
 
 export function useListings(params: ListingSearchParams) {
   return useQuery({
@@ -12,7 +12,7 @@ export function useListings(params: ListingSearchParams) {
   });
 }
 
-export function useListing(id: string) {
+export function useListing(id: string | number) {
   return useQuery({
     queryKey: ["listing", id],
     queryFn: () => listingApi.getListingById(id),
@@ -26,3 +26,13 @@ export function useMyListings() {
     queryFn: () => listingApi.getMyListings(),
   });
 }
+
+export function useNearbyListings(params: NearbySearchParams) {
+  return useQuery({
+    queryKey: ["listings-nearby", params],
+    queryFn: () => listingApi.findNearby(params),
+    enabled: typeof params.lat === "number" && typeof params.lng === "number",
+    staleTime: 1000 * 60 * 2, // 2 phút
+  });
+}
+
