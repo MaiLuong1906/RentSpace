@@ -8,19 +8,19 @@ ALTER SEQUENCE listings_id_seq RESTART WITH 1;
 
 -- ==========================================
 -- 1. TẠO USERS (Mật khẩu mặc định là: 123456)
--- Hash Bcrypt cho '123456' là: $2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVKIui
+-- Hash Bcrypt cho '123456' là: $2a$12$hlBeNhhPHUOmbFYCWPSw2OmSRWiMXriiHUKMswuYod0XQu0mgMqYu
 -- ==========================================
 INSERT INTO users (email, password, full_name, phone_number, role, kyc_status, is_active, is_email_verified) VALUES
 -- Admin
-('admin@rentspace.com', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVKIui', 'Hệ thống Admin', '0901000000', 'ADMIN', 'VERIFIED', true, true),
+('admin@rentspace.com', '$2a$12$hlBeNhhPHUOmbFYCWPSw2OmSRWiMXriiHUKMswuYod0XQu0mgMqYu', 'Hệ thống Admin', '0901000000', 'ADMIN', 'VERIFIED', true, true),
 
 -- Landlords (Chủ nhà)
-('landlord1@rentspace.com', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVKIui', 'Chủ nhà Trần A', '0901000001', 'LANDLORD', 'VERIFIED', true, true),
-('landlord2@rentspace.com', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVKIui', 'Chủ nhà Nguyễn B', '0901000002', 'LANDLORD', 'PENDING', true, true),
+('landlord1@rentspace.com', '$2a$12$hlBeNhhPHUOmbFYCWPSw2OmSRWiMXriiHUKMswuYod0XQu0mgMqYu', 'Chủ nhà Trần A', '0901000001', 'LANDLORD', 'VERIFIED', true, true),
+('landlord2@rentspace.com', '$2a$12$hlBeNhhPHUOmbFYCWPSw2OmSRWiMXriiHUKMswuYod0XQu0mgMqYu', 'Chủ nhà Nguyễn B', '0901000002', 'LANDLORD', 'PENDING', true, true),
 
 -- Tenants (Người thuê)
-('tenant1@rentspace.com', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVKIui', 'Người thuê Lê C', '0901000003', 'TENANT', 'PENDING', true, true),
-('tenant2@rentspace.com', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVKIui', 'Người thuê Phạm D', '0901000004', 'TENANT', 'VERIFIED', true, true);
+('tenant1@rentspace.com', '$2a$12$hlBeNhhPHUOmbFYCWPSw2OmSRWiMXriiHUKMswuYod0XQu0mgMqYu', 'Người thuê Lê C', '0901000003', 'TENANT', 'PENDING', true, true),
+('tenant2@rentspace.com', '$2a$12$hlBeNhhPHUOmbFYCWPSw2OmSRWiMXriiHUKMswuYod0XQu0mgMqYu', 'Người thuê Phạm D', '0901000004', 'TENANT', 'VERIFIED', true, true);
 
 -- ==========================================
 -- 2. TẠO LISTINGS (Tin đăng khớp V3 schema)
