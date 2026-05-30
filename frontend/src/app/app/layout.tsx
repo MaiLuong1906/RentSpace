@@ -65,7 +65,6 @@ export default function DashboardLayout({
   ];
 
   const landlordItems = [
-    { path: "/app/landlord/create-listing", icon: PlusCircle, label: "Đăng tin" },
     { path: "/app/landlord/my-listings", icon: Building2, label: "Quản lý phòng" },
   ];
 
@@ -83,46 +82,46 @@ export default function DashboardLayout({
       {/* Header */}
       <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center h-[70px]">
+          <div className="flex items-center h-[76px] justify-between">
             {/* Logo — bên trái */}
-            <Link href="/app" className="flex items-center gap-2 text-blue-600 shrink-0">
+            <Link href="/app" className="flex items-center gap-2.5 text-blue-600 shrink-0">
               <Home className="h-6 w-6" />
-              <span className="text-[17px] font-bold hidden xl:block">RentSpace</span>
+              <span className="text-[18px] font-bold hidden xl:block">RentSpace</span>
             </Link>
 
             {/* Desktop Navigation — dàn đều ra giữa */}
-            <nav className="hidden lg:flex flex-1 items-center justify-center gap-0.5 px-4">
+            <nav className="hidden lg:flex flex-1 items-center justify-center gap-1.5 px-4">
               {navItems
                 .filter((item) => item.roles.includes(userRole))
                 .map((item) => (
                   <Link
                     key={item.path}
                     href={item.path}
-                    className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors text-[15px] whitespace-nowrap ${
+                    className={`flex items-center gap-2 px-4 py-2.5 rounded-lg transition-colors text-[16px] font-medium whitespace-nowrap ${
                       isItemActive(item.path, item.exact || false)
-                        ? "bg-blue-50 text-blue-600"
+                        ? "bg-blue-50 text-blue-600 font-semibold"
                         : "text-gray-700 hover:bg-gray-50"
                     }`}
                   >
-                    <item.icon className="h-[18px] w-[18px] shrink-0" />
+                    <item.icon className="h-5 w-5 shrink-0" />
                     <span>{item.label}</span>
                   </Link>
                 ))}
 
               {userRole === "landlord" && (
                 <>
-                  <div className="h-5 w-px bg-gray-200 mx-1" />
+                  <div className="h-6 w-px bg-gray-200 mx-1.5" />
                   {landlordItems.map((item) => (
                     <Link
                       key={item.path}
                       href={item.path}
-                      className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors text-[15px] whitespace-nowrap ${
+                      className={`flex items-center gap-2 px-4 py-2.5 rounded-lg transition-colors text-[16px] font-medium whitespace-nowrap ${
                         isActive(item.path)
-                          ? "bg-blue-50 text-blue-600"
+                          ? "bg-blue-50 text-blue-600 font-semibold"
                           : "text-gray-700 hover:bg-gray-50"
                       }`}
                     >
-                      <item.icon className="h-[18px] w-[18px] shrink-0" />
+                      <item.icon className="h-5 w-5 shrink-0" />
                       <span>{item.label}</span>
                     </Link>
                   ))}
@@ -131,18 +130,18 @@ export default function DashboardLayout({
 
               {userRole === "admin" && (
                 <>
-                  <div className="h-5 w-px bg-gray-200 mx-1" />
+                  <div className="h-6 w-px bg-gray-200 mx-1.5" />
                   {adminItems.map((item) => (
                     <Link
                       key={item.path}
                       href={item.path}
-                      className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors text-[15px] whitespace-nowrap ${
+                      className={`flex items-center gap-2 px-4 py-2.5 rounded-lg transition-colors text-[16px] font-medium whitespace-nowrap ${
                         isActive(item.path)
-                          ? "bg-blue-50 text-blue-600"
+                          ? "bg-blue-50 text-blue-600 font-semibold"
                           : "text-gray-700 hover:bg-gray-50"
                       }`}
                     >
-                      <item.icon className="h-[18px] w-[18px] shrink-0" />
+                      <item.icon className="h-5 w-5 shrink-0" />
                       <span>{item.label}</span>
                     </Link>
                   ))}
@@ -152,21 +151,21 @@ export default function DashboardLayout({
 
             {/* User Actions — luôn bên phải */}
             <div className="flex items-center gap-2 ml-auto shrink-0">
-              <div className="hidden lg:flex items-center gap-1">
+              <div className="hidden lg:flex items-center gap-1.5">
                 {status === "authenticated" ? (
                   <>
                     <Link
                       href="/app/profile"
-                      className="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-gray-50 text-gray-700 font-semibold text-[15px] transition-all whitespace-nowrap"
+                      className="flex items-center gap-2 px-4 py-2.5 rounded-xl hover:bg-gray-50 text-gray-700 font-semibold text-[16px] transition-all whitespace-nowrap"
                     >
-                      <User className="h-[18px] w-[18px] text-gray-500 shrink-0" />
+                      <User className="h-5 w-5 text-gray-500 shrink-0" />
                       <span>Hồ sơ</span>
                     </Link>
                     <button
                       onClick={handleLogout}
-                      className="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-gray-50 text-red-600 font-semibold text-[15px] transition-all active:scale-95 whitespace-nowrap"
+                      className="flex items-center gap-2 px-4 py-2.5 rounded-xl hover:bg-gray-50 text-red-600 font-semibold text-[16px] transition-all active:scale-95 whitespace-nowrap"
                     >
-                      <LogOut className="h-[18px] w-[18px] shrink-0" />
+                      <LogOut className="h-5 w-5 shrink-0" />
                       <span>Đăng xuất</span>
                     </button>
                   </>

@@ -11,7 +11,7 @@ function formatPrice(price: number): string {
 export default function HomePage() {
   const { data: apiResponse, isLoading } = useListings({ size: 6 });
   const featuredListings = apiResponse?.data?.content || [];
-  const totalListings = apiResponse?.data?.totalElements ?? 0;
+  const totalListings = apiResponse?.data?.page?.totalElements ?? apiResponse?.data?.totalElements ?? 0;
 
   return (
     <div className="min-h-screen bg-gray-50">

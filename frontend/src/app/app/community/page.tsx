@@ -103,22 +103,21 @@ export default function CommunityPage() {
                 filter === "all"
                   ? "bg-blue-600 text-white"
                   : filter === "roommate"
-                  ? "bg-purple-600 text-white"
-                  : filter === "tips"
-                  ? "bg-yellow-600 text-white"
-                  : filter === "review"
-                  ? "bg-blue-600 text-white"
-                  : "bg-green-600 text-white";
+                    ? "bg-purple-600 text-white"
+                    : filter === "tips"
+                      ? "bg-yellow-600 text-white"
+                      : filter === "review"
+                        ? "bg-blue-600 text-white"
+                        : "bg-green-600 text-white";
 
               return (
                 <button
                   key={filter}
                   onClick={() => setActiveFilter(filter)}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
-                    activeFilter === filter
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${activeFilter === filter
                       ? activeColor
                       : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                  }`}
+                    }`}
                 >
                   {Icon && <Icon className="h-4 w-4" />}
                   {label}
@@ -222,9 +221,8 @@ export default function CommunityPage() {
                   <div className="px-4 pb-4 border-t border-gray-200 pt-3">
                     <div className="flex items-center gap-6">
                       <button
-                        className={`flex items-center gap-2 ${
-                          post.isLiked ? "text-red-600" : "text-gray-600 hover:text-red-600"
-                        }`}
+                        className={`flex items-center gap-2 ${post.isLiked ? "text-red-600" : "text-gray-600 hover:text-red-600"
+                          }`}
                       >
                         <Heart className={`h-5 w-5 ${post.isLiked ? "fill-current" : ""}`} />
                         <span className="font-semibold">{post.likes}</span>
@@ -309,9 +307,8 @@ function CreatePostModal({ onClose }: { onClose: () => void }) {
                 <button
                   key={t.value}
                   onClick={() => setPostType(t.value)}
-                  className={`p-3 border-2 rounded-lg flex items-center gap-2 ${
-                    postType === t.value ? t.activeClass : "border-gray-200"
-                  }`}
+                  className={`p-3 border-2 rounded-lg flex items-center gap-2 ${postType === t.value ? t.activeClass : "border-gray-200"
+                    }`}
                 >
                   <t.icon className="h-5 w-5" />
                   <span className="font-semibold">{t.label}</span>
