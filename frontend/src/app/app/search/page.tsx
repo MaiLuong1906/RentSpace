@@ -14,6 +14,20 @@ import {
 } from "lucide-react";
 import { useListings } from "@/hooks/useListings";
 
+function formatPrice(price: number): string {
+  return new Intl.NumberFormat("vi-VN").format(price) + "đ";
+}
+
+function getRoomTypeLabel(type: string): string {
+  const map: Record<string, string> = {
+    single: "Phòng đơn",
+    shared: "Phòng ghép",
+    apartment: "Căn hộ",
+    house: "Nhà nguyên căn",
+  };
+  return map[type] || type;
+}
+
 type ViewMode = "list" | "map";
 
 export default function SearchPage() {
