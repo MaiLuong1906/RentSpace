@@ -6,6 +6,7 @@ import type {
   NearbySearchParams,
   CreateListingRequest,
   UpdateListingStatusRequest,
+  ListingStatus,
 } from "@/types/listing.types";
 import type { ApiResponse, PageResponse } from "@/types/api.types";
 
@@ -47,8 +48,8 @@ export const listingApi = {
   },
 
   // PATCH /api/v1/listings/{id}/status — Đổi trạng thái [LANDLORD]
-  updateListingStatus: async (id: string | number, data: UpdateListingStatusRequest): Promise<ApiResponse<Listing>> => {
-    const response = await apiClient.patch(`/listings/${id}/status`, data);
+  updateListingStatus: async (id: string | number, status: ListingStatus): Promise<ApiResponse<Listing>> => {
+    const response = await apiClient.patch(`/listings/${id}/status`, { status });
     return response.data;
   },
 
