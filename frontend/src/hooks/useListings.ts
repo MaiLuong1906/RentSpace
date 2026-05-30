@@ -20,10 +20,10 @@ export function useListing(id: string | number) {
   });
 }
 
-export function useMyListings() {
+export function useMyListings(params?: Pick<ListingSearchParams, "page" | "size" | "sort">) {
   return useQuery({
-    queryKey: ["my-listings"],
-    queryFn: () => listingApi.getMyListings(),
+    queryKey: ["my-listings", params],
+    queryFn: () => listingApi.getMyListings(params),
   });
 }
 
