@@ -2,8 +2,21 @@
 
 import Link from "next/link";
 import { PlusCircle, Edit, Eye, Trash2, ToggleLeft, ToggleRight, Loader2 } from "lucide-react";
-import { mockListings, formatPrice, getRoomTypeLabel } from "@/lib/mockData";
 import { useMyListings } from "@/hooks/useListings";
+
+function formatPrice(price: number): string {
+  return new Intl.NumberFormat("vi-VN").format(price) + "đ";
+}
+
+function getRoomTypeLabel(type: string): string {
+  const map: Record<string, string> = {
+    single: "Phòng đơn",
+    shared: "Phòng ghép",
+    apartment: "Căn hộ",
+    house: "Nhà nguyên căn",
+  };
+  return map[type] || type;
+}
 
 export default function MyListingsPage() {
   // Fetch real listings from backend

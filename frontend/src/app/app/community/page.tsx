@@ -15,7 +15,6 @@ import {
   Send,
   MoreHorizontal,
 } from "lucide-react";
-import { formatDate } from "@/lib/mockData";
 
 type PostType = "review" | "roommate" | "tips" | "question";
 
@@ -51,114 +50,8 @@ export default function CommunityPage() {
   const [showCreatePost, setShowCreatePost] = useState(false);
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
 
-  const posts: Post[] = [
-    {
-      id: "1",
-      type: "roommate",
-      userId: "user1",
-      userName: "Nguyễn Văn A",
-      userAvatar: "https://i.pravatar.cc/150?img=8",
-      userVerified: true,
-      content:
-        "Tìm bạn nữ ở ghép khu vực Hải Châu! Mình là sinh viên năm 3 ĐH Bách Khoa, sạch sẽ, không hút thuốc. Phòng 2 người, giá 2tr/người. Có ai quan tâm inbox mình nhé! 🏠",
-      tags: ["Hải Châu", "Sinh viên nữ", "2 triệu"],
-      images: [
-        "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800&h=600&fit=crop",
-      ],
-      likes: 24,
-      comments: 8,
-      shares: 3,
-      isLiked: false,
-      createdAt: "2026-05-13T09:30:00Z",
-    },
-    {
-      id: "2",
-      type: "tips",
-      userId: "user2",
-      userName: "Trần Thị B",
-      userAvatar: "https://i.pravatar.cc/150?img=9",
-      userVerified: true,
-      content:
-        "💡 Chia sẻ kinh nghiệm thuê trọ cho các bạn mới:\n\n1. Luôn xem phòng trực tiếp trước khi chuyển tiền cọc\n2. Kiểm tra kỹ hợp đồng, đặc biệt là điều khoản về điện nước\n3. Chụp ảnh/video tình trạng phòng lúc nhận để tránh tranh chấp sau này\n4. Hỏi rõ về qui định chung cư/khu trọ (giờ giấc, khách, nấu ăn...)\n5. Kiểm tra khóa cửa, ổ điện, máy nước nóng lạnh\n\nChúc các bạn tìm được phòng ưng ý! 🏡",
-      tags: ["Tips", "Kinh nghiệm"],
-      likes: 156,
-      comments: 32,
-      shares: 45,
-      isLiked: true,
-      createdAt: "2026-05-12T14:20:00Z",
-    },
-    {
-      id: "3",
-      type: "review",
-      userId: "user3",
-      userName: "Lê Minh C",
-      userAvatar: "https://i.pravatar.cc/150?img=10",
-      userVerified: false,
-      content:
-        "Review phòng trọ trên đường Lê Duẩn - 5⭐\n\nMình vừa chuyển vào đây được 2 tuần, phòng sạch sẽ, chủ nhà thân thiện. Khu vực an ninh tốt, gần trường, siêu thị tiện lợi. Giá 3tr5 bao điện nước, có điều hòa, nóng lạnh đầy đủ.\n\nĐiểm cộng:\n✅ Vị trí đẹp, gần trung tâm\n✅ Phòng thoáng, có ban công\n✅ Chủ nhà dễ tính\n✅ An ninh tốt\n\nĐiểm trừ:\n❌ Hơi ồn vào buổi tối do gần đường lớn\n\nTổng thể rất ok, recommend! 👍",
-      images: [
-        "https://images.unsplash.com/photo-1536376072261-38c75010e6c9?w=800&h=600&fit=crop",
-        "https://images.unsplash.com/photo-1493809842364-78817add7ffb?w=800&h=600&fit=crop",
-      ],
-      tags: ["Review", "Lê Duẩn", "Hải Châu"],
-      likes: 89,
-      comments: 15,
-      shares: 12,
-      isLiked: false,
-      createdAt: "2026-05-11T16:45:00Z",
-    },
-    {
-      id: "4",
-      type: "question",
-      userId: "user4",
-      userName: "Phạm Thị D",
-      userAvatar: "https://i.pravatar.cc/150?img=5",
-      userVerified: true,
-      content:
-        "Các bạn cho mình hỏi với! Mình đang thuê trọ ở Thanh Khê, giờ muốn chuyển trọ trước hạn 1 tháng thì có mất tiền cọc không nhỉ? Hợp đồng có ghi là phải báo trước 1 tháng nhưng mình có việc gấp phải chuyển luôn.\n\nCó ai gặp trường hợp tương tự không? Tư vấn mình với! 🙏",
-      tags: ["Hỏi đáp", "Hợp đồng"],
-      likes: 12,
-      comments: 24,
-      shares: 2,
-      isLiked: false,
-      createdAt: "2026-05-13T11:15:00Z",
-    },
-    {
-      id: "5",
-      type: "roommate",
-      userId: "user5",
-      userName: "Hoàng Văn E",
-      userAvatar: "https://i.pravatar.cc/150?img=12",
-      userVerified: true,
-      content:
-        "Tìm 1 bạn nam ở ghép khu Sơn Trà, view biển cực đẹp! 🌊\n\nMình đang làm IT, đi làm sáng về chiều. Phòng 2 người, hiện tại chỉ mình mình ở, cần tìm thêm 1 bạn.\n\nThông tin:\n- Giá: 3tr/người (bao điện nước)\n- Phòng: 30m2, full nội thất, có ban công view biển\n- Ưu tiên: Đi làm, sạch sẽ, không hút thuốc\n\nAi quan tâm inbox mình nhé! Mình sẽ gửi ảnh phòng.",
-      tags: ["Sơn Trà", "Nam", "IT"],
-      images: [
-        "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&h=600&fit=crop",
-      ],
-      likes: 34,
-      comments: 11,
-      shares: 5,
-      isLiked: true,
-      createdAt: "2026-05-12T10:00:00Z",
-    },
-    {
-      id: "6",
-      type: "tips",
-      userId: "user6",
-      userName: "Võ Thị F",
-      userAvatar: "https://i.pravatar.cc/150?img=1",
-      userVerified: true,
-      content:
-        "Mẹo tiết kiệm tiền điện khi thuê trọ! ⚡💰\n\nMình vừa nhận hoá đơn điện tháng này chỉ 150k cho phòng 1 người (có điều hoà). Chia sẻ vài tips:\n\n1️⃣ Điều hoà: Set 26-27 độ, tắt khi ra ngoài > 2 tiếng\n2️⃣ Tắt nguồn các thiết bị khi không dùng (đừng để chế độ chờ)\n3️⃣ Dùng đèn LED thay bóng thường\n4️⃣ Nấu ăn bằng bếp từ/gas thay vì bếp điện\n5️⃣ Giặt đồ vào ban đêm (nếu giá điện có phân khung giờ)\n\nHy vọng giúp ích được các bạn! 😊",
-      tags: ["Tips", "Tiết kiệm"],
-      likes: 203,
-      comments: 47,
-      shares: 89,
-      isLiked: false,
-      createdAt: "2026-05-10T08:30:00Z",
-    },
-  ];
+  // Thực tế sẽ fetch từ API khi backend hỗ trợ community posts
+  const posts: Post[] = [];
 
   const filteredPosts =
     activeFilter === "all"
@@ -271,7 +164,24 @@ export default function CommunityPage() {
 
         {/* Posts Feed */}
         <div className="space-y-6">
-          {filteredPosts.map((post) => {
+          {filteredPosts.length === 0 ? (
+            <div className="bg-white rounded-xl shadow-md p-12 text-center">
+              <div className="text-5xl mb-4">✍️</div>
+              <h3 className="text-xl font-semibold text-gray-800 mb-2">
+                {activeFilter === "all" ? "Chưa có bài viết nào" : "Chưa có bài viết ở danh mục này"}
+              </h3>
+              <p className="text-gray-500 mb-6">
+                Hãy là người đầu tiên chia sẻ với cộng đồng!
+              </p>
+              <button
+                onClick={() => setShowCreatePost(true)}
+                className="px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+              >
+                Tạo bài viết ngay
+              </button>
+            </div>
+          ) : (
+            filteredPosts.map((post) => {
             const typeInfo = getPostTypeInfo(post.type);
             const TypeIcon = typeInfo.icon;
 
@@ -296,8 +206,8 @@ export default function CommunityPage() {
                           )}
                         </div>
                         <div className="text-sm text-gray-600">
-                          {formatDate(post.createdAt)}
-                        </div>
+                        {new Date(post.createdAt).toLocaleDateString("vi-VN")}
+                      </div>
                       </div>
                     </div>
                     <button className="p-2 hover:bg-gray-100 rounded-lg">
@@ -376,7 +286,8 @@ export default function CommunityPage() {
                 </div>
               </div>
             );
-          })}
+            }))
+          )}
         </div>
       </div>
 

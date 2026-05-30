@@ -1,11 +1,17 @@
 "use client";
 
 import Link from "next/link";
-import { Search, MapPin, TrendingUp, Star, Users, MessageCircle } from "lucide-react";
-import { mockListings, formatPrice, getRoomTypeLabel } from "@/lib/mockData";
+import { Search, MapPin, TrendingUp, Star, Loader2, Users, MessageCircle } from "lucide-react";
+import { useListings } from "@/hooks/useListings";
+
+function formatPrice(price: number): string {
+  return new Intl.NumberFormat("vi-VN").format(price) + "đ";
+}
 
 export default function HomePage() {
-  const featuredListings = mockListings.slice(0, 6);
+  const { data: apiResponse, isLoading } = useListings({ size: 6 });
+  const featuredListings = apiResponse?.data?.content || [];
+  const totalListings = apiResponse?.data?.totalElements ?? 0;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -17,7 +23,7 @@ export default function HomePage() {
               Tìm phòng trọ lý tưởng của bạn
             </h1>
             <p className="text-xl text-blue-100">
-              Hơn {mockListings.length} phòng trọ được xác thực tại Đà Nẵng
+              Hơn {totalListings > 0 ? totalListings : "--"} phòng trọ được xác thực tại Đà Nẵng
             </p>
           </div>
 
@@ -52,7 +58,7 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
             <div>
-              <div className="text-3xl font-bold text-blue-600">{mockListings.length}+</div>
+              <div className="text-3xl font-bold text-blue-600">{totalListings > 0 ? `${totalListings}+` : "--"}</div>
               <div className="text-gray-600 mt-1">Phòng trọ</div>
             </div>
             <div>
@@ -89,74 +95,64 @@ export default function HomePage() {
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {featuredListings.map((listing) => (
-              <Link
-                key={listing.id}
-                href={`/app/listings/${listing.id}`}
-                className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-shadow block"
-              >
-                <div className="relative h-48 bg-gray-200">
-                  <img
-                    src={listing.images[0]}
-                    alt={listing.title}
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute top-3 right-3 bg-white px-3 py-1 rounded-full text-sm font-semibold text-blue-600">
-                    {formatPrice(listing.price)}/tháng
-                  </div>
-                  {listing.landlordVerified && (
-                    <div className="absolute top-3 left-3 bg-green-500 text-white px-2 py-1 rounded-full text-xs font-semibold flex items-center gap-1">
-                      ✓ Đã xác thực
-                    </div>
-                  )}
+              {isLoading ? (
+                <div className="col-span-3 flex justify-center py-16">
+                  <Loader2 className="h-10 w-10 animate-spin text-blue-600" />
                 </div>
-
-                <div className="p-4">
-                  <h3 className="font-semibold text-lg mb-2 line-clamp-1 text-gray-900">
-                    {listing.title}
-                  </h3>
-
-                  <div className="flex items-center gap-1 text-gray-600 text-sm mb-2">
-                    <MapPin className="h-4 w-4 shrink-0" />
-                    <span className="line-clamp-1">
-                      {listing.district}, {listing.city}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center justify-between text-sm">
-                    <div className="flex items-center gap-3 text-gray-600">
-                      <span>{listing.area}m²</span>
-                      <span>•</span>
-                      <span>{getRoomTypeLabel(listing.roomType)}</span>
-                    </div>
-
-                    <div className="flex items-center gap-1 text-yellow-500">
-                      <Star className="h-4 w-4 fill-current shrink-0" />
-                      <span className="font-semibold text-gray-900">
-                        {listing.rating}
-                      </span>
-                      <span className="text-gray-500">({listing.reviewCount})</span>
-                    </div>
-                  </div>
-
-                  <div className="mt-3 flex flex-wrap gap-1">
-                    {listing.amenities.slice(0, 3).map((amenity, index) => (
-                      <span
-                        key={index}
-                        className="px-2 py-1 bg-gray-100 text-gray-600 rounded text-xs"
-                      >
-                        {amenity}
-                      </span>
-                    ))}
-                    {listing.amenities.length > 3 && (
-                      <span className="px-2 py-1 bg-gray-100 text-gray-600 rounded text-xs">
-                        +{listing.amenities.length - 3}
-                      </span>
-                    )}
-                  </div>
+              ) : featuredListings.length === 0 ? (
+                <div className="col-span-3 text-center py-16 text-gray-500">
+                  Chưa có tin đăng nào. Hãy là người đầu tiên đăng tin!
                 </div>
-              </Link>
-            ))}
+              ) : (
+                featuredListings.map((listing) => (
+                  <Link
+                    key={listing.id}
+                    href={`/app/listings/${listing.id}`}
+                    className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-shadow block"
+                  >
+                    <div className="relative h-48 bg-gray-200">
+                      <img
+                        src={listing.images?.[0]?.imageUrl || "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800&h=600&fit=crop"}
+                        alt={listing.title}
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="absolute top-3 right-3 bg-white px-3 py-1 rounded-full text-sm font-semibold text-blue-600">
+                        {formatPrice(listing.pricePerMonth)}/tháng
+                      </div>
+                    </div>
+
+                    <div className="p-4">
+                      <h3 className="font-semibold text-lg mb-2 line-clamp-1 text-gray-900">
+                        {listing.title}
+                      </h3>
+
+                      <div className="flex items-center gap-1 text-gray-600 text-sm mb-2">
+                        <MapPin className="h-4 w-4 shrink-0" />
+                        <span className="line-clamp-1">
+                          {[listing.district, listing.city].filter(Boolean).join(", ")}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center justify-between text-sm">
+                        <div className="flex items-center gap-3 text-gray-600">
+                          {listing.areaM2 && <span>{listing.areaM2}m²</span>}
+                          {listing.numBedrooms != null && <span>• {listing.numBedrooms} PN</span>}
+                        </div>
+                        <div className="flex items-center gap-1 text-yellow-500">
+                          <Star className="h-4 w-4 fill-current shrink-0" />
+                          <span className="font-semibold text-gray-900">4.8</span>
+                        </div>
+                      </div>
+
+                      <div className="mt-3 flex flex-wrap gap-1">
+                        {listing.hasWifi && <span className="px-2 py-1 bg-gray-100 text-gray-600 rounded text-xs">WiFi</span>}
+                        {listing.hasParking && <span className="px-2 py-1 bg-gray-100 text-gray-600 rounded text-xs">Đỗ xe</span>}
+                        {listing.hasAirConditioner && <span className="px-2 py-1 bg-gray-100 text-gray-600 rounded text-xs">Điều hòa</span>}
+                      </div>
+                    </div>
+                  </Link>
+                ))
+              )}
           </div>
         </div>
       </section>

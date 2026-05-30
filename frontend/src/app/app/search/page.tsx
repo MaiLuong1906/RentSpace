@@ -12,7 +12,6 @@ import {
   X,
   Loader2,
 } from "lucide-react";
-import { mockListings, formatPrice, getRoomTypeLabel } from "@/lib/mockData";
 import { useListings } from "@/hooks/useListings";
 
 type ViewMode = "list" | "map";
@@ -77,8 +76,8 @@ export default function SearchPage() {
     };
   });
 
-  // Fallback to mock list if API returned 0 results (for smooth demo fallback)
-  const baseListings = activeListings.length > 0 ? activeListings : mockListings;
+  // Dữ liệu từ API — không fallback sang mock
+  const baseListings = activeListings;
 
   // Apply fine-grained client-side filters for values backend doesn't handle natively yet
   const filteredListings = baseListings.filter((listing) => {
