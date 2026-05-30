@@ -7,10 +7,15 @@ export interface ApiResponse<T> {
 
 export interface PageResponse<T> {
   content: T[];
-  totalElements: number;
-  totalPages: number;
-  page: number;
-  size: number;
+  totalElements?: number;
+  totalPages?: number;
+  page?: {
+    size: number;
+    number: number;
+    totalElements: number;
+    totalPages: number;
+  };
+  size?: number;
 }
 
 export interface ApiError {

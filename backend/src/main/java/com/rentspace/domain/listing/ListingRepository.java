@@ -13,12 +13,11 @@ import java.util.Optional;
 
 public interface ListingRepository extends JpaRepository<Listing, Long> {
 
-    // Tìm kiếm có filter + phân trang
     @Query("""
             SELECT l FROM Listing l
             WHERE l.status = :status
-              AND (:city IS NULL OR LOWER(l.city) LIKE LOWER(CONCAT('%', :city, '%')))
-              AND (:district IS NULL OR LOWER(l.district) LIKE LOWER(CONCAT('%', :district, '%')))
+              AND (CAST(:city AS string) IS NULL OR LOWER(l.city) LIKE LOWER(CONCAT('%', CAST(:city AS string), '%')))
+              AND (CAST(:district AS string) IS NULL OR LOWER(l.district) LIKE LOWER(CONCAT('%', CAST(:district AS string), '%')))
               AND (:minPrice IS NULL OR l.pricePerMonth >= :minPrice)
               AND (:maxPrice IS NULL OR l.pricePerMonth <= :maxPrice)
               AND (:minArea IS NULL OR l.areaM2 >= :minArea)

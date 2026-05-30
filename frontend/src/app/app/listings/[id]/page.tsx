@@ -13,26 +13,63 @@ import {
   ArrowLeft,
   CheckCircle,
   AlertTriangle,
+  Wifi,
+  Car,
+  Wind,
+  WashingMachine,
+  PawPrint,
+  Loader2,
+  BedDouble,
+  Bath,
+  SquareCode,
 } from "lucide-react";
-import {
-  getListingById,
-  getReviewsByListingId,
-  formatPrice,
-  formatDate,
-  getRoomTypeLabel,
-} from "@/lib/mockData";
+import { useListing } from "@/hooks/useListings";
+
+// --- Helpers ---
+function formatPrice(price: number): string {
+  return new Intl.NumberFormat("vi-VN").format(price) + "đ";
+}
+
+function formatDate(dateStr: string): string {
+  return new Date(dateStr).toLocaleDateString("vi-VN", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
+}
+
+const STATUS_LABELS: Record<string, { label: string; color: string }> = {
+  ACTIVE:   { label: "Còn trống",   color: "bg-green-100 text-green-700" },
+  RENTED:   { label: "Đã cho thuê", color: "bg-red-100 text-red-700" },
+  INACTIVE: { label: "Tạm ẩn",      color: "bg-yellow-100 text-yellow-700" },
+  DRAFT:    { label: "Bản nháp",    color: "bg-gray-100 text-gray-600" },
+};
 
 export default function ListingDetailPage() {
   const params = useParams();
   const id = params?.id as string;
-  const listing = getListingById(id);
-  const reviews = getReviewsByListingId(id);
+
+  const { data: apiResponse, isLoading, isError } = useListing(id);
+  const listing = apiResponse?.data;
 
   const [selectedImage, setSelectedImage] = useState(0);
   const [showContactModal, setShowContactModal] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
 
-  if (!listing) {
+  // --- Trạng thái Loading ---
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="h-12 w-12 animate-spin text-blue-600 mx-auto mb-4" />
+          <p className="text-gray-600">Đang tải thông tin phòng trọ...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // --- Trạng thái Lỗi / Không tìm thấy ---
+  if (isError || !listing) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -50,9 +87,20 @@ export default function ListingDetailPage() {
     );
   }
 
-  const averageRating = reviews.length > 0
-    ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
-    : listing.rating;
+  // --- Danh sách ảnh & tiện ích ---
+  const imageUrls = listing.images?.length > 0
+    ? listing.images.map((img) => img.imageUrl)
+    : ["https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800&h=600&fit=crop"];
+
+  const amenities = [
+    { label: "WiFi",       value: listing.hasWifi,           icon: <Wifi className="h-4 w-4 text-blue-500" /> },
+    { label: "Đỗ xe",      value: listing.hasParking,        icon: <Car className="h-4 w-4 text-blue-500" /> },
+    { label: "Điều hòa",   value: listing.hasAirConditioner, icon: <Wind className="h-4 w-4 text-blue-500" /> },
+    { label: "Máy giặt",   value: listing.hasWashingMachine, icon: <WashingMachine className="h-4 w-4 text-blue-500" /> },
+    { label: "Thú cưng",   value: listing.allowPets,         icon: <PawPrint className="h-4 w-4 text-blue-500" /> },
+  ].filter((a) => a.value);
+
+  const statusInfo = STATUS_LABELS[listing.status] ?? { label: listing.status, color: "bg-gray-100 text-gray-600" };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -67,40 +115,39 @@ export default function ListingDetailPage() {
         </Link>
 
         <div className="grid lg:grid-cols-3 gap-6">
-          {/* Main Content */}
+          {/* ===== Main Content ===== */}
           <div className="lg:col-span-2 space-y-6">
             {/* Image Gallery */}
             <div className="bg-white rounded-xl shadow-md overflow-hidden">
               <div className="relative h-96 bg-gray-200">
                 <img
-                  src={listing.images[selectedImage]}
+                  src={imageUrls[selectedImage]}
                   alt={listing.title}
                   className="w-full h-full object-cover"
                 />
-                {listing.landlordVerified && (
-                  <div className="absolute top-4 left-4 bg-green-500 text-white px-3 py-1.5 rounded-full text-sm font-semibold flex items-center gap-1">
-                    <CheckCircle className="h-4 w-4" />
-                    Đã xác thực KYC
-                  </div>
-                )}
+                {/* Status badge */}
+                <div className={`absolute top-4 left-4 px-3 py-1.5 rounded-full text-sm font-semibold ${statusInfo.color}`}>
+                  {statusInfo.label}
+                </div>
                 <div className="absolute bottom-4 right-4 bg-black/50 text-white px-3 py-1 rounded-lg text-sm">
-                  {selectedImage + 1} / {listing.images.length}
+                  {selectedImage + 1} / {imageUrls.length}
                 </div>
               </div>
 
-              {listing.images.length > 1 && (
+              {imageUrls.length > 1 && (
                 <div className="flex gap-2 p-4 overflow-x-auto">
-                  {listing.images.map((image, index) => (
+                  {imageUrls.map((src, index) => (
                     <button
                       key={index}
                       onClick={() => setSelectedImage(index)}
-                      className={`flex-shrink-0 w-24 h-20 rounded-lg overflow-hidden border-2 transition-all ${selectedImage === index
+                      className={`flex-shrink-0 w-24 h-20 rounded-lg overflow-hidden border-2 transition-all ${
+                        selectedImage === index
                           ? "border-blue-600"
                           : "border-transparent hover:border-gray-300"
-                        }`}
+                      }`}
                     >
                       <img
-                        src={image}
+                        src={src}
                         alt={`${listing.title} ${index + 1}`}
                         className="w-full h-full object-cover"
                       />
@@ -117,21 +164,24 @@ export default function ListingDetailPage() {
                   <h1 className="text-3xl font-bold text-gray-900 mb-2">
                     {listing.title}
                   </h1>
-                  <div className="flex items-center gap-4 text-gray-600">
-                    <div className="flex items-center gap-1">
-                      <MapPin className="h-5 w-5" />
-                      <span>{listing.address}, {listing.district}, {listing.city}</span>
-                    </div>
+                  <div className="flex items-center gap-1 text-gray-600">
+                    <MapPin className="h-5 w-5 flex-shrink-0" />
+                    <span>
+                      {[listing.address, listing.ward, listing.district, listing.city]
+                        .filter(Boolean)
+                        .join(", ")}
+                    </span>
                   </div>
                 </div>
 
-                <div className="flex gap-2">
+                <div className="flex gap-2 ml-4">
                   <button
                     onClick={() => setIsSaved(!isSaved)}
-                    className={`p-3 rounded-lg border-2 transition-colors ${isSaved
+                    className={`p-3 rounded-lg border-2 transition-colors ${
+                      isSaved
                         ? "border-red-600 bg-red-50 text-red-600"
                         : "border-gray-300 hover:border-gray-400"
-                      }`}
+                    }`}
                   >
                     <Heart className={`h-5 w-5 ${isSaved ? "fill-current" : ""}`} />
                   </button>
@@ -141,138 +191,111 @@ export default function ListingDetailPage() {
                 </div>
               </div>
 
-              <div className="flex items-center gap-6 py-4 border-y border-gray-200">
+              {/* Price & Stats */}
+              <div className="flex flex-wrap items-center gap-6 py-4 border-y border-gray-200">
                 <div>
                   <div className="text-3xl font-bold text-blue-600">
-                    {formatPrice(listing.price)}
+                    {formatPrice(listing.pricePerMonth)}
                   </div>
                   <div className="text-sm text-gray-600">/ tháng</div>
                 </div>
 
                 <div className="h-12 w-px bg-gray-200" />
 
-                <div className="flex items-center gap-6">
-                  <div>
-                    <div className="text-xl font-semibold">{listing.area}m²</div>
-                    <div className="text-sm text-gray-600">Diện tích</div>
-                  </div>
-                  <div>
-                    <div className="text-xl font-semibold">{getRoomTypeLabel(listing.roomType)}</div>
-                    <div className="text-sm text-gray-600">Loại phòng</div>
-                  </div>
-                </div>
-
-                <div className="h-12 w-px bg-gray-200" />
-
-                <div className="flex items-center gap-2">
-                  <Star className="h-6 w-6 fill-yellow-400 text-yellow-400" />
-                  <div>
-                    <div className="text-xl font-semibold">{averageRating.toFixed(1)}</div>
-                    <div className="text-sm text-gray-600">{reviews.length} đánh giá</div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="mt-6">
-                <h2 className="text-xl font-semibold mb-3">Mô tả</h2>
-                <p className="text-gray-700 leading-relaxed">
-                  {listing.description}
-                </p>
-              </div>
-
-              <div className="mt-6">
-                <h2 className="text-xl font-semibold mb-3">Tiện nghi</h2>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                  {listing.amenities.map((amenity, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg"
-                    >
-                      <CheckCircle className="h-5 w-5 text-green-600" />
-                      <span className="text-gray-700">{amenity}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* Reviews */}
-            <div className="bg-white rounded-xl shadow-md p-6">
-              <h2 className="text-2xl font-semibold mb-6">
-                Đánh giá từ người thuê ({reviews.length})
-              </h2>
-
-              {reviews.length > 0 ? (
-                <div className="space-y-6">
-                  {reviews.map((review) => (
-                    <div key={review.id} className="border-b border-gray-200 pb-6 last:border-0 last:pb-0">
-                      <div className="flex items-start gap-4">
-                        <img
-                          src={review.userAvatar}
-                          alt={review.userName}
-                          className="w-12 h-12 rounded-full"
-                        />
-                        <div className="flex-1">
-                          <div className="flex items-center justify-between mb-2">
-                            <div>
-                              <div className="font-semibold">{review.userName}</div>
-                              <div className="text-sm text-gray-600">
-                                {formatDate(review.createdAt)}
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-1">
-                              {[...Array(5)].map((_, i) => (
-                                <Star
-                                  key={i}
-                                  className={`h-4 w-4 ${i < review.rating
-                                      ? "fill-yellow-400 text-yellow-400"
-                                      : "text-gray-300"
-                                    }`}
-                                />
-                              ))}
-                            </div>
-                          </div>
-                          <p className="text-gray-700">{review.comment}</p>
-                        </div>
+                <div className="flex items-center gap-5">
+                  {listing.areaM2 && (
+                    <div className="flex items-center gap-1.5">
+                      <SquareCode className="h-5 w-5 text-gray-400" />
+                      <div>
+                        <div className="text-lg font-semibold">{listing.areaM2}m²</div>
+                        <div className="text-xs text-gray-500">Diện tích</div>
                       </div>
                     </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8 text-gray-500">
-                  Chưa có đánh giá nào
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Sidebar */}
-          <div className="space-y-6">
-            {/* Landlord Info Card */}
-            <div className="bg-white rounded-xl shadow-md p-6 sticky top-20">
-              <Link 
-                href={`/app/profile/${listing.landlordId}`}
-                className="flex items-center gap-4 mb-6 group hover:opacity-95 transition-all cursor-pointer"
-              >
-                <img
-                  src={listing.landlordAvatar}
-                  alt={listing.landlordName}
-                  className="w-16 h-16 rounded-full border border-gray-100 shadow-sm"
-                />
-                <div>
-                  <div className="font-semibold text-lg group-hover:text-blue-600 transition-colors">
-                    {listing.landlordName}
-                  </div>
-                  <div className="text-sm text-gray-600">Chủ trọ</div>
-                  {listing.landlordVerified && (
-                    <div className="flex items-center gap-1 text-green-600 text-sm mt-1">
-                      <CheckCircle className="h-4 w-4" />
-                      <span>Đã xác minh</span>
+                  )}
+                  {typeof listing.numBedrooms === "number" && (
+                    <div className="flex items-center gap-1.5">
+                      <BedDouble className="h-5 w-5 text-gray-400" />
+                      <div>
+                        <div className="text-lg font-semibold">{listing.numBedrooms}</div>
+                        <div className="text-xs text-gray-500">Phòng ngủ</div>
+                      </div>
+                    </div>
+                  )}
+                  {typeof listing.numBathrooms === "number" && (
+                    <div className="flex items-center gap-1.5">
+                      <Bath className="h-5 w-5 text-gray-400" />
+                      <div>
+                        <div className="text-lg font-semibold">{listing.numBathrooms}</div>
+                        <div className="text-xs text-gray-500">Phòng tắm</div>
+                      </div>
                     </div>
                   )}
                 </div>
-              </Link>
+              </div>
 
+              {/* Description */}
+              {listing.description && (
+                <div className="mt-6">
+                  <h2 className="text-xl font-semibold mb-3">Mô tả</h2>
+                  <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">
+                    {listing.description}
+                  </p>
+                </div>
+              )}
+
+              {/* Amenities */}
+              {amenities.length > 0 && (
+                <div className="mt-6">
+                  <h2 className="text-xl font-semibold mb-3">Tiện nghi</h2>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                    {amenities.map((a) => (
+                      <div
+                        key={a.label}
+                        className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg"
+                      >
+                        {a.icon}
+                        <span className="text-gray-700">{a.label}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Timestamps */}
+              <div className="mt-6 pt-4 border-t border-gray-100 text-sm text-gray-500 flex gap-4">
+                <span>Đăng ngày: {formatDate(listing.createdAt)}</span>
+                <span>Cập nhật: {formatDate(listing.updatedAt)}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* ===== Sidebar ===== */}
+          <div className="space-y-6">
+            <div className="bg-white rounded-xl shadow-md p-6 sticky top-20">
+              {/* Landlord Info */}
+              <div className="flex items-center gap-4 mb-6">
+                {listing.landlordAvatar ? (
+                  <img
+                    src={listing.landlordAvatar}
+                    alt={listing.landlordName}
+                    className="w-16 h-16 rounded-full border border-gray-100 shadow-sm object-cover"
+                  />
+                ) : (
+                  <div className="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 text-2xl font-bold">
+                    {listing.landlordName?.charAt(0).toUpperCase()}
+                  </div>
+                )}
+                <div>
+                  <div className="font-semibold text-lg">{listing.landlordName}</div>
+                  <div className="text-sm text-gray-600">Chủ trọ</div>
+                  <div className="flex items-center gap-1 text-green-600 text-sm mt-1">
+                    <CheckCircle className="h-4 w-4" />
+                    <span>Đã xác minh</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* CTA Buttons */}
               <div className="space-y-3">
                 <button
                   onClick={() => setShowContactModal(true)}
@@ -288,6 +311,7 @@ export default function ListingDetailPage() {
                 </button>
               </div>
 
+              {/* Safety Note */}
               <div className="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
                 <div className="flex items-start gap-2">
                   <AlertTriangle className="h-5 w-5 text-yellow-600 flex-shrink-0 mt-0.5" />
