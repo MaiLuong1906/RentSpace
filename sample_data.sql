@@ -33,12 +33,12 @@ INSERT INTO listings (landlord_id, title, description, address, district, city, 
 '123 Nguyễn Văn Cừ', 'Liên Chiểu', 'Đà Nẵng', 16.074567, 108.152345, 
 3500000, 25.5, 1, 1, true, true, true, true, false, 'ACTIVE', NOW(), NOW()),
 
--- Tin 2: Chung cư mini PENDING chờ duyệt
+-- Tin 2: Chung cư mini INACTIVE (tạm ẩn/chờ duyệt)
 ((SELECT id FROM users WHERE email = 'landlord1@rentspace.com'), 
 'Chung cư mini view biển Mỹ Khê', 
 'Ban công rộng, thoáng mát, bao gồm dịch vụ dọn dẹp tuần 2 lần.', 
 '45 Võ Nguyên Giáp', 'Sơn Trà', 'Đà Nẵng', 16.056789, 108.245678, 
-6000000, 40.0, 1, 1, true, true, true, true, false, 'PENDING', NOW(), NOW()),
+6000000, 40.0, 1, 1, true, true, true, true, false, 'INACTIVE', NOW(), NOW()),
 
 -- Tin 3: Nhà nguyên căn ACTIVE
 ((SELECT id FROM users WHERE email = 'landlord2@rentspace.com'), 
