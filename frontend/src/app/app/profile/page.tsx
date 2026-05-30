@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
-import { User, Mail, Phone, Calendar, Shield, ShieldCheck, ShieldAlert, ShieldEllipsis, ShieldX, KeyRound, Bell, Edit2, Camera, Lock, Eye, EyeOff } from "lucide-react";
+import { User, Mail, Phone, Calendar, ShieldCheck, ShieldAlert, ShieldEllipsis, ShieldX, KeyRound, Bell, Edit2, Camera, Lock, Eye, EyeOff } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 

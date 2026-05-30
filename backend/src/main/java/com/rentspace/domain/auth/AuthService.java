@@ -281,9 +281,14 @@ public class AuthService {
         user.setPassword(passwordEncoder.encode(request.getNewPassword()));
         userRepository.save(user);
 
-        // Hủy toàn bộ session cũ (tùy chọn, bắt user đăng nhập lại)
         redisTemplate.delete("RT:" + user.getEmail());
 
         log.info("Người dùng chủ động đổi mật khẩu thành công: email={}", user.getEmail());
+    }
+
+    @Transactional
+    public void logout(String email) {
+        redisTemplate.delete("RT:" + email);
+        log.info("Người dùng đăng xuất thành công, đã thu hồi Refresh Token: email={}", email);
     }
 }
