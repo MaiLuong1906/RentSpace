@@ -2,11 +2,17 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Upload, X, Plus } from "lucide-react";
+import { Upload, X, Plus, Loader2 } from "lucide-react";
+import { listingApi } from "@/lib/api/listing.api";
+import type { CreateListingRequest } from "@/types/listing.types";
 
 export default function CreateListingPage() {
   const router = useRouter();
   const [images, setImages] = useState<string[]>([]);
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
+
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -36,6 +42,8 @@ export default function CreateListingPage() {
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
+    setImageFiles((prev) => [...prev, ...files]);
+
     files.forEach((file) => {
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -47,6 +55,7 @@ export default function CreateListingPage() {
 
   const removeImage = (index: number) => {
     setImages((prev) => prev.filter((_, i) => i !== index));
+    setImageFiles((prev) => prev.filter((_, i) => i !== index));
   };
 
   const toggleAmenity = (amenity: string) => {
@@ -60,9 +69,43 @@ export default function CreateListingPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Call API POST /api/v1/listings
-    console.log("Create listing:", formData, images);
-    router.push("/app/landlord/my-listings");
+    setSubmitting(true);
+    setError("");
+
+    try {
+      // 1. Create the listing
+      const payload: CreateListingRequest = {
+        title: formData.title,
+        description: formData.description,
+        address: formData.address,
+        district: formData.district || undefined,
+        city: formData.city,
+        pricePerMonth: Number(formData.price),
+        areaM2: Number(formData.area),
+        hasWifi: formData.amenities.includes("WiFi"),
+        hasParking: formData.amenities.includes("Gửi xe miễn phí") || formData.amenities.includes("Bảo vệ 24/7"),
+        hasAirConditioner: formData.amenities.includes("Điều hòa"),
+        hasWashingMachine: formData.amenities.includes("Máy giặt"),
+        allowPets: false,
+      };
+
+      const response = await listingApi.createListing(payload);
+      const newListingId = response.data.id;
+
+      // 2. Upload each image file sequentially or in parallel
+      if (imageFiles.length > 0) {
+        await Promise.all(
+          imageFiles.map((file) => listingApi.uploadImage(newListingId, file))
+        );
+      }
+
+      router.push("/app/landlord/my-listings");
+    } catch (err: any) {
+      console.error("Error creating listing:", err);
+      setError(err?.response?.data?.message || "Đã có lỗi xảy ra khi tạo tin đăng.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -272,20 +315,35 @@ export default function CreateListingPage() {
             </div>
           </div>
 
+          {error && (
+            <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-lg text-red-700 text-sm font-medium">
+              ⚠️ {error}
+            </div>
+          )}
+
           {/* Actions */}
           <div className="flex gap-4">
             <button
               type="button"
-              onClick={() => router.push("/app")}
-              className="flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-50"
+              onClick={() => router.push("/app/landlord/my-listings")}
+              disabled={submitting}
+              className="flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Hủy
             </button>
             <button
               type="submit"
-              className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700"
+              disabled={submitting}
+              className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 disabled:opacity-75 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-all"
             >
-              Đăng tin
+              {submitting ? (
+                <>
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                  Đang đăng tin...
+                </>
+              ) : (
+                "Đăng tin"
+              )}
             </button>
           </div>
         </form>
