@@ -9,7 +9,6 @@ import {
   Star,
   Map,
   List,
-  X,
   Loader2,
 } from "lucide-react";
 import { useListings } from "@/hooks/useListings";

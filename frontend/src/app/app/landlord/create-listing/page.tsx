@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Upload, X, Plus, Loader2 } from "lucide-react";
+import { Upload, X, Loader2 } from "lucide-react";
 import { listingApi } from "@/lib/api/listing.api";
 import type { CreateListingRequest } from "@/types/listing.types";
 
@@ -100,9 +100,11 @@ export default function CreateListingPage() {
       }
 
       router.push("/app/landlord/my-listings");
-    } catch (err: any) {
+    } catch (err) {
       console.error("Error creating listing:", err);
-      setError(err?.response?.data?.message || "Đã có lỗi xảy ra khi tạo tin đăng.");
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const errorResponse = err as any;
+      setError(errorResponse?.response?.data?.message || "Đã có lỗi xảy ra khi tạo tin đăng.");
     } finally {
       setSubmitting(false);
     }

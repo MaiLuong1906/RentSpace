@@ -12,7 +12,6 @@ import {
   LogOut,
   Menu,
   X,
-  PlusCircle,
   Building2,
   Shield,
   Users,
