@@ -3,15 +3,19 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Upload, X, Loader2 } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { listingApi } from "@/lib/api/listing.api";
 import type { CreateListingRequest } from "@/types/listing.types";
 
 export default function CreateListingPage() {
   const router = useRouter();
+  const queryClient = useQueryClient();
+  
   const [images, setImages] = useState<string[]>([]);
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [createdListingId, setCreatedListingId] = useState<number | null>(null);
 
   const [formData, setFormData] = useState({
     title: "",
@@ -41,10 +45,23 @@ export default function CreateListingPage() {
   ];
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setError("");
     const files = Array.from(e.target.files || []);
-    setImageFiles((prev) => [...prev, ...files]);
+    
+    // Validate image mime types only
+    const validImageFiles = files.filter((file) => {
+      if (!file.type.startsWith("image/")) {
+        setError(`Tệp "${file.name}" không hợp lệ. Chỉ chấp nhận các định dạng hình ảnh (JPEG, PNG, WEBP,...)`);
+        return false;
+      }
+      return true;
+    });
 
-    files.forEach((file) => {
+    if (validImageFiles.length === 0) return;
+
+    setImageFiles((prev) => [...prev, ...validImageFiles]);
+
+    validImageFiles.forEach((file) => {
       const reader = new FileReader();
       reader.onloadend = () => {
         setImages((prev) => [...prev, reader.result as string]);
@@ -73,38 +90,66 @@ export default function CreateListingPage() {
     setError("");
 
     try {
-      // 1. Create the listing
-      const payload: CreateListingRequest = {
-        title: formData.title,
-        description: formData.description,
-        address: formData.address,
-        district: formData.district || undefined,
-        city: formData.city,
-        pricePerMonth: Number(formData.price),
-        areaM2: Number(formData.area),
-        hasWifi: formData.amenities.includes("WiFi"),
-        hasParking: formData.amenities.includes("Gửi xe miễn phí") || formData.amenities.includes("Bảo vệ 24/7"),
-        hasAirConditioner: formData.amenities.includes("Điều hòa"),
-        hasWashingMachine: formData.amenities.includes("Máy giặt"),
-        allowPets: false,
-      };
+      let listingId = createdListingId;
 
-      const response = await listingApi.createListing(payload);
-      const newListingId = response.data.id;
+      // 1. Create the listing if not already created (prevents double submits on retry)
+      if (!listingId) {
+        const payload: CreateListingRequest = {
+          title: formData.title,
+          description: formData.description,
+          address: formData.address,
+          district: formData.district || undefined,
+          city: formData.city,
+          pricePerMonth: Number(formData.price),
+          areaM2: Number(formData.area),
+          hasWifi: formData.amenities.includes("WiFi"),
+          hasParking: formData.amenities.includes("Gửi xe miễn phí") || formData.amenities.includes("Bảo vệ 24/7"),
+          hasAirConditioner: formData.amenities.includes("Điều hòa"),
+          hasWashingMachine: formData.amenities.includes("Máy giặt"),
+          allowPets: false,
+        };
 
-      // 2. Upload each image file sequentially or in parallel
+        const response = await listingApi.createListing(payload);
+        listingId = response.data.id;
+        setCreatedListingId(listingId);
+      }
+
+      // 2. Upload image files sequentially or in parallel
       if (imageFiles.length > 0) {
         await Promise.all(
-          imageFiles.map((file) => listingApi.uploadImage(newListingId, file))
+          imageFiles.map((file) => listingApi.uploadImage(listingId!, file))
         );
       }
+
+      // Clear current state and cache to force update on land page
+      setCreatedListingId(null);
+      queryClient.invalidateQueries({ queryKey: ["my-listings"] });
+      queryClient.invalidateQueries({ queryKey: ["listings"] });
 
       router.push("/app/landlord/my-listings");
     } catch (err) {
       console.error("Error creating listing:", err);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const errorResponse = err as any;
-      setError(errorResponse?.response?.data?.message || "Đã có lỗi xảy ra khi tạo tin đăng.");
+      const responseData = errorResponse?.response?.data;
+
+      // Format validation errors nicely
+      if (responseData?.data && typeof responseData.data === "object") {
+        const errorMessages = Object.entries(responseData.data)
+          .map(([field, msg]) => `• ${field}: ${msg}`)
+          .join("\n");
+        setError(`${responseData.message}:\n${errorMessages}`);
+      } else {
+        setError(responseData?.message || "Đã có lỗi xảy ra khi tạo tin đăng.");
+      }
+
+      // Auto scroll to the error message box
+      setTimeout(() => {
+        const errorEl = document.getElementById("error-message");
+        if (errorEl) {
+          errorEl.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+      }, 50);
     } finally {
       setSubmitting(false);
     }
@@ -318,7 +363,7 @@ export default function CreateListingPage() {
           </div>
 
           {error && (
-            <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-lg text-red-700 text-sm font-medium">
+            <div id="error-message" className="bg-red-50 border-l-4 border-red-500 p-4 rounded-lg text-red-700 text-sm font-medium whitespace-pre-line">
               ⚠️ {error}
             </div>
           )}

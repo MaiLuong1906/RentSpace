@@ -39,6 +39,22 @@ jobs:
       - name: Checkout source code
         uses: actions/checkout@v4
 
+      # --- Pre-warm Maven cache để Trivy không fetch từ Maven Central ---
+      # Trivy quét pom.xml cần metadata từ Maven Central → dễ bị 429 rate-limit
+      # Giải pháp: resolve dependencies trước để Trivy đọc từ cache ~/.m2 cục bộ
+      - name: Set up JDK 21 for Maven cache pre-warm
+        uses: actions/setup-java@v4
+        with:
+          java-version: "21"
+          distribution: "temurin"
+          cache: "maven"
+
+      - name: Pre-warm Maven dependency cache
+        run: chmod +x ./mvnw && ./mvnw dependency:resolve -q --no-transfer-progress
+        working-directory: ./backend
+        env:
+          MAVEN_OPTS: "-Xmx512m"
+
       # --- Quét toàn bộ filesystem (source code + lock files) ---
       - name: Run Trivy vulnerability scanner (filesystem)
         uses: aquasecurity/trivy-action@master
@@ -67,6 +83,7 @@ jobs:
           category: "trivy-fs-scan"
 
       # --- Scan riêng: Kiểm tra secrets bị lộ (fail ngay nếu tìm thấy) ---
+      # Chỉ quét secret (không quét vuln để tránh gọi Maven Central lần 2)
       - name: Trivy secret scan (fail on detect)
         uses: aquasecurity/trivy-action@master
         with:
