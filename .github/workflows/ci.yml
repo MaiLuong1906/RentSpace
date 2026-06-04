@@ -50,7 +50,7 @@ jobs:
           cache: "maven"
 
       - name: Pre-warm Maven dependency cache
-        run: ./mvnw dependency:resolve -q --no-transfer-progress
+        run: chmod +x ./mvnw && ./mvnw dependency:resolve -q --no-transfer-progress
         working-directory: ./backend
         env:
           MAVEN_OPTS: "-Xmx512m"
