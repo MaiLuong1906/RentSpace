@@ -79,9 +79,8 @@ export default function SearchPage() {
     zoom: 13,
   });
 
-  // Check if Mapbox token is configured
+  // Get Mapbox token
   const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
-  const isMapboxTokenValid = mapboxToken && mapboxToken.startsWith("pk.ey");
 
   // Fetch standard listings
   const { data: standardResponse, isLoading: standardLoading } = useListings({
@@ -679,210 +678,84 @@ export default function SearchPage() {
 
                 {/* Map Component (2 Columns) */}
                 <div className="lg:col-span-2 bg-gray-100 border border-gray-200 rounded-3xl h-[600px] relative overflow-hidden shadow-inner">
-                  {isMapboxTokenValid ? (
-                    /* Real Mapbox Map */
-                    <Map
-                      {...mapViewport}
-                      onMove={(evt: ViewStateChangeEvent) => setMapViewport(evt.viewState)}
-                      style={{ width: "100%", height: "100%" }}
-                      mapStyle="mapbox://styles/mapbox/streets-v12"
-                      mapboxAccessToken={mapboxToken}
-                    >
-                      <NavigationControl position="top-right" />
+                  {/* Real Mapbox Map */}
+                  <Map
+                    {...mapViewport}
+                    onMove={(evt: ViewStateChangeEvent) => setMapViewport(evt.viewState)}
+                    style={{ width: "100%", height: "100%" }}
+                    mapStyle="mapbox://styles/mapbox/streets-v12"
+                    mapboxAccessToken={mapboxToken}
+                  >
+                    <NavigationControl position="top-right" />
 
-                      {/* User Current Location Marker */}
-                      {userCoords && (
-                        <Marker latitude={userCoords.lat} longitude={userCoords.lng}>
-                          <div className="relative flex items-center justify-center">
-                            <span className="absolute inline-flex h-8 w-8 rounded-full bg-blue-500/20 opacity-35 animate-ping"></span>
-                            <span className="relative rounded-full h-4.5 w-4.5 bg-blue-600 border-2 border-white shadow-md flex items-center justify-center">
-                              <Navigation className="h-2 w-2 text-white fill-white rotate-45" />
-                            </span>
-                          </div>
-                        </Marker>
-                      )}
+                    {/* User Current Location Marker */}
+                    {userCoords && (
+                      <Marker latitude={userCoords.lat} longitude={userCoords.lng}>
+                        <div className="relative flex items-center justify-center">
+                          <span className="absolute inline-flex h-8 w-8 rounded-full bg-blue-500/20 opacity-35 animate-ping"></span>
+                          <span className="relative rounded-full h-4.5 w-4.5 bg-blue-600 border-2 border-white shadow-md flex items-center justify-center">
+                            <Navigation className="h-2 w-2 text-white fill-white rotate-45" />
+                          </span>
+                        </div>
+                      </Marker>
+                    )}
 
-                      {/* Listing Markers */}
-                      {filteredListings.map((listing) => (
-                        <Marker
-                          key={listing.id}
-                          latitude={listing.lat}
-                          longitude={listing.lng}
-                          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                          onClick={(e: any) => {
-                            e.originalEvent.stopPropagation();
-                            setSelectedListing(listing);
-                          }}
+                    {/* Listing Markers */}
+                    {filteredListings.map((listing) => (
+                      <Marker
+                        key={listing.id}
+                        latitude={listing.lat}
+                        longitude={listing.lng}
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        onClick={(e: any) => {
+                          e.originalEvent.stopPropagation();
+                          setSelectedListing(listing);
+                        }}
+                      >
+                        <button
+                          className={`px-2 py-1 rounded-lg font-extrabold text-[10px] shadow-md border active:scale-95 transition-all ${
+                            selectedListing?.id === listing.id
+                              ? "bg-blue-600 text-white border-blue-600"
+                              : "bg-white text-blue-700 border-blue-100 hover:bg-blue-50"
+                          }`}
                         >
-                          <button
-                            className={`px-2 py-1 rounded-lg font-extrabold text-[10px] shadow-md border active:scale-95 transition-all ${
-                              selectedListing?.id === listing.id
-                                ? "bg-blue-600 text-white border-blue-600"
-                                : "bg-white text-blue-700 border-blue-100 hover:bg-blue-50"
-                            }`}
-                          >
-                            {formatPrice(listing.price).replace("đ", "").replace(".000.000", "M").replace(".000", "k")}
-                          </button>
-                        </Marker>
-                      ))}
+                          {formatPrice(listing.price).replace("đ", "").replace(".000.000", "M").replace(".000", "k")}
+                        </button>
+                      </Marker>
+                    ))}
 
-                      {/* Selected Listing Popup Info */}
-                      {selectedListing && (
-                        <Popup
-                          latitude={selectedListing.lat}
-                          longitude={selectedListing.lng}
-                          anchor="bottom"
-                          onClose={() => setSelectedListing(null)}
-                          closeOnClick={false}
-                          className="z-40"
-                        >
-                          <Link href={`/app/listings/${selectedListing.id}`} className="block w-48 p-1">
-                            <img
-                              src={selectedListing.images[0]}
-                              alt={selectedListing.title}
-                              className="w-full h-24 object-cover rounded-lg mb-2"
-                            />
-                            <h5 className="font-extrabold text-xs text-gray-900 line-clamp-1 mb-0.5">
-                              {selectedListing.title}
-                            </h5>
-                            <p className="text-blue-600 font-extrabold text-xs">
-                              {formatPrice(selectedListing.price)}/tháng
-                            </p>
-                            <div className="flex justify-between items-center text-[10px] text-gray-400 font-semibold mt-1">
-                              <span>{selectedListing.area} m²</span>
-                              <span className="text-blue-650 flex items-center gap-0.5 text-xs">
-                                Chi tiết <ChevronRight className="h-3 w-3" />
-                              </span>
-                            </div>
-                          </Link>
-                        </Popup>
-                      )}
-                    </Map>
-                  ) : (
-                    /* Fallback Premium Interactive Simulated Map (Used when Mapbox token is missing/placeholder) */
-                    <div className="absolute inset-0 bg-slate-900/95 flex flex-col justify-between p-6 overflow-hidden">
-                      {/* Grid background to mimic maps */}
-                      <div className="absolute inset-0 opacity-10 bg-[linear-gradient(to_right,#808080_1px,transparent_1px),linear-gradient(to_bottom,#808080_1px,transparent_1px)] bg-[size:24px_24px]"></div>
-                      
-                      {/* Header warning notification */}
-                      <div className="relative bg-white/10 backdrop-blur-md border border-white/15 p-4 rounded-2xl flex items-start gap-3 z-10 shadow-lg text-white">
-                        <Info className="h-5 w-5 text-blue-400 flex-shrink-0 mt-0.5" />
-                        <div>
-                          <h4 className="text-xs font-bold">Chế độ Bản đồ Mô phỏng (Demo Mode)</h4>
-                          <p className="text-[10px] text-white/70 leading-relaxed mt-0.5">
-                            Mapbox token chưa được cấu hình. Để hiển thị bản đồ vệ tinh thật, hãy điền khóa Mapbox cá nhân vào biến <code className="bg-white/10 px-1 py-0.5 rounded font-mono text-[9px]">NEXT_PUBLIC_MAPBOX_TOKEN</code> trong file <code className="bg-white/10 px-1 py-0.5 rounded font-mono text-[9px]">.env.local</code>.
+                    {/* Selected Listing Popup Info */}
+                    {selectedListing && (
+                      <Popup
+                        latitude={selectedListing.lat}
+                        longitude={selectedListing.lng}
+                        anchor="bottom"
+                        onClose={() => setSelectedListing(null)}
+                        closeOnClick={false}
+                        className="z-40"
+                      >
+                        <Link href={`/app/listings/${selectedListing.id}`} className="block w-48 p-1">
+                          <img
+                            src={selectedListing.images[0]}
+                            alt={selectedListing.title}
+                            className="w-full h-24 object-cover rounded-lg mb-2"
+                          />
+                          <h5 className="font-extrabold text-xs text-gray-900 line-clamp-1 mb-0.5">
+                            {selectedListing.title}
+                          </h5>
+                          <p className="text-blue-600 font-extrabold text-xs">
+                            {formatPrice(selectedListing.price)}/tháng
                           </p>
-                        </div>
-                      </div>
-
-                      {/* Dynamic Simulated Interactive Map Layout */}
-                      <div className="flex-1 relative flex items-center justify-center my-4 border border-white/10 rounded-2xl bg-slate-950/60 overflow-hidden shadow-inner">
-                        <div className="absolute inset-0 flex items-center justify-center">
-                          {/* Radius Scanning Animation */}
-                          {userCoords && searchMode === "nearby" && (
-                            <div
-                              className="border-2 border-blue-500/35 bg-blue-500/5 rounded-full flex items-center justify-center transition-all duration-300"
-                              style={{
-                                width: `${Math.min(180 + radius * 12, 380)}px`,
-                                height: `${Math.min(180 + radius * 12, 380)}px`,
-                              }}
-                            >
-                              <div className="h-full w-full rounded-full border border-blue-500/20 animate-pulse bg-blue-500/5"></div>
-                            </div>
-                          )}
-
-                          {/* Radar scanning arm decoration */}
-                          {searchMode === "nearby" && (
-                            <div className="absolute w-64 h-64 border border-blue-500/10 rounded-full animate-spin [animation-duration:10s] flex items-start justify-center">
-                              <div className="w-0.5 h-32 bg-gradient-to-t from-transparent to-blue-500/40"></div>
-                            </div>
-                          )}
-
-                          {/* Center Coordinates compass marker */}
-                          <div className="relative flex items-center justify-center z-10">
-                            <span className="absolute inline-flex h-10 w-10 rounded-full bg-blue-400/20 opacity-40 animate-ping"></span>
-                            <span className="h-5 w-5 rounded-full bg-blue-600 border-2 border-white shadow-xl flex items-center justify-center">
-                              <Navigation className="h-2.5 w-2.5 text-white fill-white rotate-45" />
-                            </span>
-                            <span className="absolute -bottom-5 text-[9px] font-bold text-blue-400 bg-slate-900/90 border border-slate-700/50 px-2 py-0.5 rounded-full whitespace-nowrap">
-                              Vị trí quét (GPS)
+                          <div className="flex justify-between items-center text-[10px] text-gray-400 font-semibold mt-1">
+                            <span>{selectedListing.area} m²</span>
+                            <span className="text-blue-650 flex items-center gap-0.5 text-xs">
+                              Chi tiết <ChevronRight className="h-3 w-3" />
                             </span>
                           </div>
-
-                          {/* Plot markers relative to the center based on coords difference */}
-                          {filteredListings.map((listing) => {
-                            const centerLat = userCoords?.lat || 16.0544;
-                            const centerLng = userCoords?.lng || 108.2022;
-                            
-                            // Exaggerate differences for better visual layout on the mock screen
-                            const latDiff = (listing.lat - centerLat) * 350;
-                            const lngDiff = (listing.lng - centerLng) * 350;
-                            
-                            // Constrain offsets within visual viewport bounds
-                            const clampedX = Math.max(-160, Math.min(160, lngDiff));
-                            const clampedY = Math.max(-130, Math.min(130, latDiff));
-
-                            return (
-                              <button
-                                key={listing.id}
-                                onClick={() => setSelectedListing(listing)}
-                                style={{
-                                  transform: `translate(${clampedX}px, ${-clampedY}px)`,
-                                }}
-                                className={`absolute px-2.5 py-1 rounded-xl text-[10px] font-bold shadow-lg border-2 z-20 transition-all ${
-                                  selectedListing?.id === listing.id
-                                    ? "bg-blue-600 text-white border-white scale-110"
-                                    : "bg-slate-900 text-blue-400 border-blue-500/30 hover:border-blue-400"
-                                }`}
-                              >
-                                📌 {formatPrice(listing.price).replace("đ", "").replace(".000.000", "M").replace(".000", "k")}
-                              </button>
-                            );
-                          })}
-                        </div>
-
-                        {/* Selected Listing Popup inside Simulation Map */}
-                        {selectedListing && (
-                          <div className="absolute bottom-4 left-4 right-4 bg-slate-900/95 border border-slate-800 p-3.5 rounded-2xl flex items-center gap-3 z-30 shadow-2xl backdrop-blur-md text-white">
-                            <img
-                              src={selectedListing.images[0]}
-                              alt={selectedListing.title}
-                              className="w-16 h-16 object-cover rounded-xl border border-white/10"
-                            />
-                            <div className="flex-1 min-w-0">
-                              <h5 className="font-bold text-xs text-white line-clamp-1">
-                                {selectedListing.title}
-                              </h5>
-                              <p className="text-blue-400 font-extrabold text-xs mt-0.5">
-                                {formatPrice(selectedListing.price)}/tháng
-                              </p>
-                              <div className="flex justify-between items-center text-[9px] text-white/50 font-semibold mt-1.5 font-sans">
-                                <span>{selectedListing.area} m² • {selectedListing.district}</span>
-                                <Link
-                                  href={`/app/listings/${selectedListing.id}`}
-                                  className="text-blue-400 hover:text-blue-300 font-bold flex items-center gap-0.5"
-                                >
-                                  Xem chi tiết <ChevronRight className="h-3 w-3" />
-                                </Link>
-                              </div>
-                            </div>
-                            <button
-                              onClick={() => setSelectedListing(null)}
-                              className="absolute top-2 right-2 text-white/40 hover:text-white/80 text-xs font-bold"
-                            >
-                              ✕
-                            </button>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Map Controls Decoration footer */}
-                      <div className="relative flex justify-between items-center text-[10px] text-white/40 font-semibold z-10">
-                        <span>Tọa độ trung tâm: {userCoords ? `${userCoords.lat.toFixed(4)}, ${userCoords.lng.toFixed(4)}` : "16.0544, 108.2022"}</span>
-                        <span>Đã tìm thấy {filteredListings.length} phòng trong bán kính</span>
-                      </div>
-                    </div>
-                  )}
+                        </Link>
+                      </Popup>
+                    )}
+                  </Map>
                 </div>
               </div>
             )}
