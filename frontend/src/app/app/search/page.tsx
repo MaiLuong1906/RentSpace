@@ -20,9 +20,34 @@ import { useListings, useNearbyListings } from "@/hooks/useListings";
 import { toast } from "sonner";
 import { formatPrice, getRoomTypeLabel } from "@/lib/mockData";
 
-// Conditionally import Mapbox GL only on the client side
-import Map, { Marker, Popup, NavigationControl, ViewStateChangeEvent } from "react-map-gl/mapbox";
-import "mapbox-gl/dist/mapbox-gl.css";
+// Import React Map GL and MapLibre GL (OpenStreetMap, no token needed)
+import Map, { Marker, Popup, NavigationControl } from "react-map-gl/maplibre";
+import type { ViewStateChangeEvent } from "react-map-gl/maplibre";
+import maplibregl from "maplibre-gl";
+import "maplibre-gl/dist/maplibre-gl.css";
+
+const osmStyle = {
+  version: 8 as const,
+  sources: {
+    "osm-tiles": {
+      type: "raster" as const,
+      tiles: [
+        "https://basemaps.cartocdn.com/rastertiles/voyager_labels_under/{z}/{x}/{y}.png",
+      ],
+      tileSize: 256,
+      attribution: "© OpenStreetMap contributors, © CARTO",
+    },
+  },
+  layers: [
+    {
+      id: "osm-tiles-layer",
+      type: "raster" as const,
+      source: "osm-tiles",
+      minzoom: 0,
+      maxzoom: 19,
+    },
+  ],
+};
 
 type ViewMode = "list" | "map";
 type SearchMode = "standard" | "nearby";
@@ -690,16 +715,17 @@ export default function SearchPage() {
 
                 {/* Map Component (2 Columns) */}
                 <div className="lg:col-span-2 bg-gray-100 border border-gray-200 rounded-3xl h-[600px] relative overflow-hidden shadow-inner">
-                  {/* Real Mapbox Map */}
+                  {/* Interactive Map */}
                   <Map
                     {...mapViewport}
                     onMove={(evt: ViewStateChangeEvent) => setMapViewport(evt.viewState)}
                     style={{ width: "100%", height: "100%" }}
-                    mapStyle="mapbox://styles/mapbox/streets-v12"
-                    mapboxAccessToken={mapboxToken}
-                    onError={(e) => {
-                      console.error("Mapbox error:", e);
-                      setMapError("Token Mapbox không hợp lệ hoặc đã hết hạn.");
+                    mapLib={maplibregl}
+                    mapStyle={osmStyle}
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    onError={(e: any) => {
+                      console.error("Map error:", e);
+                      setMapError("Không thể tải bản đồ.");
                     }}
                   >
                     <NavigationControl position="top-right" />
