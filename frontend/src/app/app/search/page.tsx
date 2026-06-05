@@ -81,6 +81,13 @@ export default function SearchPage() {
 
   // Get Mapbox token
   const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
+  const [mapError, setMapError] = useState<string | null>(null);
+
+  // Clear map error when token changes
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setMapError(null);
+  }, [mapboxToken]);
 
   // Fetch standard listings
   const { data: standardResponse, isLoading: standardLoading } = useListings({
@@ -690,6 +697,10 @@ export default function SearchPage() {
                     style={{ width: "100%", height: "100%" }}
                     mapStyle="mapbox://styles/mapbox/streets-v12"
                     mapboxAccessToken={mapboxToken}
+                    onError={(e) => {
+                      console.error("Mapbox error:", e);
+                      setMapError("Token Mapbox không hợp lệ hoặc đã hết hạn.");
+                    }}
                   >
                     <NavigationControl position="top-right" />
 
@@ -761,6 +772,25 @@ export default function SearchPage() {
                       </Popup>
                     )}
                   </Map>
+
+                  {/* Error Overlay for Invalid Mapbox Token */}
+                  {mapError && (
+                    <div className="absolute inset-0 bg-slate-950/90 z-50 flex flex-col justify-center items-center p-6 text-center text-white backdrop-blur-md">
+                      <div className="max-w-md bg-slate-900 border border-white/10 p-6 rounded-3xl shadow-2xl">
+                        <Info className="h-10 w-10 text-red-500 mx-auto mb-4 animate-pulse" />
+                        <h4 className="text-sm font-extrabold text-red-400">Lỗi Xác Thực Mapbox Token</h4>
+                        <p className="text-xs text-white/70 leading-relaxed mt-2">
+                          Mã token hiện tại của bạn không hợp lệ hoặc đã hết hạn. Hãy kiểm tra và cung cấp một Mapbox Access Token hợp lệ trong file <code className="bg-white/10 px-1.5 py-0.5 rounded font-mono text-[10px] text-red-300">.env.local</code> ở biến <code className="bg-white/10 px-1.5 py-0.5 rounded font-mono text-[10px] text-red-300">NEXT_PUBLIC_MAPBOX_TOKEN</code>.
+                        </p>
+                        <button
+                          onClick={() => setMapError(null)}
+                          className="mt-5 px-4 py-2 bg-blue-600 hover:bg-blue-500 active:scale-95 text-white text-xs font-bold rounded-xl transition-all shadow-md"
+                        >
+                          Thử tải lại bản đồ
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
