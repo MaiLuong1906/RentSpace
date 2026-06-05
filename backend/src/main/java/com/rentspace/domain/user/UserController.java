@@ -12,6 +12,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
@@ -65,9 +66,11 @@ public class UserController {
         return ResponseEntity.ok(ApiResponse.success(profile));
     }
 
-    // ===== GET /api/v1/users/all (Dev only) =====
+    // ===== GET /api/v1/users/all =====
     @GetMapping("/all")
-    @Operation(summary = "[Dev] Lấy danh sách tất cả người dùng")
+    @SecurityRequirement(name = "bearerAuth")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "[ADMIN] Lấy danh sách tất cả người dùng")
     public ResponseEntity<ApiResponse<List<UserProfileResponse>>> getAllUsers() {
         List<UserProfileResponse> profiles = userService.getAllUsers();
         return ResponseEntity.ok(ApiResponse.success(profiles));

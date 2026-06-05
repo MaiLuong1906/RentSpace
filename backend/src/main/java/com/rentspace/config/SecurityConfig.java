@@ -31,7 +31,6 @@ public class SecurityConfig {
     // Các endpoint hoàn toàn public (không cần đăng nhập)
     private static final String[] PUBLIC_ENDPOINTS = {
             "/api/v1/auth/**",
-            "/api/v1/users/all",           // Dev only - xem tất cả user
             "/api/v1/users/{userId}",       // Public - xem hồ sơ công khai
             "/uploads/**",                  // Static files (ảnh upload local)
             "/swagger-ui/**",
