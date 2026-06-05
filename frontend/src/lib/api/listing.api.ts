@@ -74,4 +74,16 @@ export const listingApi = {
     const response = await apiClient.delete(`/listings/${listingId}/images/${imageId}`);
     return response.data;
   },
+
+  // GET /api/v1/admin/listings — Admin lấy tất cả tin đăng
+  getAdminListings: async (params?: { status?: ListingStatus; page?: number; size?: number; sort?: string }): Promise<ApiResponse<PageResponse<Listing>>> => {
+    const response = await apiClient.get("/admin/listings", { params });
+    return response.data;
+  },
+
+  // PATCH /api/v1/admin/listings/{id}/status — Admin đổi trạng thái tin đăng
+  updateAdminListingStatus: async (id: string | number, status: ListingStatus): Promise<ApiResponse<Listing>> => {
+    const response = await apiClient.patch(`/admin/listings/${id}/status`, { status });
+    return response.data;
+  },
 };
