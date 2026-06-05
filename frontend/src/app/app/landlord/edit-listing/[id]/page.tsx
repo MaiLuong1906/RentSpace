@@ -2,10 +2,38 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { Upload, X, Loader2, ArrowLeft } from "lucide-react";
+import { Upload, X, Loader2, ArrowLeft, Locate } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { listingApi } from "@/lib/api/listing.api";
 import type { CreateListingRequest, ListingImage } from "@/types/listing.types";
+import { toast } from "sonner";
+
+import Map, { Marker } from "react-map-gl/maplibre";
+import maplibregl from "maplibre-gl";
+import "maplibre-gl/dist/maplibre-gl.css";
+
+const osmStyle = {
+  version: 8 as const,
+  sources: {
+    "osm-tiles": {
+      type: "raster" as const,
+      tiles: [
+        "https://basemaps.cartocdn.com/rastertiles/voyager_labels_under/{z}/{x}/{y}.png",
+      ],
+      tileSize: 256,
+      attribution: "© OpenStreetMap contributors, © CARTO",
+    },
+  },
+  layers: [
+    {
+      id: "osm-tiles-layer",
+      type: "raster" as const,
+      source: "osm-tiles",
+      minzoom: 0,
+      maxzoom: 19,
+    },
+  ],
+};
 
 export default function EditListingPage() {
   const router = useRouter();
@@ -18,6 +46,11 @@ export default function EditListingPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [coords, setCoords] = useState<{ lat: number; lng: number }>({
+    lat: 16.0544,
+    lng: 108.2022,
+  });
+  const [geocoding, setGeocoding] = useState(false);
 
   const [formData, setFormData] = useState({
     title: "",
@@ -82,6 +115,10 @@ export default function EditListingPage() {
         });
 
         setExistingImages(l.images || []);
+        setCoords({
+          lat: l.latitude ? Number(l.latitude) : 16.0544,
+          lng: l.longitude ? Number(l.longitude) : 108.2022,
+        });
         setLoading(false);
       } catch (err) {
         console.error("Error loading listing details:", err);
@@ -138,6 +175,37 @@ export default function EditListingPage() {
     }));
   };
 
+  const handleGeocode = async () => {
+    if (!formData.address) {
+      toast.error("Vui lòng nhập số nhà, tên đường trước.");
+      return;
+    }
+    setGeocoding(true);
+    try {
+      const fullAddress = `${formData.address}, ${formData.district || ""}, ${formData.city}`;
+      const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(fullAddress)}&limit=1`;
+      const response = await fetch(url, {
+        headers: {
+          "User-Agent": "RentSpaceApp/1.0",
+        },
+      });
+      const data = await response.json();
+      if (data && data.length > 0) {
+        const lat = parseFloat(data[0].lat);
+        const lng = parseFloat(data[0].lon);
+        setCoords({ lat, lng });
+        toast.success("Đã tìm thấy vị trí gợi ý trên bản đồ!");
+      } else {
+        toast.error("Không tìm thấy tọa độ cho địa chỉ này. Bạn có thể tự ghim trên bản đồ.");
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Lỗi khi tìm tọa độ tự động.");
+    } finally {
+      setGeocoding(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
@@ -152,6 +220,8 @@ export default function EditListingPage() {
         address: formData.address,
         district: formData.district || undefined,
         city: formData.city,
+        latitude: coords.lat,
+        longitude: coords.lng,
         pricePerMonth: Number(formData.price),
         areaM2: Number(formData.area),
         hasWifi: formData.amenities.includes("WiFi"),
@@ -410,6 +480,50 @@ export default function EditListingPage() {
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-500 cursor-not-allowed"
                     readOnly
                   />
+                </div>
+              </div>
+
+              <div>
+                <button
+                  type="button"
+                  onClick={handleGeocode}
+                  disabled={geocoding}
+                  className="mt-2 px-4 py-2 bg-blue-50 text-blue-600 border border-blue-200 rounded-lg font-medium hover:bg-blue-100 transition-colors disabled:opacity-50 flex items-center gap-2 cursor-pointer"
+                >
+                  {geocoding ? <Loader2 className="h-4 w-4 animate-spin" /> : <Locate className="h-4 w-4" />}
+                  Định vị địa chỉ trên bản đồ
+                </button>
+              </div>
+
+              <div className="mt-4 border border-gray-200 rounded-2xl overflow-hidden h-[300px] relative shadow-inner">
+                <Map
+                  initialViewState={{
+                    latitude: coords.lat,
+                    longitude: coords.lng,
+                    zoom: 14,
+                  }}
+                  latitude={coords.lat}
+                  longitude={coords.lng}
+                  onMove={(evt) => setCoords({ lat: evt.viewState.latitude, lng: evt.viewState.longitude })}
+                  style={{ width: "100%", height: "100%" }}
+                  mapLib={maplibregl}
+                  mapStyle={osmStyle}
+                  onClick={(e) => {
+                    setCoords({ lat: e.lngLat.lat, lng: e.lngLat.lng });
+                  }}
+                >
+                  <Marker
+                    latitude={coords.lat}
+                    longitude={coords.lng}
+                    draggable
+                    onDragEnd={(e) => {
+                      setCoords({ lat: e.lngLat.lat, lng: e.lngLat.lng });
+                    }}
+                  />
+                </Map>
+                <div className="absolute bottom-2 left-2 right-2 bg-white/95 backdrop-blur-sm px-3 py-2 rounded-xl border border-gray-150 text-xs text-gray-750 flex items-center justify-between shadow-sm z-10">
+                  <span>Tọa độ ghim: <strong>{coords.lat.toFixed(6)}, {coords.lng.toFixed(6)}</strong></span>
+                  <span className="font-semibold text-blue-650">Kéo ghim hoặc click bản đồ để chỉnh sửa</span>
                 </div>
               </div>
             </div>
