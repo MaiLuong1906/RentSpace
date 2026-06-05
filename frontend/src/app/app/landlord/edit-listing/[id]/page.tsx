@@ -181,22 +181,41 @@ export default function EditListingPage() {
       return;
     }
     setGeocoding(true);
+
+    const searchQueries = [
+      // 1. Full address query with country
+      `${formData.address}, ${formData.district ? 'Quận ' + formData.district : ''}, ${formData.city}, Việt Nam`,
+      // 2. Street and City query
+      `${formData.address}, ${formData.city}, Việt Nam`,
+      // 3. District and City query fallback
+      `${formData.district ? 'Quận ' + formData.district : ''}, ${formData.city}, Việt Nam`
+    ];
+
     try {
-      const fullAddress = `${formData.address}, ${formData.district || ""}, ${formData.city}`;
-      const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(fullAddress)}&limit=1`;
-      const response = await fetch(url, {
-        headers: {
-          "User-Agent": "RentSpaceApp/1.0",
-        },
-      });
-      const data = await response.json();
-      if (data && data.length > 0) {
-        const lat = parseFloat(data[0].lat);
-        const lng = parseFloat(data[0].lon);
-        setCoords({ lat, lng });
-        toast.success("Đã tìm thấy vị trí gợi ý trên bản đồ!");
-      } else {
-        toast.error("Không tìm thấy tọa độ cho địa chỉ này. Bạn có thể tự ghim trên bản đồ.");
+      let found = false;
+      for (const query of searchQueries) {
+        if (!query.trim()) continue;
+        
+        const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1`;
+        const response = await fetch(url, {
+          headers: {
+            "User-Agent": "RentSpaceApp/1.0",
+          },
+        });
+        const data = await response.json();
+        
+        if (data && data.length > 0) {
+          const lat = parseFloat(data[0].lat);
+          const lng = parseFloat(data[0].lon);
+          setCoords({ lat, lng });
+          toast.success(`Định vị gợi ý theo khu vực: "${data[0].display_name.split(',')[0]}"`);
+          found = true;
+          break;
+        }
+      }
+
+      if (!found) {
+        toast.error("Không tìm thấy địa điểm trên. Bạn có thể tự ghim trên bản đồ.");
       }
     } catch (err) {
       console.error(err);
