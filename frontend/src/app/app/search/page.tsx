@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import {
   Search as SearchIcon,
@@ -101,71 +101,76 @@ export default function SearchPage() {
   });
 
   const isLoading = searchMode === "standard" ? standardLoading : nearbyLoading;
-  const rawListings = searchMode === "standard" 
-    ? (standardResponse?.data?.content || []) 
-    : (nearbyResponse?.data || []);
 
   // Transform listings to unified UI representation
-  const transformedListings = rawListings.map((l) => {
-    const amenitiesList: string[] = [];
-    if (l.hasWifi) amenitiesList.push("WiFi");
-    if (l.hasParking) amenitiesList.push("Đỗ xe");
-    if (l.hasAirConditioner) amenitiesList.push("Điều hòa");
-    if (l.hasWashingMachine) amenitiesList.push("Máy giặt");
-    if (l.allowPets) amenitiesList.push("Thú cưng");
+  const transformedListings = useMemo(() => {
+    const rawListings = searchMode === "standard" 
+      ? (standardResponse?.data?.content || []) 
+      : (nearbyResponse?.data || []);
 
-    return {
-      id: String(l.id),
-      title: l.title,
-      description: l.description || "",
-      price: l.pricePerMonth,
-      address: l.address,
-      district: l.district || "",
-      city: l.city,
-      lat: l.latitude ? Number(l.latitude) : 16.0544,
-      lng: l.longitude ? Number(l.longitude) : 108.2022,
-      area: l.areaM2 || 0,
-      roomType: "single" as const,
-      images: l.images && l.images.length > 0
-        ? l.images.map((img) => img.imageUrl)
-        : ["https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800&h=600&fit=crop"],
-      amenities: amenitiesList,
-      landlordId: String(l.landlordId),
-      landlordName: l.landlordName,
-      landlordAvatar: l.landlordAvatar || "https://i.pravatar.cc/150?img=1",
-      landlordVerified: true,
-      status: l.status === "ACTIVE" ? ("available" as const) : ("rented" as const),
-      createdAt: l.createdAt,
-      rating: 4.8,
-      reviewCount: 12,
-    };
-  });
+    return rawListings.map((l) => {
+      const amenitiesList: string[] = [];
+      if (l.hasWifi) amenitiesList.push("WiFi");
+      if (l.hasParking) amenitiesList.push("Đỗ xe");
+      if (l.hasAirConditioner) amenitiesList.push("Điều hòa");
+      if (l.hasWashingMachine) amenitiesList.push("Máy giặt");
+      if (l.allowPets) amenitiesList.push("Thú cưng");
+
+      return {
+        id: String(l.id),
+        title: l.title,
+        description: l.description || "",
+        price: l.pricePerMonth,
+        address: l.address,
+        district: l.district || "",
+        city: l.city,
+        lat: l.latitude ? Number(l.latitude) : 16.0544,
+        lng: l.longitude ? Number(l.longitude) : 108.2022,
+        area: l.areaM2 || 0,
+        roomType: "single" as const,
+        images: l.images && l.images.length > 0
+          ? l.images.map((img) => img.imageUrl)
+          : ["https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800&h=600&fit=crop"],
+        amenities: amenitiesList,
+        landlordId: String(l.landlordId),
+        landlordName: l.landlordName,
+        landlordAvatar: l.landlordAvatar || "https://i.pravatar.cc/150?img=1",
+        landlordVerified: true,
+        status: l.status === "ACTIVE" ? ("available" as const) : ("rented" as const),
+        createdAt: l.createdAt,
+        rating: 4.8,
+        reviewCount: 12,
+      };
+    });
+  }, [standardResponse, nearbyResponse, searchMode]);
 
   // Client-side local filtering for fields not natively handled by API
-  const filteredListings = transformedListings.filter((listing) => {
-    // 1. Text keyword query matching title or address
-    if (filters.query &&
-        !listing.title.toLowerCase().includes(filters.query.toLowerCase()) &&
-        !listing.address.toLowerCase().includes(filters.query.toLowerCase())) {
-      return false;
-    }
-    // 2. Room Type filter
-    if (filters.roomType && listing.roomType !== filters.roomType) {
-      return false;
-    }
-    // 3. Amenity matching
-    if (filters.amenities.length > 0) {
-      if (!filters.amenities.every((a) => listing.amenities.includes(a))) {
+  const filteredListings = useMemo(() => {
+    return transformedListings.filter((listing) => {
+      // 1. Text keyword query matching title or address
+      if (filters.query &&
+          !listing.title.toLowerCase().includes(filters.query.toLowerCase()) &&
+          !listing.address.toLowerCase().includes(filters.query.toLowerCase())) {
         return false;
       }
-    }
-    return true;
-  });
+      // 2. Room Type filter
+      if (filters.roomType && listing.roomType !== filters.roomType) {
+        return false;
+      }
+      // 3. Amenity matching
+      if (filters.amenities.length > 0) {
+        if (!filters.amenities.every((a) => listing.amenities.includes(a))) {
+          return false;
+        }
+      }
+      return true;
+    });
+  }, [transformedListings, filters]);
 
   // Extract unique amenities list
-  const allAmenities = Array.from(
-    new Set(transformedListings.flatMap((l) => l.amenities))
-  );
+  const allAmenities = useMemo(() => {
+    return Array.from(new Set(transformedListings.flatMap((l) => l.amenities)));
+  }, [transformedListings]);
 
   const toggleAmenity = (amenity: string) => {
     setFilters({
