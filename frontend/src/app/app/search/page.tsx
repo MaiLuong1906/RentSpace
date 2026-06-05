@@ -104,15 +104,7 @@ export default function SearchPage() {
     zoom: 13,
   });
 
-  // Get Mapbox token
-  const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
   const [mapError, setMapError] = useState<string | null>(null);
-
-  // Clear map error when token changes
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setMapError(null);
-  }, [mapboxToken]);
 
   // Fetch standard listings
   const { data: standardResponse, isLoading: standardLoading } = useListings({
@@ -799,14 +791,14 @@ export default function SearchPage() {
                     )}
                   </Map>
 
-                  {/* Error Overlay for Invalid Mapbox Token */}
+                  {/* Error Overlay for Map Loading Failures */}
                   {mapError && (
                     <div className="absolute inset-0 bg-slate-950/90 z-50 flex flex-col justify-center items-center p-6 text-center text-white backdrop-blur-md">
                       <div className="max-w-md bg-slate-900 border border-white/10 p-6 rounded-3xl shadow-2xl">
                         <Info className="h-10 w-10 text-red-500 mx-auto mb-4 animate-pulse" />
-                        <h4 className="text-sm font-extrabold text-red-400">Lỗi Xác Thực Mapbox Token</h4>
+                        <h4 className="text-sm font-extrabold text-red-400">Không Thể Tải Bản Đồ</h4>
                         <p className="text-xs text-white/70 leading-relaxed mt-2">
-                          Mã token hiện tại của bạn không hợp lệ hoặc đã hết hạn. Hãy kiểm tra và cung cấp một Mapbox Access Token hợp lệ trong file <code className="bg-white/10 px-1.5 py-0.5 rounded font-mono text-[10px] text-red-300">.env.local</code> ở biến <code className="bg-white/10 px-1.5 py-0.5 rounded font-mono text-[10px] text-red-300">NEXT_PUBLIC_MAPBOX_TOKEN</code>.
+                          Đã xảy ra sự cố khi tải dữ liệu bản đồ. Vui lòng kiểm tra lại kết nối mạng của bạn hoặc thử tải lại trang.
                         </p>
                         <button
                           onClick={() => setMapError(null)}

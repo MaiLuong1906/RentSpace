@@ -35,6 +35,8 @@ const osmStyle = {
   ],
 };
 
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
 export default function EditListingPage() {
   const router = useRouter();
   const params = useParams();
@@ -49,6 +51,11 @@ export default function EditListingPage() {
   const [coords, setCoords] = useState<{ lat: number; lng: number }>({
     lat: 16.0544,
     lng: 108.2022,
+  });
+  const [viewport, setViewport] = useState({
+    latitude: 16.0544,
+    longitude: 108.2022,
+    zoom: 14,
   });
   const [geocoding, setGeocoding] = useState(false);
 
@@ -115,9 +122,13 @@ export default function EditListingPage() {
         });
 
         setExistingImages(l.images || []);
-        setCoords({
-          lat: l.latitude ? Number(l.latitude) : 16.0544,
-          lng: l.longitude ? Number(l.longitude) : 108.2022,
+        const initialLat = l.latitude ? Number(l.latitude) : 16.0544;
+        const initialLng = l.longitude ? Number(l.longitude) : 108.2022;
+        setCoords({ lat: initialLat, lng: initialLng });
+        setViewport({
+          latitude: initialLat,
+          longitude: initialLng,
+          zoom: 14,
         });
         setLoading(false);
       } catch (err) {
@@ -193,8 +204,14 @@ export default function EditListingPage() {
 
     try {
       let found = false;
-      for (const query of searchQueries) {
+      for (let i = 0; i < searchQueries.length; i++) {
+        const query = searchQueries[i];
         if (!query.trim()) continue;
+        
+        // Trì hoãn 1 giây từ request thứ 2 trở đi để tuân thủ giới hạn của Nominatim API
+        if (i > 0) {
+          await sleep(1000);
+        }
         
         const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1`;
         const response = await fetch(url, {
@@ -202,12 +219,15 @@ export default function EditListingPage() {
             "User-Agent": "RentSpaceApp/1.0",
           },
         });
+        
+        if (!response.ok) continue;
         const data = await response.json();
         
         if (data && data.length > 0) {
           const lat = parseFloat(data[0].lat);
           const lng = parseFloat(data[0].lon);
           setCoords({ lat, lng });
+          setViewport((prev) => ({ ...prev, latitude: lat, longitude: lng }));
           toast.success(`Định vị gợi ý theo khu vực: "${data[0].display_name.split(',')[0]}"`);
           found = true;
           break;
@@ -516,14 +536,8 @@ export default function EditListingPage() {
 
               <div className="mt-4 border border-gray-200 rounded-2xl overflow-hidden h-[300px] relative shadow-inner">
                 <Map
-                  initialViewState={{
-                    latitude: coords.lat,
-                    longitude: coords.lng,
-                    zoom: 14,
-                  }}
-                  latitude={coords.lat}
-                  longitude={coords.lng}
-                  onMove={(evt) => setCoords({ lat: evt.viewState.latitude, lng: evt.viewState.longitude })}
+                  {...viewport}
+                  onMove={(evt) => setViewport(evt.viewState)}
                   style={{ width: "100%", height: "100%" }}
                   mapLib={maplibregl}
                   mapStyle={osmStyle}
