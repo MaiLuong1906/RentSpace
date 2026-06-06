@@ -7,9 +7,12 @@ import { useCreateReview } from "@/hooks/useReviews";
 interface ReviewFormProps {
   listingId: number;
   onSuccess?: () => void;
+  onCancel?: () => void;
 }
 
-export function ReviewForm({ listingId, onSuccess }: ReviewFormProps) {
+const RATING_LABELS = ["", "Rất tệ", "Tệ", "Bình thường", "Tốt", "Xuất sắc"];
+
+export function ReviewForm({ listingId, onSuccess, onCancel }: ReviewFormProps) {
   const [rating, setRating] = useState(0);
   const [hoveredRating, setHoveredRating] = useState(0);
   const [comment, setComment] = useState("");
@@ -37,14 +40,19 @@ export function ReviewForm({ listingId, onSuccess }: ReviewFormProps) {
     }
   };
 
-  return (
-    <form className="review-form" onSubmit={handleSubmit}>
-      <h3 className="review-form__title">Viết đánh giá của bạn</h3>
+  const displayRating = hoveredRating || rating;
 
-      {/* Lựa chọn số sao */}
-      <div className="review-form__stars">
-        <p className="review-form__label">Đánh giá *</p>
-        <div className="review-form__star-row">
+  return (
+    <form
+      onSubmit={handleSubmit}
+      className="bg-blue-50 border border-blue-100 rounded-xl p-5 mb-6"
+    >
+      <h3 className="text-base font-semibold text-gray-800 mb-4">Viết đánh giá của bạn</h3>
+
+      {/* Chọn số sao */}
+      <div className="mb-4">
+        <p className="text-sm font-medium text-gray-700 mb-2">Đánh giá *</p>
+        <div className="flex items-center gap-1">
           {Array.from({ length: 5 }).map((_, i) => {
             const starVal = i + 1;
             return (
@@ -54,61 +62,77 @@ export function ReviewForm({ listingId, onSuccess }: ReviewFormProps) {
                 onClick={() => setRating(starVal)}
                 onMouseEnter={() => setHoveredRating(starVal)}
                 onMouseLeave={() => setHoveredRating(0)}
-                className="review-form__star-btn"
+                className="p-0.5 transition-transform hover:scale-110"
               >
                 <Star
                   size={28}
                   className={
-                    starVal <= (hoveredRating || rating)
-                      ? "review-form__star review-form__star--active"
-                      : "review-form__star"
+                    starVal <= displayRating
+                      ? "fill-yellow-400 text-yellow-400"
+                      : "text-gray-300"
                   }
                 />
               </button>
             );
           })}
-          {rating > 0 && (
-            <span className="review-form__rating-label">
-              {["", "Rất tệ", "Tệ", "Bình thường", "Tốt", "Xuất sắc"][rating]}
+          {displayRating > 0 && (
+            <span className="ml-2 text-sm font-semibold text-blue-600">
+              {RATING_LABELS[displayRating]}
             </span>
           )}
         </div>
       </div>
 
-      {/* Ô nhập bình luận */}
-      <div className="review-form__field">
-        <label className="review-form__label" htmlFor="review-comment">
-          Bình luận (không bắt buộc)
+      {/* Textarea bình luận */}
+      <div className="mb-4">
+        <label className="block text-sm font-medium text-gray-700 mb-1.5" htmlFor="review-comment">
+          Bình luận <span className="text-gray-400 font-normal">(không bắt buộc)</span>
         </label>
         <textarea
           id="review-comment"
-          className="review-form__textarea"
-          rows={4}
+          rows={3}
           maxLength={1000}
           placeholder="Chia sẻ trải nghiệm thuê phòng của bạn..."
           value={comment}
           onChange={(e) => setComment(e.target.value)}
+          className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none bg-white"
         />
-        <p className="review-form__char-count">{comment.length}/1000</p>
+        <p className="text-right text-xs text-gray-400 mt-1">{comment.length}/1000</p>
       </div>
 
-      {/* Hiển thị lỗi */}
-      {error && <p className="review-form__error">{error}</p>}
+      {/* Lỗi */}
+      {error && (
+        <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2 mb-3">
+          {error}
+        </p>
+      )}
 
-      <button
-        type="submit"
-        disabled={createReview.isPending}
-        className="review-form__submit"
-      >
-        {createReview.isPending ? (
-          <>
-            <Loader2 size={16} className="animate-spin" />
-            Đang gửi...
-          </>
-        ) : (
-          "Gửi đánh giá"
+      {/* Buttons */}
+      <div className="flex gap-3">
+        {onCancel && (
+          <button
+            type="button"
+            onClick={onCancel}
+            className="flex-1 px-4 py-2.5 text-sm border-2 border-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-50 transition-colors"
+          >
+            Hủy
+          </button>
         )}
-      </button>
+        <button
+          type="submit"
+          disabled={createReview.isPending}
+          className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 text-sm bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 disabled:opacity-60 transition-colors"
+        >
+          {createReview.isPending ? (
+            <>
+              <Loader2 size={15} className="animate-spin" />
+              Đang gửi...
+            </>
+          ) : (
+            "Gửi đánh giá"
+          )}
+        </button>
+      </div>
     </form>
   );
 }

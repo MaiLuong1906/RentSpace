@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Flag, Loader2, X } from "lucide-react";
+import { Flag, Loader2, X, CheckCircle2 } from "lucide-react";
 import { useSubmitReport } from "@/hooks/useReviews";
 
 interface ReportModalProps {
@@ -47,89 +47,121 @@ export function ReportModal({ listingId, listingTitle, onClose }: ReportModalPro
   };
 
   return (
-    <div className="report-modal__overlay" onClick={onClose}>
-      <div className="report-modal" onClick={(e) => e.stopPropagation()} role="dialog">
+    /* Overlay */
+    <div
+      className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+      onClick={onClose}
+    >
+      {/* Modal */}
+      <div
+        className="bg-white rounded-2xl shadow-2xl w-full max-w-md"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Header */}
-        <div className="report-modal__header">
-          <div className="report-modal__title-row">
-            <Flag size={18} className="report-modal__icon" />
-            <h3 className="report-modal__title">Báo cáo vi phạm</h3>
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+          <div className="flex items-center gap-2 text-red-600">
+            <Flag size={18} />
+            <h3 className="font-bold text-gray-900">Báo cáo vi phạm</h3>
           </div>
-          <button className="report-modal__close" onClick={onClose} aria-label="Đóng">
-            <X size={20} />
+          <button
+            onClick={onClose}
+            className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+          >
+            <X size={18} />
           </button>
         </div>
 
         {submitted ? (
-          /* Trạng thái đã gửi thành công */
-          <div className="report-modal__success">
-            <div className="report-modal__success-icon">✓</div>
-            <p className="report-modal__success-title">Báo cáo đã được gửi!</p>
-            <p className="report-modal__success-desc">
-              Cảm ơn bạn đã phản ánh. Đội ngũ kiểm duyệt sẽ xem xét và xử lý trong thời gian sớm nhất.
+          /* ✅ Trạng thái thành công */
+          <div className="px-6 py-10 text-center">
+            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <CheckCircle2 className="h-8 w-8 text-green-600" />
+            </div>
+            <h4 className="text-lg font-bold text-gray-900 mb-2">Báo cáo đã được gửi!</h4>
+            <p className="text-sm text-gray-500 mb-6">
+              Cảm ơn bạn đã phản ánh. Đội ngũ kiểm duyệt sẽ xem xét trong thời gian sớm nhất.
             </p>
-            <button className="report-modal__close-btn" onClick={onClose}>
+            <button
+              onClick={onClose}
+              className="px-6 py-2.5 bg-gray-900 text-white text-sm font-semibold rounded-lg hover:bg-gray-700 transition-colors"
+            >
               Đóng
             </button>
           </div>
         ) : (
-          <form className="report-modal__form" onSubmit={handleSubmit}>
-            <p className="report-modal__listing-name">
-              Phòng trọ: <strong>{listingTitle}</strong>
+          <form onSubmit={handleSubmit} className="px-6 py-5">
+            {/* Tên phòng trọ */}
+            <p className="text-xs text-gray-500 mb-4">
+              Phòng trọ: <span className="font-semibold text-gray-700">{listingTitle}</span>
             </p>
 
-            {/* Lý do báo cáo */}
-            <div className="report-modal__field">
-              <label className="report-modal__label">Lý do báo cáo *</label>
-              <div className="report-modal__reasons">
+            {/* Lý do */}
+            <div className="mb-4">
+              <p className="text-sm font-medium text-gray-700 mb-2">Lý do báo cáo *</p>
+              <div className="space-y-2">
                 {REPORT_REASONS.map((r) => (
-                  <label key={r} className="report-modal__reason-option">
+                  <label
+                    key={r}
+                    className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
+                      reason === r
+                        ? "border-red-400 bg-red-50"
+                        : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
+                    }`}
+                  >
                     <input
                       type="radio"
                       name="reason"
                       value={r}
                       checked={reason === r}
                       onChange={() => setReason(r)}
+                      className="text-red-500 accent-red-500"
                     />
-                    <span>{r}</span>
+                    <span className="text-sm text-gray-700">{r}</span>
                   </label>
                 ))}
               </div>
             </div>
 
-            {/* Mô tả chi tiết */}
-            <div className="report-modal__field">
-              <label className="report-modal__label" htmlFor="report-description">
-                Mô tả chi tiết (không bắt buộc)
+            {/* Mô tả */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                Mô tả chi tiết <span className="text-gray-400 font-normal">(không bắt buộc)</span>
               </label>
               <textarea
-                id="report-description"
-                className="report-modal__textarea"
-                rows={4}
+                rows={3}
                 maxLength={1000}
-                placeholder="Mô tả chi tiết về vi phạm bạn muốn báo cáo..."
+                placeholder="Mô tả chi tiết về vi phạm..."
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
+                className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-red-400 focus:border-transparent resize-none"
               />
-              <p className="report-modal__char-count">{description.length}/1000</p>
+              <p className="text-right text-xs text-gray-400 mt-1">{description.length}/1000</p>
             </div>
 
-            {/* Hiển thị lỗi */}
-            {error && <p className="report-modal__error">{error}</p>}
+            {/* Lỗi */}
+            {error && (
+              <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2 mb-4">
+                {error}
+              </p>
+            )}
 
-            {/* Actions */}
-            <div className="report-modal__actions">
-              <button type="button" className="report-modal__cancel-btn" onClick={onClose}>
+            {/* Buttons */}
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={onClose}
+                className="flex-1 px-4 py-2.5 text-sm border-2 border-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-50 transition-colors"
+              >
                 Hủy
               </button>
               <button
                 type="submit"
                 disabled={submitReport.isPending}
-                className="report-modal__submit-btn"
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 text-sm bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 disabled:opacity-60 transition-colors"
               >
                 {submitReport.isPending ? (
                   <>
-                    <Loader2 size={16} className="animate-spin" />
+                    <Loader2 size={15} className="animate-spin" />
                     Đang gửi...
                   </>
                 ) : (
