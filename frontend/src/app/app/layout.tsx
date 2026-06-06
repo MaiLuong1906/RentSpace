@@ -16,6 +16,7 @@ import {
   Shield,
   Users,
 } from "lucide-react";
+import { authApi } from "@/lib/api/auth.api";
 
 export default function DashboardLayout({
   children,
@@ -40,14 +41,8 @@ export default function DashboardLayout({
 
   const handleLogout = async () => {
     try {
-      const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api/v1";
       if (session?.accessToken) {
-        await fetch(`${apiBaseUrl}/auth/logout`, {
-          method: "POST",
-          headers: {
-            "Authorization": `Bearer ${session.accessToken}`,
-          },
-        });
+        await authApi.logout();
       }
     } catch (error) {
       console.error("Logout API error:", error);

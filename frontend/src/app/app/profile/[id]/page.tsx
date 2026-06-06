@@ -19,6 +19,7 @@ import {
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { mockListings, formatPrice, getRoomTypeLabel } from "@/lib/mockData";
+import { userApi } from "@/lib/api/user.api";
 
 interface PublicProfile {
   id: number;
@@ -48,18 +49,10 @@ export default function PublicProfilePage({ params }: { params: Promise<{ id: st
   useEffect(() => {
     const fetchPublicProfile = async () => {
       try {
-        const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api/v1";
-        const response = await fetch(`${apiBaseUrl}/users/${userId}`, {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
+        const result = await userApi.getUserProfile(userId);
 
-        const result = await response.json();
-
-        if (response.ok && result.success) {
-          setProfile(result.data);
+        if (result.success && result.data) {
+          setProfile(result.data as PublicProfile);
         } else {
           // Fallback sang Mock Data nếu không tìm thấy user trong Database (dành cho demo & testing)
           console.warn("Không tìm thấy user trên API. Đang sử dụng dữ liệu giả lập...");

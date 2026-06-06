@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { Users, Home, Shield, Flag, Clock, UserCheck, ShieldAlert } from "lucide-react";
@@ -11,6 +11,7 @@ import { ApiResponse, PageResponse } from "@/types/api.types";
 
 export default function AdminDashboard() {
   const { data: session, status: authStatus } = useSession();
+  const fetchedRef = useRef(false);
   const [stats, setStats] = useState({
     totalUsers: 0,
     activeListings: 0,
@@ -61,7 +62,10 @@ export default function AdminDashboard() {
     };
 
     if (authStatus === "authenticated") {
-      loadDashboardStats();
+      if (session?.user?.role === "ADMIN" && session?.accessToken && !fetchedRef.current) {
+        fetchedRef.current = true;
+        loadDashboardStats();
+      }
     }
   }, [session, authStatus]);
 

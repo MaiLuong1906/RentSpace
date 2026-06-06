@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Mail, Lock, Eye, EyeOff, ArrowLeft, KeyRound, CheckCircle2, AlertCircle, RefreshCw } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
+import { authApi } from "@/lib/api/auth.api";
 
 export default function ForgotPasswordPage() {
   const router = useRouter();
@@ -14,7 +15,7 @@ export default function ForgotPasswordPage() {
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  
+
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isResending, setIsResending] = useState(false);
@@ -90,18 +91,9 @@ export default function ForgotPasswordPage() {
     setIsLoading(true);
 
     try {
-      const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api/v1";
-      const response = await fetch(`${apiBaseUrl}/auth/forgot-password`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email }),
-      });
+      const data = await authApi.forgotPassword({ email });
 
-      const data = await response.json();
-
-      if (response.ok && data.success) {
+      if (data.success) {
         toast.success("Mã OTP khôi phục mật khẩu đã được gửi đến email của bạn!");
         setStep(2);
         setCountdown(60); // Đếm ngược 60s cho lần gửi lại tiếp theo
@@ -122,18 +114,9 @@ export default function ForgotPasswordPage() {
     setIsResending(true);
 
     try {
-      const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api/v1";
-      const response = await fetch(`${apiBaseUrl}/auth/forgot-password`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email }),
-      });
+      const data = await authApi.forgotPassword({ email });
 
-      const data = await response.json();
-
-      if (response.ok && data.success) {
+      if (data.success) {
         toast.success("Mã OTP mới đã được gửi thành công!");
         setCountdown(60);
       } else {
@@ -170,22 +153,13 @@ export default function ForgotPasswordPage() {
     setIsLoading(true);
 
     try {
-      const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api/v1";
-      const response = await fetch(`${apiBaseUrl}/auth/reset-password`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email: email,
-          otp: otpCode,
-          newPassword: password,
-        }),
+      const data = await authApi.resetPassword({
+        email: email,
+        otp: otpCode,
+        newPassword: password,
       });
 
-      const data = await response.json();
-
-      if (response.ok && data.success) {
+      if (data.success) {
         toast.success("Đặt lại mật khẩu thành công! Đang quay lại trang đăng nhập...");
         setTimeout(() => {
           router.push("/auth/login");

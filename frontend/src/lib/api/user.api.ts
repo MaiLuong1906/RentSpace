@@ -26,4 +26,14 @@ export const userApi = {
     const response = await apiClient.put("/users/me", data);
     return response.data;
   },
+
+  // PATCH /api/v1/users/me/avatar — Cập nhật ảnh đại diện
+  updateAvatar: async (formData: FormData): Promise<ApiResponse<User>> => {
+    const response = await apiClient.patch("/users/me/avatar", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+    return response.data;
+  },
 };

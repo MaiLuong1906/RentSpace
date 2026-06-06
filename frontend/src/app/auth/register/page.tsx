@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Eye, EyeOff, Mail, Lock, User, Phone, CheckCircle2, AlertCircle } from "lucide-react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
+import { authApi } from "@/lib/api/auth.api";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -48,24 +49,15 @@ export default function RegisterPage() {
     setIsLoading(true);
 
     try {
-      const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api/v1";
-      const response = await fetch(`${apiBaseUrl}/auth/register`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email: formData.email,
-          password: formData.password,
-          fullName: formData.fullName,
-          phoneNumber: formData.phone,
-          role: formData.role,
-        }),
+      const data = await authApi.register({
+        email: formData.email,
+        password: formData.password,
+        fullName: formData.fullName,
+        phoneNumber: formData.phone,
+        role: formData.role,
       });
 
-      const data = await response.json();
-
-      if (response.ok && data.success) {
+      if (data.success) {
         toast.success("Đăng ký thành công! Đang chuyển đến trang xác thực OTP.");
         router.push(`/auth/verify-email?email=${encodeURIComponent(formData.email)}`);
       } else {
