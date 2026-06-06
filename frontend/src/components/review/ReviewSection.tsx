@@ -6,6 +6,7 @@ import { Star, MessageSquare, Loader2, PenSquare } from "lucide-react";
 import { useListingReviews, useDeleteReview } from "@/hooks/useReviews";
 import { ReviewCard } from "./ReviewCard";
 import { ReviewForm } from "./ReviewForm";
+import { toast } from "sonner";
 
 interface ReviewSectionProps {
   listingId: number;
@@ -39,7 +40,13 @@ export function ReviewSection({ listingId }: ReviewSectionProps) {
 
   const handleDelete = async (reviewId: number) => {
     if (confirm("Bạn có chắc muốn xóa đánh giá này không?")) {
-      await deleteReview.mutateAsync(reviewId);
+      try {
+        await deleteReview.mutateAsync(reviewId);
+        toast.success("Xóa đánh giá thành công!");
+      } catch (err: unknown) {
+        const apiError = err as { response?: { data?: { message?: string } } };
+        toast.error(apiError?.response?.data?.message ?? "Không thể xóa đánh giá. Vui lòng thử lại.");
+      }
     }
   };
 
@@ -112,10 +119,10 @@ export function ReviewSection({ listingId }: ReviewSectionProps) {
                 key={review.id}
                 review={review}
                 listingId={listingId}
-                canEdit={isTenant && review.author.id === Number(session?.user?.id)}
+                canEdit={isTenant && String(review.author.id) === String(session?.user?.id)}
                 canDelete={
                   isAdmin ||
-                  (isTenant && review.author.id === Number(session?.user?.id))
+                  (isTenant && String(review.author.id) === String(session?.user?.id))
                 }
                 onDelete={handleDelete}
               />
