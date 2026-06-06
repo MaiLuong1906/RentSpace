@@ -91,6 +91,7 @@ export interface ListingSearchParams {
   page?: number;
   size?: number;
   sort?: string;
+  status?: ListingStatus;
 }
 
 // --- Params tìm kiếm theo tọa độ (khớp GET /listings/nearby) ---
