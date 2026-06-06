@@ -111,6 +111,8 @@ export function ReviewSection({ listingId }: ReviewSectionProps) {
               <ReviewCard
                 key={review.id}
                 review={review}
+                listingId={listingId}
+                canEdit={isTenant && review.author.id === Number(session?.user?.id)}
                 canDelete={
                   isAdmin ||
                   (isTenant && review.author.id === Number(session?.user?.id))
