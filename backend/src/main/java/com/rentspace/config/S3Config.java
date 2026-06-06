@@ -7,6 +7,9 @@ import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.S3ClientBuilder;
+
+import java.net.URI;
 
 @Configuration
 public class S3Config {
@@ -20,22 +23,27 @@ public class S3Config {
     @Value("${aws.s3.region}")
     private String region;
 
+    @Value("${aws.s3.endpoint-url:}")
+    private String endpointUrl;
+
     @Bean
     public S3Client s3Client() {
+        AwsBasicCredentials credentials;
         if ("none".equals(accessKey) || "none".equals(secretKey)) {
-            // Nếu không có key thật, trả về client mặc định hoặc ném lỗi có ý nghĩa hơn
-            // Ở môi trường dev, chúng ta vẫn khởi tạo để tránh crash app
-            return S3Client.builder()
-                    .region(Region.of(region))
-                    .credentialsProvider(StaticCredentialsProvider.create(
-                            AwsBasicCredentials.create("dummy", "dummy")))
-                    .build();
+            credentials = AwsBasicCredentials.create("dummy", "dummy");
+        } else {
+            credentials = AwsBasicCredentials.create(accessKey, secretKey);
         }
 
-        return S3Client.builder()
+        S3ClientBuilder builder = S3Client.builder()
                 .region(Region.of(region))
-                .credentialsProvider(StaticCredentialsProvider.create(
-                        AwsBasicCredentials.create(accessKey, secretKey)))
-                .build();
+                .credentialsProvider(StaticCredentialsProvider.create(credentials));
+
+        if (endpointUrl != null && !endpointUrl.isBlank()) {
+            builder.endpointOverride(URI.create(endpointUrl));
+            builder.forcePathStyle(true); // MinIO/LocalStack require path style access
+        }
+
+        return builder.build();
     }
 }
