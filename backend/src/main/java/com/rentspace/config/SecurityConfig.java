@@ -44,7 +44,8 @@ public class SecurityConfig {
     private static final String[] PUBLIC_LISTING_GET_ENDPOINTS = {
             "/api/v1/listings",             // GET - tìm kiếm
             "/api/v1/listings/nearby",      // GET - tìm gần đây
-            "/api/v1/listings/*"            // GET - xem chi tiết
+            "/api/v1/listings/*",           // GET - xem chi tiết
+            "/api/v1/listings/*/reviews"    // GET - xem reviews của listing
     };
 
     @Bean

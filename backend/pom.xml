@@ -159,6 +159,13 @@
             <optional>true</optional>
         </dependency>
 
+        <!-- ===== Rate Limiting — Bucket4j ===== -->
+        <dependency>
+            <groupId>com.bucket4j</groupId>
+            <artifactId>bucket4j-core</artifactId>
+            <version>8.10.1</version>
+        </dependency>
+
         <!-- ===== Test ===== -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
