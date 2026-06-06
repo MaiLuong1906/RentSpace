@@ -74,12 +74,13 @@ public class ListingController {
 
     // ===== GET /api/v1/listings/my =====
     @GetMapping("/my")
-    @Operation(summary = "Danh sách tin của chủ trọ đang đăng nhập")
+    @Operation(summary = "Danh sách tin của chủ trọ đang đăng nhập (có thể lọc theo trạng thái)")
     @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<ApiResponse<Page<ListingResponse>>> getMyListings(
             @AuthenticationPrincipal UserDetails userDetails,
+            @RequestParam(required = false) ListingStatus status,
             @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
-        Page<ListingResponse> result = listingService.getMyListings(userDetails.getUsername(), pageable);
+        Page<ListingResponse> result = listingService.getMyListings(userDetails.getUsername(), status, pageable);
         return ResponseEntity.ok(ApiResponse.success(result));
     }
 

@@ -8,6 +8,7 @@ import com.rentspace.domain.user.User;
 import com.rentspace.domain.user.UserRepository;
 import com.rentspace.domain.user.enums.KycStatus;
 import com.rentspace.infrastructure.storage.StorageService;
+import com.rentspace.infrastructure.email.EmailService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -24,6 +25,7 @@ public class KycService {
 
     private final UserRepository userRepository;
     private final StorageService storageService;
+    private final EmailService emailService;
 
     // ===== USER: Nộp hồ sơ KYC =====
     @Transactional
@@ -91,6 +93,7 @@ public class KycService {
         user.setKycStatus(KycStatus.VERIFIED);
         userRepository.save(user);
         log.info("Admin đã duyệt KYC cho user id={}, email={}", userId, user.getEmail());
+        emailService.sendKycResultEmail(user.getEmail(), user.getFullName(), true, null);
     }
 
     // ===== ADMIN: Từ chối KYC =====
@@ -106,6 +109,7 @@ public class KycService {
         user.setKycStatus(KycStatus.REJECTED);
         userRepository.save(user);
         log.info("Admin đã từ chối KYC cho user id={}, email={}, lý do: {}", userId, user.getEmail(), reason);
+        emailService.sendKycResultEmail(user.getEmail(), user.getFullName(), false, reason);
     }
 
     // ===== Private mapper =====

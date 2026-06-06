@@ -53,4 +53,31 @@ public class EmailService {
             log.warn("Không thể gửi email chào mừng thực tế do chưa cấu hình SMTP. (Bỏ qua lỗi này ở môi trường dev)");
         }
     }
+
+    @Async
+    public void sendKycResultEmail(String toEmail, String fullName, boolean approved, String rejectReason) {
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setFrom(fromEmail);
+        message.setTo(toEmail);
+        if (approved) {
+            message.setSubject("[RentSpace] Hồ sơ KYC của bạn đã được phê duyệt thành công!");
+            message.setText(String.format(
+                    "Xin chào %s,\n\nHồ sơ xác thực danh tính (KYC) của bạn trên RentSpace đã được phê duyệt thành công.\n\nBây giờ bạn đã có đầy đủ quyền đăng tin cho thuê phòng trên hệ thống của chúng tôi.\n\nTrân trọng,\nĐội ngũ RentSpace",
+                    fullName
+            ));
+        } else {
+            message.setSubject("[RentSpace] Hồ sơ KYC của bạn đã bị từ chối");
+            message.setText(String.format(
+                    "Xin chào %s,\n\nHồ sơ xác thực danh tính (KYC) của bạn trên RentSpace không được chấp nhận.\n\nLý do từ chối: %s\n\nVui lòng kiểm tra lại thông tin và nộp lại hồ sơ tại trang cá nhân.\n\nTrân trọng,\nĐội ngũ RentSpace",
+                    fullName,
+                    rejectReason
+            ));
+        }
+        try {
+            mailSender.send(message);
+            log.info("Đã gửi email kết quả KYC đến: {} (approved={})", toEmail, approved);
+        } catch (Exception e) {
+            log.warn("Không thể gửi email kết quả KYC thực tế do chưa cấu hình SMTP. (Bỏ qua lỗi này ở môi trường dev)");
+        }
+    }
 }

@@ -50,7 +50,11 @@ public class ListingService {
     }
 
     // ===== GET /api/v1/listings/my =====
-    public Page<ListingResponse> getMyListings(String email, Pageable pageable) {
+    public Page<ListingResponse> getMyListings(String email, ListingStatus status, Pageable pageable) {
+        if (status != null) {
+            return listingRepository.findByLandlord_EmailAndStatus(email, status, pageable)
+                    .map(listingMapper::toResponse);
+        }
         return listingRepository.findByLandlord_EmailAndStatusNot(email, ListingStatus.DELETED, pageable)
                 .map(listingMapper::toResponse);
     }
@@ -97,7 +101,7 @@ public class ListingService {
                 .hasAirConditioner(Boolean.TRUE.equals(request.getHasAirConditioner()))
                 .hasWashingMachine(Boolean.TRUE.equals(request.getHasWashingMachine()))
                 .allowPets(Boolean.TRUE.equals(request.getAllowPets()))
-                .status(ListingStatus.ACTIVE)
+                .status(ListingStatus.PENDING)
                 .build();
 
         Listing saved = listingRepository.save(listing);
@@ -201,6 +205,48 @@ public class ListingService {
         }
 
         listingImageRepository.delete(image);
+    }
+
+    // ===== ADMIN: Lấy danh sách tin đăng =====
+    public Page<ListingResponse> getAllListingsForAdmin(ListingStatus status, Pageable pageable) {
+        if (status != null) {
+            return listingRepository.findByStatus(status, pageable)
+                    .map(listingMapper::toResponse);
+        }
+        return listingRepository.findByStatusNot(ListingStatus.DELETED, pageable)
+                .map(listingMapper::toResponse);
+    }
+
+    // ===== ADMIN: Duyệt tin đăng =====
+    @Transactional
+    public ListingResponse approveListing(Long id) {
+        Listing listing = listingRepository.findByIdAndStatusNot(id, ListingStatus.DELETED)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy tin đăng: " + id));
+
+        if (listing.getStatus() != ListingStatus.PENDING) {
+            throw new BusinessException("Chỉ có thể duyệt tin đăng ở trạng thái PENDING. Hiện tại: " + listing.getStatus());
+        }
+
+        listing.setStatus(ListingStatus.ACTIVE);
+        Listing saved = listingRepository.save(listing);
+        log.info("Admin đã duyệt tin đăng id={}, tiêu đề: {}", id, listing.getTitle());
+        return listingMapper.toResponse(saved);
+    }
+
+    // ===== ADMIN: Từ chối tin đăng =====
+    @Transactional
+    public ListingResponse rejectListing(Long id, String reason) {
+        Listing listing = listingRepository.findByIdAndStatusNot(id, ListingStatus.DELETED)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy tin đăng: " + id));
+
+        if (listing.getStatus() != ListingStatus.PENDING) {
+            throw new BusinessException("Chỉ có thể từ chối tin đăng ở trạng thái PENDING. Hiện tại: " + listing.getStatus());
+        }
+
+        listing.setStatus(ListingStatus.REJECTED);
+        Listing saved = listingRepository.save(listing);
+        log.info("Admin đã từ chối tin đăng id={}, tiêu đề: {}, lý do: {}", id, listing.getTitle(), reason);
+        return listingMapper.toResponse(saved);
     }
 
     // ===== Private Helpers =====
