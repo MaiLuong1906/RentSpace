@@ -24,9 +24,12 @@ function getRoomTypeLabel(type: string): string {
 
 export default function MyListingsPage() {
   const queryClient = useQueryClient();
+  const [statusFilter, setStatusFilter] = useState<ListingStatus | "ALL">("ALL");
 
   // Fetch real listings from backend
-  const { data: apiResponse, isLoading } = useMyListings();
+  const { data: apiResponse, isLoading } = useMyListings(
+    statusFilter !== "ALL" ? { status: statusFilter } : undefined
+  );
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [error, setError] = useState("");
 
@@ -43,7 +46,7 @@ export default function MyListingsPage() {
     images: l.images && l.images.length > 0
       ? l.images.map((img) => img.imageUrl)
       : ["https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800&h=600&fit=crop"],
-    status: l.status === "ACTIVE" ? ("available" as const) : l.status === "RENTED" ? ("rented" as const) : ("pending" as const),
+    status: l.status,
     originalStatus: l.status,
     rating: 4.8,
     reviewCount: 12,
@@ -121,21 +124,48 @@ export default function MyListingsPage() {
           <div className="bg-white rounded-lg shadow-md p-4">
             <div className="text-sm text-gray-600">Đang hiển thị</div>
             <div className="text-2xl font-bold text-green-600">
-              {myListings.filter((l) => l.status === "available").length}
+              {myListings.filter((l) => l.status === "ACTIVE").length}
             </div>
           </div>
           <div className="bg-white rounded-lg shadow-md p-4">
             <div className="text-sm text-gray-600">Đã cho thuê</div>
             <div className="text-2xl font-bold text-blue-600">
-              {myListings.filter((l) => l.status === "rented").length}
+              {myListings.filter((l) => l.status === "RENTED").length}
             </div>
           </div>
           <div className="bg-white rounded-lg shadow-md p-4">
-            <div className="text-sm text-gray-600">Lượt xem</div>
-            <div className="text-2xl font-bold text-purple-600">
-              {myListings.reduce((sum, l) => sum + l.reviewCount * 10, 0)}
+            <div className="text-sm text-gray-600">Chờ duyệt</div>
+            <div className="text-2xl font-bold text-yellow-600">
+              {myListings.filter((l) => l.status === "PENDING").length}
             </div>
           </div>
+        </div>
+
+        {/* Filters */}
+        <div className="flex flex-wrap gap-2 mb-6">
+          {(["ALL", "PENDING", "ACTIVE", "REJECTED", "RENTED", "INACTIVE"] as const).map((status) => (
+            <button
+              key={status}
+              onClick={() => setStatusFilter(status)}
+              className={`px-4 py-2 rounded-lg text-sm font-semibold border transition-all ${
+                statusFilter === status
+                  ? "bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-500/10"
+                  : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50"
+              }`}
+            >
+              {status === "ALL"
+                ? "Tất cả"
+                : status === "PENDING"
+                ? "Chờ duyệt"
+                : status === "ACTIVE"
+                ? "Đang hiển thị"
+                : status === "REJECTED"
+                ? "Bị từ chối"
+                : status === "RENTED"
+                ? "Đã cho thuê"
+                : "Tạm ẩn"}
+            </button>
+          ))}
         </div>
 
         {/* Listings Table */}
@@ -198,17 +228,25 @@ export default function MyListingsPage() {
                               <div className="text-xs text-gray-500">/tháng</div>
                             </td>
                             <td className="px-6 py-4">
-                              {listing.status === "available" ? (
+                              {listing.status === "ACTIVE" ? (
                                 <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                  Còn trống
+                                  Đang hiển thị
                                 </span>
-                              ) : listing.status === "rented" ? (
+                              ) : listing.status === "PENDING" ? (
+                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                  Chờ duyệt
+                                </span>
+                              ) : listing.status === "REJECTED" ? (
+                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                  Bị từ chối
+                                </span>
+                              ) : listing.status === "RENTED" ? (
                                 <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                                   Đã cho thuê
                                 </span>
                               ) : (
-                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                                  Tạm ẩn / Chờ duyệt
+                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                  Tạm ẩn
                                 </span>
                               )}
                             </td>
@@ -239,11 +277,11 @@ export default function MyListingsPage() {
                                   onClick={() => handleToggleStatus(listing.id, listing.originalStatus)}
                                   disabled={isOperating}
                                   className="p-3 text-green-600 hover:bg-green-50 rounded-lg disabled:opacity-50 transition-colors"
-                                  title={listing.status === "available" ? "Đổi sang Đã cho thuê" : "Đổi sang Còn trống"}
+                                  title={listing.status === "ACTIVE" ? "Đổi sang Đã cho thuê" : "Đổi sang Đang hiển thị"}
                                 >
                                   {isOperating ? (
                                     <Loader2 className="h-5 w-5 animate-spin" />
-                                  ) : listing.status === "available" ? (
+                                  ) : listing.status === "ACTIVE" ? (
                                     <ToggleRight className="h-5 w-5" />
                                   ) : (
                                     <ToggleLeft className="h-5 w-5" />

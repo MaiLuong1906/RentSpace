@@ -20,7 +20,7 @@ export function useListing(id: string | number) {
   });
 }
 
-export function useMyListings(params?: Pick<ListingSearchParams, "page" | "size" | "sort">) {
+export function useMyListings(params?: Pick<ListingSearchParams, "page" | "size" | "sort" | "status">) {
   return useQuery({
     queryKey: ["my-listings", params],
     queryFn: () => listingApi.getMyListings(params),

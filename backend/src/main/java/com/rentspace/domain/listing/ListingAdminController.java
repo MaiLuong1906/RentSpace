@@ -2,10 +2,12 @@ package com.rentspace.domain.listing;
 
 import com.rentspace.common.response.ApiResponse;
 import com.rentspace.domain.listing.dto.ListingResponse;
+import com.rentspace.domain.listing.dto.UpdateListingStatusRequest;
 import com.rentspace.domain.listing.enums.ListingStatus;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -51,5 +53,15 @@ public class ListingAdminController {
             @RequestParam(required = false, defaultValue = "Nội dung tin đăng không phù hợp hoặc thiếu thông tin") String reason) {
         ListingResponse response = listingService.rejectListing(id, reason);
         return ResponseEntity.ok(ApiResponse.success("Đã từ chối duyệt tin đăng", response));
+    }
+
+    // ===== PATCH /api/v1/admin/listings/{id}/status =====
+    @PatchMapping("/{id}/status")
+    @Operation(summary = "[ADMIN] Cập nhật trạng thái tin đăng phòng trọ (gọi trực tiếp từ dashboard)")
+    public ResponseEntity<ApiResponse<ListingResponse>> updateListingStatus(
+            @PathVariable Long id,
+            @Valid @RequestBody UpdateListingStatusRequest request) {
+        ListingResponse response = listingService.updateStatusForAdmin(id, request.getStatus());
+        return ResponseEntity.ok(ApiResponse.success("Cập nhật trạng thái tin đăng thành công", response));
     }
 }

@@ -24,7 +24,7 @@ export const listingApi = {
   },
 
   // GET /api/v1/listings/my — Tin đăng của landlord đang đăng nhập
-  getMyListings: async (params?: Pick<ListingSearchParams, "page" | "size" | "sort">): Promise<ApiResponse<PageResponse<Listing>>> => {
+  getMyListings: async (params?: Pick<ListingSearchParams, "page" | "size" | "sort" | "status">): Promise<ApiResponse<PageResponse<Listing>>> => {
     const response = await apiClient.get("/listings/my", { params });
     return response.data;
   },

@@ -162,6 +162,8 @@ export default function AdminListingsPage() {
   const getStatusLabel = (status: ListingStatus) => {
     switch (status) {
       case "ACTIVE": return "Đang hoạt động";
+      case "PENDING": return "Chờ duyệt";
+      case "REJECTED": return "Bị từ chối";
       case "INACTIVE": return "Đã tạm ẩn";
       case "RENTED": return "Đã cho thuê";
       case "DRAFT": return "Bản nháp";
@@ -174,6 +176,8 @@ export default function AdminListingsPage() {
   const getStatusBadgeClass = (status: ListingStatus) => {
     switch (status) {
       case "ACTIVE": return "bg-emerald-50 text-emerald-700 border-emerald-100";
+      case "PENDING": return "bg-yellow-50 text-yellow-700 border-yellow-100";
+      case "REJECTED": return "bg-red-50 text-red-700 border-red-100";
       case "INACTIVE": return "bg-gray-100 text-gray-700 border-gray-200";
       case "RENTED": return "bg-blue-50 text-blue-700 border-blue-100";
       case "DRAFT": return "bg-amber-50 text-amber-700 border-amber-100";
@@ -247,7 +251,7 @@ export default function AdminListingsPage() {
         <div className="bg-white p-5 rounded-3xl border border-gray-100 shadow-lg shadow-gray-200/20 mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
           {/* Status Buttons */}
           <div className="flex flex-wrap gap-1.5">
-            {(["ALL", "ACTIVE", "INACTIVE", "RENTED", "DRAFT", "DELETED"] as const).map((status) => (
+            {(["ALL", "PENDING", "ACTIVE", "REJECTED", "INACTIVE", "RENTED", "DRAFT", "DELETED"] as const).map((status) => (
               <button
                 key={status}
                 onClick={() => handleStatusFilterChange(status)}

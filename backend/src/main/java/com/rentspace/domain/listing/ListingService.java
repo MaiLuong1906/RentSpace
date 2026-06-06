@@ -249,6 +249,17 @@ public class ListingService {
         return listingMapper.toResponse(saved);
     }
 
+    // ===== ADMIN: Cập nhật trạng thái tin đăng (gọi từ frontend Dashboard) =====
+    @Transactional
+    public ListingResponse updateStatusForAdmin(Long id, ListingStatus status) {
+        Listing listing = listingRepository.findByIdAndStatusNot(id, ListingStatus.DELETED)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy tin đăng: " + id));
+        listing.setStatus(status);
+        Listing saved = listingRepository.save(listing);
+        log.info("Admin đã cập nhật trạng thái tin đăng id={} sang {}", id, status);
+        return listingMapper.toResponse(saved);
+    }
+
     // ===== Private Helpers =====
     private Listing findOwnedListing(Long id, String email) {
         Listing listing = listingRepository.findByIdAndStatusNot(id, ListingStatus.DELETED)
