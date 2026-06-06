@@ -26,6 +26,7 @@ import org.springframework.web.bind.annotation.*;
 public class AdminListingController {
 
     private final AdminListingService adminListingService;
+    private final ListingService listingService;
 
     // ===== GET /api/v1/admin/listings =====
     @GetMapping
@@ -45,5 +46,23 @@ public class AdminListingController {
             @Valid @RequestBody UpdateListingStatusRequest request) {
         ListingResponse response = adminListingService.updateStatus(id, request.getStatus());
         return ResponseEntity.ok(ApiResponse.success("Cập nhật trạng thái tin đăng thành công", response));
+    }
+
+    // ===== PATCH /api/v1/admin/listings/{id}/approve =====
+    @PatchMapping("/{id}/approve")
+    @Operation(summary = "[ADMIN] Duyệt đăng tin phòng trọ")
+    public ResponseEntity<ApiResponse<ListingResponse>> approveListing(@PathVariable Long id) {
+        ListingResponse response = listingService.approveListing(id);
+        return ResponseEntity.ok(ApiResponse.success("Duyệt tin đăng thành công", response));
+    }
+
+    // ===== PATCH /api/v1/admin/listings/{id}/reject =====
+    @PatchMapping("/{id}/reject")
+    @Operation(summary = "[ADMIN] Từ chối duyệt tin đăng phòng trọ")
+    public ResponseEntity<ApiResponse<ListingResponse>> rejectListing(
+            @PathVariable Long id,
+            @RequestParam(required = false, defaultValue = "Nội dung tin đăng không phù hợp hoặc thiếu thông tin") String reason) {
+        ListingResponse response = listingService.rejectListing(id, reason);
+        return ResponseEntity.ok(ApiResponse.success("Đã từ chối duyệt tin đăng", response));
     }
 }
