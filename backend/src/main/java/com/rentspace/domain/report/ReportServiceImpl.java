@@ -69,6 +69,13 @@ public class ReportServiceImpl implements ReportService {
         // Cập nhật trạng thái
         report.setStatus(status);
 
+        // Nếu báo cáo được xác nhận (RESOLVED) -> tự động ẩn tin đăng (INACTIVE)
+        if (status == ReportStatus.RESOLVED) {
+            Listing listing = report.getListing();
+            listing.setStatus(com.rentspace.domain.listing.enums.ListingStatus.INACTIVE);
+            listingRepository.save(listing);
+        }
+
         Report updatedReport = reportRepository.save(report);
         return reportMapper.toResponse(updatedReport);
     }

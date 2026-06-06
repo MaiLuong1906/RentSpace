@@ -60,9 +60,24 @@ public class ListingService {
     }
 
     // ===== GET /api/v1/listings/{id} =====
-    public ListingResponse getById(Long id) {
+    public ListingResponse getById(Long id, String requesterEmail) {
         Listing listing = listingRepository.findByIdAndStatusNot(id, ListingStatus.DELETED)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy tin đăng với id: " + id));
+
+        // Nếu tin đăng không ở trạng thái ACTIVE, chỉ cho phép chủ trọ đăng tin đó hoặc ADMIN xem
+        if (listing.getStatus() != ListingStatus.ACTIVE) {
+            if (requesterEmail == null) {
+                throw new BusinessException("Tin đăng này hiện không công khai");
+            }
+            User user = userRepository.findByEmail(requesterEmail)
+                    .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy người dùng"));
+            boolean isOwner = listing.getLandlord().getId().equals(user.getId());
+            boolean isAdmin = user.getRole() == Role.ADMIN;
+            if (!isOwner && !isAdmin) {
+                throw new BusinessException("Tin đăng này hiện không công khai");
+            }
+        }
+
         return listingMapper.toResponse(listing);
     }
 

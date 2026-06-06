@@ -87,8 +87,11 @@ public class ListingController {
     // ===== GET /api/v1/listings/{id} =====
     @GetMapping("/{id}")
     @Operation(summary = "Xem chi tiết 1 tin đăng")
-    public ResponseEntity<ApiResponse<ListingResponse>> getById(@PathVariable Long id) {
-        return ResponseEntity.ok(ApiResponse.success(listingService.getById(id)));
+    public ResponseEntity<ApiResponse<ListingResponse>> getById(
+            @PathVariable Long id,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        String email = userDetails != null ? userDetails.getUsername() : null;
+        return ResponseEntity.ok(ApiResponse.success(listingService.getById(id, email)));
     }
 
     // ===== POST /api/v1/listings =====
