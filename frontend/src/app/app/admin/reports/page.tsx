@@ -19,8 +19,8 @@ export default function AdminReportsPage() {
   const updateReportStatus = useUpdateReportStatus();
 
   const reports = data?.data?.content ?? [];
-  const totalPages = data?.data?.page?.totalPages ?? 0;
-  const totalElements = data?.data?.page?.totalElements ?? 0;
+  const totalPages = data?.data?.totalPages ?? data?.data?.page?.totalPages ?? 0;
+  const totalElements = data?.data?.totalElements ?? data?.data?.page?.totalElements ?? 0;
 
   const handleUpdateStatus = async (reportId: number, status: ReportStatus) => {
     const actionText = status === "RESOLVED" ? "Xử lý & Ẩn tin" : "Bỏ qua";

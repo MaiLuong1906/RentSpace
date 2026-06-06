@@ -26,8 +26,8 @@ export function ReviewSection({ listingId }: ReviewSectionProps) {
   const deleteReview = useDeleteReview(listingId);
 
   const reviews = data?.data?.content ?? [];
-  const totalPages = data?.data?.page?.totalPages ?? 0;
-  const totalElements = data?.data?.page?.totalElements ?? 0;
+  const totalPages = data?.data?.totalPages ?? data?.data?.page?.totalPages ?? 0;
+  const totalElements = data?.data?.totalElements ?? data?.data?.page?.totalElements ?? 0;
 
   // Tính điểm trung bình
   const avgRating =
