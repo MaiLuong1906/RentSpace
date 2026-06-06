@@ -5,7 +5,6 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import {
   MapPin,
-  Star,
   Share2,
   Heart,
   MessageCircle,
@@ -22,8 +21,10 @@ import {
   BedDouble,
   Bath,
   SquareCode,
+  Flag,
 } from "lucide-react";
 import { useListing } from "@/hooks/useListings";
+import { ReviewSection, ReportModal } from "@/components/review";
 
 // --- Helpers ---
 function formatPrice(price: number): string {
@@ -54,6 +55,7 @@ export default function ListingDetailPage() {
 
   const [selectedImage, setSelectedImage] = useState(0);
   const [showContactModal, setShowContactModal] = useState(false);
+  const [showReportModal, setShowReportModal] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
 
   // --- Trạng thái Loading ---
@@ -267,6 +269,9 @@ export default function ListingDetailPage() {
                 <span>Cập nhật: {formatDate(listing.updatedAt)}</span>
               </div>
             </div>
+
+            {/* ===== Khu vực đánh giá ===== */}
+            <ReviewSection listingId={listing.id} />
           </div>
 
           {/* ===== Sidebar ===== */}
@@ -308,6 +313,15 @@ export default function ListingDetailPage() {
                 <button className="w-full flex items-center justify-center gap-2 bg-white border-2 border-blue-600 text-blue-600 py-3 rounded-lg font-semibold hover:bg-blue-50 transition-colors">
                   <Phone className="h-5 w-5" />
                   Gọi điện
+                </button>
+
+                {/* Nút Báo cáo vi phạm */}
+                <button
+                  onClick={() => setShowReportModal(true)}
+                  className="w-full flex items-center justify-center gap-2 text-gray-500 hover:text-red-600 py-2 text-sm transition-colors"
+                >
+                  <Flag className="h-4 w-4" />
+                  Báo cáo vi phạm
                 </button>
               </div>
 
@@ -364,6 +378,15 @@ export default function ListingDetailPage() {
             </form>
           </div>
         </div>
+      )}
+
+      {/* Report Modal */}
+      {showReportModal && (
+        <ReportModal
+          listingId={listing.id}
+          listingTitle={listing.title}
+          onClose={() => setShowReportModal(false)}
+        />
       )}
     </div>
   );

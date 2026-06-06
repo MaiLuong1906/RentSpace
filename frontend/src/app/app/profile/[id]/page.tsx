@@ -18,8 +18,9 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
-import { mockListings, formatPrice, getRoomTypeLabel } from "@/lib/mockData";
+import { formatPrice, getRoomTypeLabel } from "@/lib/mockData";
 import { userApi } from "@/lib/api/user.api";
+import { useListings } from "@/hooks/useListings";
 
 interface PublicProfile {
   id: number;
@@ -37,81 +38,47 @@ export default function PublicProfilePage({ params }: { params: Promise<{ id: st
   const userId = digitsOnly ? parseInt(digitsOnly, 10) : 1;
   const { data: session } = useSession();
 
+  // Lấy danh sách tin đăng của landlord từ API thực tế
+  const { data: listingsData } = useListings({ page: 0, size: 20 });
+  const landlordListings = listingsData?.data?.content?.filter(
+    (l) => l.landlordId === userId
+  ) ?? [];
+
   const [profile, setProfile] = useState<PublicProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"listings" | "reviews">("listings");
-
-  // Lấy các bài đăng của landlord này từ mockListings để hiển thị
-  const landlordListings = mockListings.filter(
-    (l) => l.landlordId === `landlord${userId}` || l.landlordId === userIdStr
-  );
 
   useEffect(() => {
     const fetchPublicProfile = async () => {
       try {
         const result = await userApi.getUserProfile(userId);
-
         if (result.success && result.data) {
           setProfile(result.data as PublicProfile);
-        } else {
-          // Fallback sang Mock Data nếu không tìm thấy user trong Database (dành cho demo & testing)
-          console.warn("Không tìm thấy user trên API. Đang sử dụng dữ liệu giả lập...");
-          
-          // Trích xuất thông tin landlord từ các tin đăng giả lập
-          const matchingListing = mockListings.find(
-            (l) => l.landlordId === `landlord${userId}` || l.landlordId === userIdStr
-          );
-
-          if (matchingListing) {
-            setProfile({
-              id: userId,
-              fullName: matchingListing.landlordName,
-              avatarUrl: matchingListing.landlordAvatar,
-              role: "LANDLORD",
-              createdAt: "2026-01-15T10:00:00Z",
-            });
-          } else {
-            // Mock mặc định nếu hoàn toàn không có thông tin
-            setProfile({
-              id: userId,
-              fullName: `Người dùng #${userId}`,
-              avatarUrl: null,
-              role: "LANDLORD",
-              createdAt: "2026-03-10T12:00:00Z",
-            });
-          }
-        }
-      } catch (error) {
-        console.error("Fetch public profile error:", error);
-        // Fallback sang Mock Data nếu kết nối API thất bại
-        const matchingListing = mockListings.find(
-          (l) => l.landlordId === `landlord${userId}` || l.landlordId === userIdStr
-        );
-
-        if (matchingListing) {
-          setProfile({
-            id: userId,
-            fullName: matchingListing.landlordName,
-            avatarUrl: matchingListing.landlordAvatar,
-            role: "LANDLORD",
-            createdAt: "2026-01-15T10:00:00Z",
-          });
         } else {
           setProfile({
             id: userId,
             fullName: `Người dùng #${userId}`,
             avatarUrl: null,
             role: "LANDLORD",
-            createdAt: "2026-03-10T12:00:00Z",
+            createdAt: new Date().toISOString(),
           });
         }
+      } catch (error) {
+        console.error("Fetch public profile error:", error);
+        setProfile({
+          id: userId,
+          fullName: `Người dùng #${userId}`,
+          avatarUrl: null,
+          role: "LANDLORD",
+          createdAt: new Date().toISOString(),
+        });
       } finally {
         setLoading(false);
       }
     };
 
     fetchPublicProfile();
-  }, [userId, userIdStr]);
+  }, [userId]);
 
   if (loading) {
     return (
@@ -263,12 +230,12 @@ export default function PublicProfilePage({ params }: { params: Promise<{ id: st
                     >
                       <div className="relative h-48 bg-gray-200">
                         <img
-                          src={listing.images[0]}
+                          src={listing.images?.[0]?.imageUrl ?? "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800"}
                           alt={listing.title}
                           className="w-full h-full object-cover"
                         />
                         <div className="absolute top-3 right-3 bg-white/95 backdrop-blur-sm px-3 py-1 rounded-full text-sm font-bold text-blue-600 shadow-sm border border-gray-100">
-                          {formatPrice(listing.price)}/tháng
+                          {formatPrice(listing.pricePerMonth)}/tháng
                         </div>
                       </div>
 
@@ -286,15 +253,13 @@ export default function PublicProfilePage({ params }: { params: Promise<{ id: st
 
                         <div className="flex items-center justify-between text-sm pt-3 border-t border-gray-50">
                           <div className="flex items-center gap-3 text-gray-500 font-medium">
-                            <span>{listing.area} m²</span>
-                            <span>•</span>
-                            <span>{getRoomTypeLabel(listing.roomType)}</span>
+                            {listing.areaM2 && <span>{listing.areaM2} m²</span>}
                           </div>
-
-                          <div className="flex items-center gap-1 text-yellow-500">
-                            <Star className="h-4 w-4 fill-current" />
-                            <span className="font-bold text-gray-900">{listing.rating}</span>
-                          </div>
+                          <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${
+                            listing.status === "ACTIVE" ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-600"
+                          }`}>
+                            {listing.status === "ACTIVE" ? "Còn trống" : listing.status}
+                          </span>
                         </div>
                       </div>
                     </Link>
@@ -309,40 +274,10 @@ export default function PublicProfilePage({ params }: { params: Promise<{ id: st
               </div>
             ) : (
               <div className="bg-white rounded-2xl p-8 border border-gray-100 shadow-sm">
-                <h3 className="text-lg font-bold mb-6 text-gray-900">Đánh giá từ người thuê</h3>
-                <div className="space-y-6">
-                  {[
-                    {
-                      name: "Lê Minh C",
-                      avatar: "https://i.pravatar.cc/150?img=10",
-                      rating: 5,
-                      comment: "Chủ nhà cực kỳ dễ tính và phản hồi nhanh khi có hỏng hóc trong phòng. Rất khuyến khích thuê!",
-                      date: "24/04/2026"
-                    },
-                    {
-                      name: "Nguyễn Văn A",
-                      avatar: "https://i.pravatar.cc/150?img=8",
-                      rating: 4.8,
-                      comment: "Phòng trọ đúng như mô tả, khu an ninh tốt. Hỗ trợ nhiệt tình trong suốt thời gian thuê.",
-                      date: "15/04/2026"
-                    }
-                  ].map((review, idx) => (
-                    <div key={idx} className="flex gap-4 p-4 hover:bg-gray-50 rounded-xl transition-all border border-transparent hover:border-gray-100">
-                      <img src={review.avatar} alt={review.name} className="w-12 h-12 rounded-full object-cover bg-gray-100" />
-                      <div className="flex-1">
-                        <div className="flex items-center justify-between mb-1">
-                          <h4 className="font-bold text-gray-900">{review.name}</h4>
-                          <span className="text-sm text-gray-500">{review.date}</span>
-                        </div>
-                        <div className="flex items-center gap-1 text-yellow-500 mb-2">
-                          <Star className="h-4 w-4 fill-current" />
-                          <span className="text-sm font-bold text-gray-900">{review.rating}</span>
-                        </div>
-                        <p className="text-gray-700 text-sm leading-relaxed">{review.comment}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                <h3 className="text-lg font-bold mb-4 text-gray-900">Đánh giá từ người thuê</h3>
+                <p className="text-gray-500 text-sm text-center py-8">
+                  Tính năng xem đánh giá theo chủ nhà đang được phát triển.
+                </p>
               </div>
             )}
           </div>
