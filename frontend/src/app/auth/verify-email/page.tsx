@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Mail, ArrowLeft, RefreshCw, CheckCircle } from "lucide-react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
+import { authApi } from "@/lib/api/auth.api";
 
 function VerifyEmailContent() {
   const router = useRouter();
@@ -88,21 +89,12 @@ function VerifyEmailContent() {
     setIsVerifying(true);
 
     try {
-      const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api/v1";
-      const response = await fetch(`${apiBaseUrl}/auth/verify-otp`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email: email,
-          otp: otpCode,
-        }),
+      const data = await authApi.verifyOtp({
+        email: email,
+        otp: otpCode,
       });
 
-      const data = await response.json();
-
-      if (response.ok && data.success) {
+      if (data.success) {
         toast.success("Xác thực tài khoản thành công! Đang chuyển đến trang đăng nhập...");
         setTimeout(() => {
           router.push("/auth/login");
@@ -129,20 +121,11 @@ function VerifyEmailContent() {
     setIsResending(true);
 
     try {
-      const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api/v1";
-      const response = await fetch(`${apiBaseUrl}/auth/resend-otp`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email: email,
-        }),
+      const data = await authApi.resendOtp({
+        email: email,
       });
 
-      const data = await response.json();
-
-      if (response.ok && data.success) {
+      if (data.success) {
         toast.success("Mã OTP mới đã được gửi thành công!");
         setCountdown(60); // Reset bộ đếm ngược về 60s
       } else {

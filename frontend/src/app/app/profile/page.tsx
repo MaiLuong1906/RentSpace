@@ -7,13 +7,16 @@ import { useSession, signOut } from "next-auth/react";
 import { User, Mail, Phone, Calendar, ShieldCheck, ShieldAlert, ShieldEllipsis, ShieldX, KeyRound, Bell, Edit2, Camera, Lock, Eye, EyeOff } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
+import { userApi } from "@/lib/api/user.api";
+import { authApi } from "@/lib/api/auth.api";
+import { kycApi } from "@/lib/api/kyc.api";
 
 interface UserProfile {
   id: number;
   email: string;
   fullName: string;
-  phoneNumber: string;
-  avatarUrl: string | null;
+  phoneNumber?: string;
+  avatarUrl?: string | null;
   role: "TENANT" | "LANDLORD" | "ADMIN";
   kycStatus: "PENDING" | "SUBMITTED" | "VERIFIED" | "REJECTED";
   cccdImageUrl?: string | null;
@@ -24,7 +27,7 @@ interface UserProfile {
 export default function ProfilePage() {
   const router = useRouter();
   const { data: session, status } = useSession();
-  
+
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<"profile" | "security" | "notifications">("profile");
@@ -62,20 +65,11 @@ export default function ProfilePage() {
     formData.append("file", file);
 
     try {
-      const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api/v1";
-      const response = await fetch(`${apiBaseUrl}/users/me/avatar`, {
-        method: "PATCH",
-        headers: {
-          "Authorization": `Bearer ${session?.accessToken}`,
-        },
-        body: formData,
-      });
+      const result = await userApi.updateAvatar(formData);
 
-      const result = await response.json();
-
-      if (response.ok && result.success) {
+      if (result.success && result.data) {
         toast.success("Cập nhật ảnh đại diện thành công!");
-        setProfile(result.data);
+        setProfile(prev => prev ? { ...prev, ...result.data } : result.data as UserProfile);
       } else {
         toast.error(result.message || "Không thể tải lên ảnh đại diện!");
       }
@@ -126,28 +120,15 @@ export default function ProfilePage() {
     setIsChangingPassword(true);
 
     try {
-      const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api/v1";
-      const response = await fetch(`${apiBaseUrl}/auth/change-password`, {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${session?.accessToken}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          oldPassword,
-          newPassword,
-        }),
-      });
+      const result = await authApi.changePassword({ oldPassword, newPassword });
 
-      const result = await response.json();
-
-      if (response.ok && result.success) {
+      if (result.success) {
         toast.success("Thay đổi mật khẩu thành công! Vui lòng đăng nhập lại.");
         setOldPassword("");
         setNewPassword("");
         setConfirmPassword("");
         setIsSecurityFormOpen(false);
-        
+
         setTimeout(() => {
           signOut({ callbackUrl: "/auth/login" });
         }, 1500);
@@ -168,7 +149,7 @@ export default function ProfilePage() {
   useEffect(() => {
     const fetchProfile = async () => {
       if (status === "loading") return;
-      
+
       if (status === "unauthenticated" || !session?.accessToken) {
         setLoading(false);
         return;
@@ -178,31 +159,15 @@ export default function ProfilePage() {
       profileFetchedRef.current = true;
 
       try {
-        const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api/v1";
-        const response = await fetch(`${apiBaseUrl}/users/me`, {
-          method: "GET",
-          headers: {
-            "Authorization": `Bearer ${session.accessToken}`,
-            "Content-Type": "application/json",
-          },
-        });
+        const result = await userApi.getMyProfile();
 
-        const result = await response.json();
-
-        if (response.ok && result.success) {
+        if (result.success && result.data) {
           let kycStatus = result.data.kycStatus;
           let cccdImageUrl = null;
 
           try {
-            const kycResponse = await fetch(`${apiBaseUrl}/kyc/status`, {
-              method: "GET",
-              headers: {
-                "Authorization": `Bearer ${session.accessToken}`,
-                "Content-Type": "application/json",
-              },
-            });
-            const kycResult = await kycResponse.json();
-            if (kycResponse.ok && kycResult.success && kycResult.data) {
+            const kycResult = await kycApi.getKycStatus();
+            if (kycResult.success && kycResult.data) {
               kycStatus = kycResult.data.status;
               cccdImageUrl = kycResult.data.cccdImageUrl;
             }
@@ -273,24 +238,11 @@ export default function ProfilePage() {
     setIsSubmitting(true);
 
     try {
-      const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api/v1";
-      const response = await fetch(`${apiBaseUrl}/users/me`, {
-        method: "PUT",
-        headers: {
-          "Authorization": `Bearer ${session?.accessToken}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          fullName,
-          phoneNumber,
-        }),
-      });
+      const result = await userApi.updateProfile({ fullName, phoneNumber });
 
-      const result = await response.json();
-
-      if (response.ok && result.success) {
+      if (result.success && result.data) {
         toast.success("Cập nhật thông tin cá nhân thành công!");
-        setProfile(result.data);
+        setProfile(prev => prev ? { ...prev, ...result.data } : result.data as UserProfile);
         setIsEditing(false);
       } else {
         toast.error(result.message || "Không thể cập nhật thông tin!");
@@ -322,8 +274,8 @@ export default function ProfilePage() {
             </div>
           );
         }
-        // Nếu kycStatus là PENDING nhưng chưa có ảnh CCCD (mặc định đăng ký mới) -> Xem như chưa nộp
-        // Sẽ rơi xuống block default tiếp theo
+      // Nếu kycStatus là PENDING nhưng chưa có ảnh CCCD (mặc định đăng ký mới) -> Xem như chưa nộp
+      // Sẽ rơi xuống block default tiếp theo
       case "REJECTED":
         if (status === "REJECTED") {
           return (
@@ -366,7 +318,7 @@ export default function ProfilePage() {
         <div className="max-w-4xl mx-auto space-y-8">
           {/* Header Skeleton */}
           <div className="h-10 w-48 bg-gray-200 animate-pulse rounded-xl" />
-          
+
           <div className="grid md:grid-cols-3 gap-8">
             {/* Left Card Skeleton */}
             <div className="bg-white border border-gray-100 shadow-xl shadow-gray-200/20 rounded-3xl p-8 flex flex-col items-center space-y-6">
@@ -485,13 +437,12 @@ export default function ProfilePage() {
 
             {/* Thông tin Cơ bản */}
             <h2 className="text-xl font-extrabold text-gray-800 mb-1">{profile?.fullName}</h2>
-            <span className={`inline-block px-3 py-1 text-xs font-bold rounded-full mb-6 uppercase tracking-wider ${
-              profile?.role === "LANDLORD" 
-                ? "bg-indigo-50 text-indigo-700 border border-indigo-100" 
+            <span className={`inline-block px-3 py-1 text-xs font-bold rounded-full mb-6 uppercase tracking-wider ${profile?.role === "LANDLORD"
+                ? "bg-indigo-50 text-indigo-700 border border-indigo-100"
                 : profile?.role === "ADMIN"
-                ? "bg-red-50 text-red-700 border border-red-100"
-                : "bg-blue-50 text-blue-700 border border-blue-100"
-            }`}>
+                  ? "bg-red-50 text-red-700 border border-red-100"
+                  : "bg-blue-50 text-blue-700 border border-blue-100"
+              }`}>
               {profile?.role === "LANDLORD" ? "Chủ cho thuê" : profile?.role === "ADMIN" ? "Quản trị viên" : "Người thuê phòng"}
             </span>
 
@@ -509,7 +460,7 @@ export default function ProfilePage() {
             className="md:col-span-2 bg-white border border-gray-100 shadow-xl shadow-gray-200/10 rounded-3xl p-8"
           >
             {/* Header Tabs */}
-            <div 
+            <div
               className="flex md:grid md:grid-cols-3 w-full border-b border-gray-100 pb-4 mb-8 overflow-x-auto md:overflow-visible gap-2 no-scrollbar"
               style={{
                 scrollbarWidth: "none",
@@ -523,33 +474,30 @@ export default function ProfilePage() {
               `}</style>
               <button
                 onClick={() => setActiveTab("profile")}
-                className={`flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-xs md:text-sm font-bold transition-all whitespace-nowrap ${
-                  activeTab === "profile"
+                className={`flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-xs md:text-sm font-bold transition-all whitespace-nowrap ${activeTab === "profile"
                     ? "bg-blue-50 text-blue-600"
                     : "text-gray-500 hover:bg-gray-50"
-                }`}
+                  }`}
               >
                 <User className="h-4 w-4" />
                 <span>Thông tin cá nhân</span>
               </button>
               <button
                 onClick={() => setActiveTab("security")}
-                className={`flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-xs md:text-sm font-bold transition-all whitespace-nowrap ${
-                  activeTab === "security"
+                className={`flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-xs md:text-sm font-bold transition-all whitespace-nowrap ${activeTab === "security"
                     ? "bg-blue-50 text-blue-600"
                     : "text-gray-500 hover:bg-gray-50"
-                }`}
+                  }`}
               >
                 <KeyRound className="h-4 w-4" />
                 <span>Bảo mật & Mật khẩu</span>
               </button>
               <button
                 onClick={() => setActiveTab("notifications")}
-                className={`flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-xs md:text-sm font-bold transition-all whitespace-nowrap ${
-                  activeTab === "notifications"
+                className={`flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-xs md:text-sm font-bold transition-all whitespace-nowrap ${activeTab === "notifications"
                     ? "bg-blue-50 text-blue-600"
                     : "text-gray-500 hover:bg-gray-50"
-                }`}
+                  }`}
               >
                 <Bell className="h-4 w-4" />
                 <span>Cài đặt thông báo</span>
