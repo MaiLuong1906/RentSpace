@@ -98,6 +98,7 @@ aws:
   s3:
     bucket-name: ${AWS_S3_BUCKET:rentspace-uploads}
     region: ${AWS_REGION:ap-southeast-1}
+    endpoint-url: ${AWS_S3_ENDPOINT_URL:}
   credentials:
     access-key: ${AWS_ACCESS_KEY:none}
     secret-key: ${AWS_SECRET_KEY:none}
