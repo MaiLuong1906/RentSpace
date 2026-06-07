@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   MapPin,
@@ -25,6 +25,10 @@ import {
 } from "lucide-react";
 import { useListing } from "@/hooks/useListings";
 import { ReviewSection, ReportModal } from "@/components/review";
+import { chatApi } from "@/lib/api/chat";
+import { useChatStore } from "@/store/chatStore";
+import { useChat } from "@/hooks/useChat";
+import { toast } from "sonner";
 
 // --- Helpers ---
 function formatPrice(price: number): string {
@@ -48,6 +52,7 @@ const STATUS_LABELS: Record<string, { label: string; color: string }> = {
 
 export default function ListingDetailPage() {
   const params = useParams();
+  const router = useRouter();
   const id = params?.id as string;
 
   const { data: apiResponse, isLoading, isError } = useListing(id);
@@ -57,6 +62,38 @@ export default function ListingDetailPage() {
   const [showContactModal, setShowContactModal] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
+
+  const { setActiveConversation } = useChatStore();
+  const { sendMessage } = useChat();
+  const [contactMessage, setContactMessage] = useState("");
+  const [isSending, setIsSending] = useState(false);
+
+  const handleContactSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (isSending || !listing?.landlordId) return;
+
+    setIsSending(true);
+    try {
+      // 1. Tạo hoặc lấy cuộc trò chuyện với Landlord
+      const conversation = await chatApi.createConversation(listing.landlordId);
+
+      // 2. Gửi tin nhắn đầu tiên qua WebSocket nếu có nội dung
+      if (contactMessage.trim()) {
+        sendMessage(listing.landlordId, contactMessage.trim());
+      }
+
+      // 3. Đánh dấu cuộc trò chuyện đang active và chuyển hướng sang trang nhắn tin
+      setActiveConversation(conversation.id);
+      router.push("/app/messages");
+      toast.success("Đã kết nối cuộc trò chuyện thành công!");
+    } catch (err) {
+      console.error("Lỗi khi tạo kết nối chat:", err);
+      toast.error("Không thể tạo kết nối trò chuyện. Vui lòng thử lại.");
+    } finally {
+      setIsSending(false);
+      setShowContactModal(false);
+    }
+  };
 
   // --- Trạng thái Loading ---
   if (isLoading) {
@@ -348,15 +385,18 @@ export default function ListingDetailPage() {
               Gửi tin nhắn cho {listing.landlordName} về phòng trọ này
             </p>
 
-            <form className="space-y-4">
+            <form onSubmit={handleContactSubmit} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Nội dung tin nhắn
                 </label>
                 <textarea
                   rows={4}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  value={contactMessage}
+                  onChange={(e) => setContactMessage(e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm text-gray-800"
                   placeholder="Xin chào, tôi quan tâm đến phòng trọ của bạn..."
+                  disabled={isSending}
                 />
               </div>
 
@@ -365,14 +405,17 @@ export default function ListingDetailPage() {
                   type="button"
                   onClick={() => setShowContactModal(false)}
                   className="flex-1 px-4 py-3 border-2 border-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-50"
+                  disabled={isSending}
                 >
                   Hủy
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 px-4 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700"
+                  disabled={isSending}
+                  className="flex-1 px-4 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 disabled:bg-gray-300 flex items-center justify-center gap-2"
                 >
-                  Gửi tin nhắn
+                  {isSending && <Loader2 className="h-4 w-4 animate-spin" />}
+                  <span>{isSending ? "Đang gửi..." : "Gửi tin nhắn"}</span>
                 </button>
               </div>
             </form>

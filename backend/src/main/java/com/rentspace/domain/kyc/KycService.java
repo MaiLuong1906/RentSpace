@@ -18,6 +18,9 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.rentspace.domain.notification.NotificationService;
+import com.rentspace.domain.notification.enums.NotificationType;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -26,6 +29,7 @@ public class KycService {
     private final UserRepository userRepository;
     private final StorageService storageService;
     private final EmailService emailService;
+    private final NotificationService notificationService;
 
     // ===== USER: Nộp hồ sơ KYC =====
     @Transactional
@@ -94,6 +98,12 @@ public class KycService {
         userRepository.save(user);
         log.info("Admin đã duyệt KYC cho user id={}, email={}", userId, user.getEmail());
         emailService.sendKycResultEmail(user.getEmail(), user.getFullName(), true, null);
+        notificationService.createAndSendNotification(
+                user,
+                "Hồ sơ KYC được phê duyệt",
+                "Chúc mừng! Hồ sơ xác thực thông tin tài khoản (KYC) của bạn đã được duyệt thành công.",
+                NotificationType.KYC
+        );
     }
 
     // ===== ADMIN: Từ chối KYC =====
@@ -110,6 +120,12 @@ public class KycService {
         userRepository.save(user);
         log.info("Admin đã từ chối KYC cho user id={}, email={}, lý do: {}", userId, user.getEmail(), reason);
         emailService.sendKycResultEmail(user.getEmail(), user.getFullName(), false, reason);
+        notificationService.createAndSendNotification(
+                user,
+                "Hồ sơ KYC bị từ chối",
+                "Hồ sơ xác thực thông tin tài khoản (KYC) của bạn đã bị từ chối. Lý do: " + reason,
+                NotificationType.KYC
+        );
     }
 
     // ===== Private mapper =====

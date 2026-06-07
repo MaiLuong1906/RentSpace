@@ -10,6 +10,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.rentspace.domain.notification.NotificationService;
+import com.rentspace.domain.notification.enums.NotificationType;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -18,6 +21,7 @@ public class AdminListingService {
 
     private final ListingRepository listingRepository;
     private final ListingMapper listingMapper;
+    private final NotificationService notificationService;
 
     // ===== [ADMIN] GET tất cả listing (mọi status trừ DELETED nếu status=null) =====
     public Page<ListingResponse> getAllListings(ListingStatus status, Pageable pageable) {
@@ -42,6 +46,20 @@ public class AdminListingService {
         Listing saved = listingRepository.save(listing);
 
         log.info("[ADMIN] Cập nhật trạng thái tin đăng id={} từ {} → {}", id, oldStatus, newStatus);
+
+        // Gửi thông báo đến chủ nhà
+        try {
+            String title = "Cập nhật trạng thái tin đăng";
+            String content = String.format("Tin đăng '%s' của bạn đã được cập nhật trạng thái thành: %s.", listing.getTitle(), newStatus);
+            if (newStatus == ListingStatus.ACTIVE) {
+                title = "Tin đăng của bạn đã được duyệt";
+                content = String.format("Tin đăng '%s' đã được kiểm duyệt thành công và đang được hiển thị công khai.", listing.getTitle());
+            }
+            notificationService.createAndSendNotification(listing.getLandlord(), title, content, NotificationType.LISTING);
+        } catch (Exception e) {
+            log.error("Lỗi khi gửi thông báo cập nhật trạng thái tin đăng: {}", e.getMessage());
+        }
+
         return listingMapper.toResponse(saved);
     }
 }

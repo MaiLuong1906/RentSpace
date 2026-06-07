@@ -38,17 +38,25 @@ public class AuthChannelInterceptor implements ChannelInterceptor {
                         String username = jwtTokenProvider.extractUsername(token);
                         if (username != null && accessor.getUser() == null) {
                             UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-                            if (jwtTokenProvider.isTokenValid(token, userDetails)) {
-                                UsernamePasswordAuthenticationToken authentication =
-                                        new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-                                accessor.setUser(authentication);
-                                log.info("Xác thực thành công kết nối WebSocket cho user: {}", username);
+                            if (jwtTokenProvider.isTokenValid(token, userDetails)
+                                    && userDetails instanceof com.rentspace.domain.user.CustomUserDetails customUserDetails) {
+                                StompPrincipal principal = new StompPrincipal(
+                                        customUserDetails.getUser().getId().toString());
+                                accessor.setUser(principal);
+                                log.info("Xác thực thành công kết nối WebSocket cho user id: {} (email: {})",
+                                        customUserDetails.getUser().getId(), username);
                             }
                         }
                     } catch (Exception e) {
                         log.error("Lỗi khi xác thực token WebSocket: {}", e.getMessage());
                     }
                 }
+            }
+
+            // Từ chối kết nối nếu sau khi xác thực vẫn không có Principal hợp lệ
+            if (accessor.getUser() == null) {
+                log.warn("Từ chối kết nối WebSocket: thiếu hoặc token không hợp lệ.");
+                throw new IllegalArgumentException("Kết nối WebSocket bị từ chối: yêu cầu xác thực JWT hợp lệ.");
             }
         }
         return message;

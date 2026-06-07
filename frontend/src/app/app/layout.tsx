@@ -17,6 +17,7 @@ import {
   Users,
 } from "lucide-react";
 import { authApi } from "@/lib/api/auth.api";
+import { useChat } from "@/hooks/useChat";
 
 export default function DashboardLayout({
   children,
@@ -24,6 +25,8 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const { data: session, status } = useSession();
+  useChat(); // Kích hoạt kết nối WebSocket STOMP toàn cục khi người dùng đăng nhập
+
   const rawRole = session?.user?.role;
   const userRole = (rawRole?.toLowerCase() || "tenant") as "tenant" | "landlord" | "admin";
 
