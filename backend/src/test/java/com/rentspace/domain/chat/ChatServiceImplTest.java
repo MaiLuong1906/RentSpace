@@ -18,6 +18,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.access.AccessDeniedException;
 
+import java.math.BigInteger;
+import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
@@ -147,19 +149,19 @@ class ChatServiceImplTest {
     void getConversations_ShouldReturnMappedResponse() {
         // Given
         when(userRepository.findByEmail("tenant@rentspace.com")).thenReturn(Optional.of(tenant));
-        when(conversationRepository.findAllByUserId(1L)).thenReturn(Collections.singletonList(conversation));
         
-        Message lastMessage = Message.builder()
-                .id(500L)
-                .content("Last Message")
-                .sender(landlord)
-                .createdAt(LocalDateTime.now())
-                .build();
+        Object[] mockRow = new Object[] {
+                BigInteger.valueOf(100L),                  // conversationId
+                BigInteger.valueOf(2L),                    // otherUserId
+                "Landlord User",                           // otherUserFullName
+                "landlord_avatar.png",                     // otherUserAvatarUrl
+                "Last Message",                            // lastMessageContent
+                Timestamp.valueOf(LocalDateTime.now()),    // lastMessageTime
+                BigInteger.valueOf(3L)                     // unreadCount
+        };
         
-        when(messageRepository.findFirstByConversationIdOrderByCreatedAtDesc(100L))
-                .thenReturn(Optional.of(lastMessage));
-        when(messageRepository.countByConversationIdAndSenderIdNotAndIsReadFalse(100L, 1L))
-                .thenReturn(3L);
+        when(conversationRepository.findConversationSummariesByUserId(1L))
+                .thenReturn(Collections.singletonList(mockRow));
 
         // When
         List<ConversationResponse> results = chatService.getConversations("tenant@rentspace.com");

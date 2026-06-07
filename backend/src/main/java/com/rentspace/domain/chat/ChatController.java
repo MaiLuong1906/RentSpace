@@ -1,6 +1,6 @@
 package com.rentspace.domain.chat;
 
-import com.rentspace.common.exception.UnauthorizedException;
+import org.springframework.security.access.AccessDeniedException;
 import com.rentspace.common.response.ApiResponse;
 import com.rentspace.domain.chat.dto.ConversationResponse;
 import com.rentspace.domain.chat.dto.CreateConversationRequest;
@@ -57,7 +57,7 @@ public class ChatController {
             @AuthenticationPrincipal UserDetails userDetails) {
         // Pattern matching instanceof để tránh ClassCastException runtime khi userDetails không phải CustomUserDetails
         if (!(userDetails instanceof CustomUserDetails currentUser)) {
-            throw new UnauthorizedException("Không thể xác định danh tính người dùng.");
+            throw new AccessDeniedException("Không thể xác định danh tính người dùng.");
         }
 
         Conversation conversation = chatService.getOrCreateConversation(
