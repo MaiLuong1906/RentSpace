@@ -53,8 +53,7 @@ export function useChat() {
                 
                 if (conv) {
                   const avatar = conv.otherParticipantAvatar || `https://api.dicebear.com/7.x/adventurer/svg?seed=${conv.otherParticipantName}`;
-                  let tId: string | number;
-                  tId = toast(
+                  const tId = toast(
                     <div 
                       className="flex items-center gap-3 cursor-pointer py-1.5 w-full active:scale-98 transition-transform"
                       onClick={() => {
@@ -91,8 +90,7 @@ export function useChat() {
                       const name = newConv ? newConv.otherParticipantName : "Người dùng RentSpace";
                       const avatar = newConv?.otherParticipantAvatar || `https://api.dicebear.com/7.x/adventurer/svg?seed=${name}`;
                       
-                      let tId: string | number;
-                      tId = toast(
+                      const tId = toast(
                         <div 
                           className="flex items-center gap-3 cursor-pointer py-1.5 w-full active:scale-98 transition-transform"
                           onClick={() => {

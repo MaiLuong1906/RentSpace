@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useMemo } from "react";
 import { Search, Send, MoreVertical, ImagePlus, X, Loader2, Film, Paperclip, FileText } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
@@ -103,7 +103,9 @@ export default function MessagesPage() {
   }, [activeConversationId, setMessages, markAsRead, sendReadReceipt]);
 
   const selectedConv = conversations.find((c) => c.id === activeConversationId);
-  const activeMessages = activeConversationId ? messages[activeConversationId] || [] : [];
+  const activeMessages = useMemo(() => {
+    return activeConversationId ? messages[activeConversationId] || [] : [];
+  }, [messages, activeConversationId]);
 
   // 2.5. Khi có tin nhắn mới trong cuộc hội thoại đang mở, tự động gửi tín hiệu đã đọc
   useEffect(() => {
@@ -114,7 +116,7 @@ export default function MessagesPage() {
         markAsRead(activeConversationId);
       }
     }
-  }, [activeMessages.length, activeConversationId, sendReadReceipt, markAsRead, session?.user?.id]);
+  }, [activeMessages, activeConversationId, sendReadReceipt, markAsRead, session?.user?.id]);
 
   // 3. Tự động cuộn xuống cuối khung chat khi có tin nhắn mới hoặc đổi phòng chat
   const scrollToBottom = () => {
