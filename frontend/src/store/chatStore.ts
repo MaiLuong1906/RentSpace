@@ -57,8 +57,12 @@ export const useChatStore = create<ChatState>((set) => ({
 
   addMessage: (conversationId, message) =>
     set((state) => {
-      // Cập nhật danh sách message cho cuộc hội thoại
       const conversationMessages = state.messages[conversationId] || [];
+
+      // Dedup: bỏ qua nếu message.id đã tồn tại trong store (tránh hiện 2 lần khi WebSocket echo + REST load)
+      const isDuplicate = message.id != null && conversationMessages.some((m) => m.id === message.id);
+      if (isDuplicate) return state;
+
       const messageWithReadStatus = {
         ...message,
         isRead: message.isRead !== undefined ? message.isRead : false,
@@ -139,12 +143,16 @@ export const useChatStore = create<ChatState>((set) => ({
       };
     }),
 
+  // Cập nhật trạng thái isRead=true cho các tin nhắn được gửi BỞI readerId
+  // (đối phương đã đọc những tin nhắn mà mình gửi)
   markAllMessagesAsReadForParticipant: (conversationId, readerId) =>
     set((state) => {
       const conversationMessages = state.messages[conversationId] || [];
       const updatedMessagesList = conversationMessages.map((m) => ({
         ...m,
-        isRead: true,
+        // Chỉ mark là đã đọc nếu tin nhắn được gửi BỞI currentUser (senderId != readerId)
+        // tức là readerId đã đọc những tin nhắn của người đối diện
+        isRead: m.senderId !== readerId ? true : m.isRead,
       }));
 
       return {

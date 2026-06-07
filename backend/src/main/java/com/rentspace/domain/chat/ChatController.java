@@ -1,5 +1,6 @@
 package com.rentspace.domain.chat;
 
+import com.rentspace.common.exception.UnauthorizedException;
 import com.rentspace.common.response.ApiResponse;
 import com.rentspace.domain.chat.dto.ConversationResponse;
 import com.rentspace.domain.chat.dto.CreateConversationRequest;
@@ -8,6 +9,7 @@ import com.rentspace.domain.user.CustomUserDetails;
 import com.rentspace.domain.user.User;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -51,9 +53,13 @@ public class ChatController {
     @PostMapping
     @Operation(summary = "Khởi tạo cuộc hội thoại mới giữa Tenant và Landlord")
     public ResponseEntity<ApiResponse<ConversationResponse>> createConversation(
-            @RequestBody CreateConversationRequest request,
+            @Valid @RequestBody CreateConversationRequest request,
             @AuthenticationPrincipal UserDetails userDetails) {
-        CustomUserDetails currentUser = (CustomUserDetails) userDetails;
+        // Pattern matching instanceof để tránh ClassCastException runtime khi userDetails không phải CustomUserDetails
+        if (!(userDetails instanceof CustomUserDetails currentUser)) {
+            throw new UnauthorizedException("Không thể xác định danh tính người dùng.");
+        }
+
         Conversation conversation = chatService.getOrCreateConversation(
                 currentUser.getUser().getId(),
                 request.getLandlordId()

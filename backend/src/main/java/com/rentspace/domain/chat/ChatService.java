@@ -41,9 +41,6 @@ public interface ChatService {
     /**
      * Lấy thông tin cuộc hội thoại theo ID.
      */
-    /**
-     * Lấy thông tin cuộc hội thoại theo ID.
-     */
     Conversation getConversationById(Long id);
 
     /**

@@ -52,6 +52,12 @@ public class AuthChannelInterceptor implements ChannelInterceptor {
                     }
                 }
             }
+
+            // Từ chối kết nối nếu sau khi xác thực vẫn không có Principal hợp lệ
+            if (accessor.getUser() == null) {
+                log.warn("Từ chối kết nối WebSocket: thiếu hoặc token không hợp lệ.");
+                throw new IllegalArgumentException("Kết nối WebSocket bị từ chối: yêu cầu xác thực JWT hợp lệ.");
+            }
         }
         return message;
     }

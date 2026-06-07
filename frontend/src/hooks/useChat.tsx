@@ -26,10 +26,8 @@ export function useChat() {
     if (!token) return;
 
     activeHookCount++;
-    console.log(`[useChat] Hook mounted. Hook count: ${activeHookCount}`);
 
     if (!sharedStompClient) {
-      console.log("[useChat] Initializing singleton WebSocket connection...");
       sharedStompClient = new Client({
         webSocketFactory: () =>
           new SockJS(`${process.env.NEXT_PUBLIC_API_URL?.replace("/api/v1", "")}/ws`),
@@ -38,14 +36,13 @@ export function useChat() {
         },
         onConnect: () => {
           setConnected(true);
-          console.log("[useChat] WebSocket connected.");
 
           // 1. Subscribe to personal messages
           sharedStompClient?.subscribe("/user/queue/messages", (frame) => {
             try {
               const message = JSON.parse(frame.body);
               
-              // Cập nhật tin nhắn vào store
+              // Cập nhật tin nhắn vào store, dedup theo message.id
               addMessage(message.conversationId, message);
 
               const store = useChatStore.getState();
@@ -151,8 +148,6 @@ export function useChat() {
               const payload = JSON.parse(frame.body);
               const conversationId = Number(payload.conversationId);
               const readerId = Number(payload.readerId);
-              
-              console.log(`[useChat] User ${readerId} has read conversation ${conversationId}`);
               useChatStore.getState().markAllMessagesAsReadForParticipant(conversationId, readerId);
             } catch (err) {
               console.error("[useChat] Error parsing messages.read body:", err);
@@ -173,7 +168,16 @@ export function useChat() {
         },
         onDisconnect: () => {
           setConnected(false);
-          console.log("[useChat] WebSocket disconnected.");
+        },
+        onStompError: (frame) => {
+          // Xử lý lỗi STOMP (ví dụ: token hết hạn sau 15 phút)
+          // Deactivate client cũ để force reconnect với token mới khi session refresh
+          console.error("[useChat] STOMP error, will reconnect on next token refresh:", frame.headers?.message);
+          setConnected(false);
+          if (sharedStompClient) {
+            sharedStompClient.deactivate();
+            sharedStompClient = null;
+          }
         },
         reconnectDelay: 5000,
       });
@@ -183,14 +187,13 @@ export function useChat() {
 
     return () => {
       activeHookCount--;
-      console.log(`[useChat] Hook unmounted. Hook count: ${activeHookCount}`);
       if (activeHookCount <= 0 && sharedStompClient) {
-        console.log("[useChat] Cleaning up STOMP client connection...");
         sharedStompClient.deactivate();
         sharedStompClient = null;
       }
     };
   }, [token, setConnected, addMessage, router]);
+
 
   const sendMessage = useCallback(
     (receiverId: number, content: string, messageType = "TEXT", fileUrl?: string) => {

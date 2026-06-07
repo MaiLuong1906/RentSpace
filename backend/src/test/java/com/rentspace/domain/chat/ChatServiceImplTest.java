@@ -15,6 +15,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.access.AccessDeniedException;
 
 import java.time.LocalDateTime;
@@ -38,6 +39,11 @@ class ChatServiceImplTest {
 
     @Mock
     private UserRepository userRepository;
+
+    // Mock SimpMessagingTemplate để tránh NullPointerException trong getMessages()
+    // khi service gửi tín hiệu "Đã xem" qua WebSocket
+    @Mock
+    private SimpMessagingTemplate messagingTemplate;
 
     @InjectMocks
     private ChatServiceImpl chatService;
@@ -199,7 +205,12 @@ class ChatServiceImplTest {
         assertEquals("Hi", response.getContent());
         assertFalse(response.getIsOwn()); // Sent by landlord, viewed by tenant
         
+        // Verify mark as read được gọi
         verify(messageRepository, times(1)).markMessagesAsRead(100L, 1L);
+        // Verify WebSocket "seen" signal được gửi tới đối phương (landlord id=2)
+        verify(messagingTemplate, times(1)).convertAndSendToUser(
+                eq("2"), eq("/queue/messages.read"), any()
+        );
     }
 
     @Test

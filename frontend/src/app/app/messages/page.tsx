@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Search, Send, MoreVertical, ImagePlus, X, Loader2, Film, Paperclip, FileText } from "lucide-react";
 import { useSession } from "next-auth/react";
+import { toast } from "sonner";
 import { useChat } from "@/hooks/useChat";
 import { useChatStore } from "@/store/chatStore";
 import { chatApi } from "@/lib/api/chat";
@@ -135,25 +136,25 @@ export default function MessagesPage() {
 
     if (type === "IMAGE") {
       if (!file.type.startsWith("image/")) {
-        alert("Chỉ hỗ trợ file ảnh (JPEG, PNG, GIF, WEBP)");
+        toast.error("Chỉ hỗ trợ file ảnh (JPEG, PNG, GIF, WEBP)");
         return;
       }
       if (file.size > 5 * 1024 * 1024) {
-        alert("Ảnh không được vượt quá 5MB");
+        toast.error("Ảnh không được vượt quá 5MB");
         return;
       }
     } else if (type === "VIDEO") {
       if (!file.type.startsWith("video/")) {
-        alert("Chỉ hỗ trợ file video (MP4, MOV, AVI, WebM, MKV)");
+        toast.error("Chỉ hỗ trợ file video (MP4, MOV, AVI, WebM, MKV)");
         return;
       }
       if (file.size > 100 * 1024 * 1024) {
-        alert("Video không được vượt quá 100MB");
+        toast.error("Video không được vượt quá 100MB");
         return;
       }
     } else if (type === "FILE") {
       if (file.size > 20 * 1024 * 1024) {
-        alert("Tài liệu không được vượt quá 20MB");
+        toast.error("Tài liệu không được vượt quá 20MB");
         return;
       }
     }
@@ -197,11 +198,15 @@ export default function MessagesPage() {
         }
 
         sendMessage(selectedConv.otherParticipantId, content, fileType, fileUrl);
-        handleCancelFile();
+        // Revoke object URL để giải phóng memory trước khi reset state
+        if (filePreview) URL.revokeObjectURL(filePreview);
+        setSelectedFile(null);
+        setFileType(null);
+        setFilePreview(null);
         setMessageInput("");
       } catch (err) {
         console.error("Lỗi gửi file:", err);
-        alert("Lỗi upload tệp tin. Vui lòng thử lại.");
+        toast.error("Lỗi upload tệp tin. Vui lòng thử lại.");
       } finally {
         setIsUploading(false);
       }

@@ -15,11 +15,14 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigInteger;
+import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
+
 
 /**
  * Hiện thực hóa ChatService.
@@ -109,31 +112,32 @@ public class ChatServiceImpl implements ChatService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException("User không tồn tại"));
 
-        List<Conversation> conversations = conversationRepository.findAllByUserId(user.getId());
+        // Dùng native summary query để lấy toàn bộ thông tin trong 1 query (tránh N+1)
+        List<Object[]> rows = conversationRepository.findConversationSummariesByUserId(user.getId());
 
-        return conversations.stream().map(c -> {
-            // Xác định người kia trong cuộc hội thoại
-            User otherParticipant = c.getTenant().getId().equals(user.getId()) ? c.getLandlord() : c.getTenant();
-
-            // Tìm tin nhắn mới nhất
-            Message lastMsg = messageRepository.findFirstByConversationIdOrderByCreatedAtDesc(c.getId()).orElse(null);
-            String lastMsgContent = lastMsg != null ? lastMsg.getContent() : "";
-            LocalDateTime lastMsgTime = lastMsg != null ? lastMsg.getCreatedAt() : c.getUpdatedAt();
-
-            // Đếm tin nhắn chưa đọc
-            Long unreadCount = messageRepository.countByConversationIdAndSenderIdNotAndIsReadFalse(c.getId(), user.getId());
+        return rows.stream().map(row -> {
+            Long conversationId = ((BigInteger) row[0]).longValue();
+            Long otherUserId    = ((BigInteger) row[1]).longValue();
+            String otherName    = (String) row[2];
+            String otherAvatar  = (String) row[3];
+            String lastMessage  = (String) row[4];
+            LocalDateTime lastMessageTime = row[5] != null
+                    ? ((Timestamp) row[5]).toLocalDateTime()
+                    : null;
+            Long unreadCount = ((BigInteger) row[6]).longValue();
 
             return ConversationResponse.builder()
-                    .id(c.getId())
-                    .otherParticipantId(otherParticipant.getId())
-                    .otherParticipantName(otherParticipant.getFullName())
-                    .otherParticipantAvatar(otherParticipant.getAvatarUrl())
-                    .lastMessage(lastMsgContent)
-                    .lastMessageTime(lastMsgTime)
+                    .id(conversationId)
+                    .otherParticipantId(otherUserId)
+                    .otherParticipantName(otherName)
+                    .otherParticipantAvatar(otherAvatar)
+                    .lastMessage(lastMessage != null ? lastMessage : "")
+                    .lastMessageTime(lastMessageTime)
                     .unreadCount(unreadCount)
                     .build();
         }).collect(Collectors.toList());
     }
+
 
     @Override
     @Transactional

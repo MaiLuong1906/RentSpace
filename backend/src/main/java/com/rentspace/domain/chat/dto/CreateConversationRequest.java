@@ -1,5 +1,6 @@
 package com.rentspace.domain.chat.dto;
 
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
 /**
@@ -11,5 +12,7 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 public class CreateConversationRequest {
+
+    @NotNull(message = "landlordId không được để trống")
     private Long landlordId;
 }
