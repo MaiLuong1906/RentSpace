@@ -33,6 +33,14 @@ public class Message {
     @Column(nullable = false, columnDefinition = "TEXT")
     private String content;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "message_type", nullable = false)
+    @Builder.Default
+    private com.rentspace.domain.chat.enums.MessageType messageType = com.rentspace.domain.chat.enums.MessageType.TEXT;
+
+    @Column(name = "file_url", length = 512)
+    private String fileUrl;
+
     @Column(name = "is_read", nullable = false)
     @Builder.Default
     private Boolean isRead = false;
