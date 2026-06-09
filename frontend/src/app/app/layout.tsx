@@ -42,6 +42,13 @@ export default function DashboardLayout({
     }
   }, [session]);
 
+  // Reset active conversation khi rời khỏi các trang chat (messages / chat)
+  useEffect(() => {
+    if (pathname && !pathname.startsWith("/app/messages") && !pathname.startsWith("/app/chat")) {
+      useChatStore.getState().setActiveConversation(null);
+    }
+  }, [pathname]);
+
   const isActive = (path: string) => pathname?.startsWith(path);
 
   const handleLogout = async () => {
