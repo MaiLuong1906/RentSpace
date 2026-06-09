@@ -23,4 +23,14 @@ public interface StorageService {
      * @param fileUrl URL của file cần xóa
      */
     void deleteFile(String fileUrl);
+
+    /**
+     * Sinh Presigned URL bảo mật có thời hạn từ URL lưu trữ gốc.
+     * Ở môi trường dev (Local), phương thức này trả về chính URL đó.
+     * Ở môi trường production (S3), phương thức này tạo link AWS S3 Presigned URL (hết hạn sau 15 phút).
+     *
+     * @param fileUrl URL lưu trữ gốc của file
+     * @return Presigned URL bảo mật
+     */
+    String getPresignedUrl(String fileUrl);
 }

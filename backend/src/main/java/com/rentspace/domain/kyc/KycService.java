@@ -64,7 +64,7 @@ public class KycService {
 
         return new KycStatusResponse(
                 user.getKycStatus().name(),
-                user.getCccdImageUrl()
+                user.getCccdImageUrl() != null ? storageService.getPresignedUrl(user.getCccdImageUrl()) : null
         );
     }
 
@@ -135,7 +135,7 @@ public class KycService {
                 .email(user.getEmail())
                 .fullName(user.getFullName())
                 .kycStatus(user.getKycStatus().name())
-                .cccdImageUrl(user.getCccdImageUrl())
+                .cccdImageUrl(user.getCccdImageUrl() != null ? storageService.getPresignedUrl(user.getCccdImageUrl()) : null)
                 .submittedAt(user.getUpdatedAt())
                 .build();
     }

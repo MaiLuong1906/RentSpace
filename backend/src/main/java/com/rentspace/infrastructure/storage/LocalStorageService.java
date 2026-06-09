@@ -78,4 +78,10 @@ public class LocalStorageService implements StorageService {
             log.warn("Không thể xóa file local: {}", e.getMessage());
         }
     }
+
+    @Override
+    public String getPresignedUrl(String fileUrl) {
+        // Môi trường local dev không cần ký bảo mật, trả trực tiếp URL để frontend hiển thị
+        return fileUrl;
+    }
 }
