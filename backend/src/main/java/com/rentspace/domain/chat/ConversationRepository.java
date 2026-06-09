@@ -27,9 +27,9 @@ public interface ConversationRepository extends JpaRepository<Conversation, Long
     @Query(value = """
             SELECT
                 c.id                AS conversationId,
-                CASE WHEN c.tenant_id = :userId THEN u_other.id      ELSE u_self.id       END AS otherUserId,
-                CASE WHEN c.tenant_id = :userId THEN u_other.full_name ELSE u_self.full_name END AS otherUserFullName,
-                CASE WHEN c.tenant_id = :userId THEN u_other.avatar_url ELSE u_self.avatar_url END AS otherUserAvatarUrl,
+                u_other.id          AS otherUserId,
+                u_other.full_name   AS otherUserFullName,
+                u_other.avatar_url  AS otherUserAvatarUrl,
                 (SELECT m.content FROM messages m WHERE m.conversation_id = c.id ORDER BY m.created_at DESC LIMIT 1)  AS lastMessage,
                 (SELECT m.created_at FROM messages m WHERE m.conversation_id = c.id ORDER BY m.created_at DESC LIMIT 1) AS lastMessageTime,
                 (SELECT COUNT(*) FROM messages m WHERE m.conversation_id = c.id AND m.sender_id != :userId AND m.is_read = false) AS unreadCount

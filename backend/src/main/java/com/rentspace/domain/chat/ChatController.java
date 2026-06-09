@@ -74,6 +74,7 @@ public class ChatController {
                 .otherParticipantName(otherParticipant.getFullName())
                 .otherParticipantAvatar(otherParticipant.getAvatarUrl())
                 .unreadCount(0L)
+                .isOnline(chatService.isUserOnline(otherParticipant.getId()))
                 .build();
 
         return ResponseEntity.ok(ApiResponse.success("Tạo cuộc hội thoại thành công", response));

@@ -47,6 +47,9 @@ class ChatServiceImplTest {
     @Mock
     private SimpMessagingTemplate messagingTemplate;
 
+    @Mock
+    private UserPresenceService presenceService;
+
     @InjectMocks
     private ChatServiceImpl chatService;
 
@@ -162,6 +165,7 @@ class ChatServiceImplTest {
         
         when(conversationRepository.findConversationSummariesByUserId(1L))
                 .thenReturn(Collections.singletonList(mockRow));
+        when(presenceService.isOnline(2L)).thenReturn(true);
 
         // When
         List<ConversationResponse> results = chatService.getConversations("tenant@rentspace.com");
@@ -174,6 +178,7 @@ class ChatServiceImplTest {
         assertEquals("Last Message", response.getLastMessage());
         assertEquals(3L, response.getUnreadCount());
         assertEquals(2L, response.getOtherParticipantId());
+        assertTrue(response.getIsOnline());
     }
 
     @Test

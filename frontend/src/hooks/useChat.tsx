@@ -163,6 +163,18 @@ export function useChat() {
               console.error("[useChat] Error parsing messages.typing body:", err);
             }
           });
+
+          // 5. Subscribe to user online/offline presence status
+          sharedStompClient?.subscribe("/topic/users.presence", (frame) => {
+            try {
+              const payload = JSON.parse(frame.body);
+              const userId = Number(payload.userId);
+              const isOnline = payload.status === "ONLINE";
+              useChatStore.getState().setUserOnlineStatus(userId, isOnline);
+            } catch (err) {
+              console.error("[useChat] Error parsing users.presence body:", err);
+            }
+          });
         },
         onDisconnect: () => {
           setConnected(false);
