@@ -1,0 +1,37 @@
+spring:
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5433/rentspace_test}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:123456}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+  mail:
+    host: localhost
+    port: 25
+    username: test@example.com
+    password: testpassword
+
+aws:
+  s3:
+    bucket-name: rentspace-test-uploads
+    region: ap-southeast-1
+    endpoint-url: http://localhost:4566
+  credentials:
+    access-key: test-access-key
+    secret-key: test-secret-key
+
+app:
+  jwt:
+    secret: ${JWT_SECRET:VmVyeVNlY3JldEtleUZvclJlbnRTcGFjZUFwcGxpY2F0aW9uMjAyNjEyMzQ1Njc4OTA=}
