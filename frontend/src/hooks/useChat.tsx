@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 import { useChatStore } from "@/store/chatStore";
 import { toast } from "sonner";
 import { chatApi } from "@/lib/api/chat";
+import { useNotificationStore } from "@/store/notificationStore";
 
 // Singleton STOMP client & reference counter
 let sharedStompClient: Client | null = null;
@@ -131,6 +132,9 @@ export function useChat() {
           sharedStompClient?.subscribe("/user/queue/notifications", (frame) => {
             try {
               const notification = JSON.parse(frame.body);
+              // Lưu vào store thông báo để hiển thị trên dropdown
+              useNotificationStore.getState().addNotification(notification);
+              
               toast(notification.title, {
                 description: notification.content,
                 duration: 5000,
