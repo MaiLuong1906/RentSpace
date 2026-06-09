@@ -19,6 +19,7 @@ import {
 import { authApi } from "@/lib/api/auth.api";
 import { useChat } from "@/hooks/useChat";
 import { useChatStore } from "@/store/chatStore";
+import { NotificationDropdown } from "@/components/notification";
 
 export default function DashboardLayout({
   children,
@@ -167,6 +168,7 @@ export default function DashboardLayout({
               <div className="hidden lg:flex items-center gap-1.5">
                 {status === "authenticated" ? (
                   <>
+                    <NotificationDropdown />
                     <Link
                       href="/app/profile"
                       className="flex items-center gap-2 px-4 py-2.5 rounded-xl hover:bg-gray-50 text-gray-700 font-semibold text-[16px] transition-all whitespace-nowrap"
@@ -201,6 +203,13 @@ export default function DashboardLayout({
                   <div className="h-8 w-24 bg-gray-100 animate-pulse rounded-xl" />
                 )}
               </div>
+
+              {/* Mobile notification bell */}
+              {status === "authenticated" && (
+                <div className="lg:hidden flex items-center mr-1">
+                  <NotificationDropdown />
+                </div>
+              )}
 
               {/* Mobile menu button */}
               <button

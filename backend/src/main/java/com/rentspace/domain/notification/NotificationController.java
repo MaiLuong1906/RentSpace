@@ -10,6 +10,10 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
+import com.rentspace.domain.user.User;
+import com.rentspace.domain.user.UserRepository;
+import com.rentspace.domain.notification.enums.NotificationType;
+import com.rentspace.common.exception.ResourceNotFoundException;
 import java.util.List;
 
 /**
@@ -22,6 +26,7 @@ import java.util.List;
 public class NotificationController {
 
     private final NotificationService notificationService;
+    private final UserRepository userRepository;
 
     @GetMapping
     @Operation(summary = "Lấy danh sách thông báo của người dùng hiện tại")
@@ -46,5 +51,24 @@ public class NotificationController {
             @AuthenticationPrincipal UserDetails userDetails) {
         notificationService.markAllAsRead(userDetails.getUsername());
         return ResponseEntity.ok(ApiResponse.success("Đánh dấu đã đọc tất cả thành công", null));
+    }
+
+    @PostMapping("/test-send")
+    @Operation(summary = "[TEST] Gửi thông báo test real-time cho chính mình")
+    public ResponseEntity<ApiResponse<NotificationResponse>> sendTestNotification(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestParam(required = false, defaultValue = "Yêu cầu KYC được duyệt") String title,
+            @RequestParam(required = false, defaultValue = "Tài khoản của bạn đã được nâng cấp lên Landlord thành công!") String content,
+            @RequestParam(required = false, defaultValue = "KYC") String type) {
+        User user = userRepository.findByEmail(userDetails.getUsername())
+                .orElseThrow(() -> new ResourceNotFoundException("User không tồn tại"));
+        
+        NotificationResponse response = notificationService.createAndSendNotification(
+                user,
+                title,
+                content,
+                NotificationType.valueOf(type)
+        );
+        return ResponseEntity.ok(ApiResponse.success("Gửi thông báo test thành công", response));
     }
 }

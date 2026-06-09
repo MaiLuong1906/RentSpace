@@ -140,7 +140,11 @@ export default function HomePage() {
                         </div>
                         <div className="flex items-center gap-1 text-yellow-500">
                           <Star className="h-4 w-4 fill-current shrink-0" />
-                          <span className="font-semibold text-gray-900">4.8</span>
+                          <span className="font-semibold text-gray-900">
+                            {listing.averageRating !== undefined && listing.averageRating !== null && listing.averageRating > 0
+                              ? listing.averageRating.toFixed(1)
+                              : "Chưa có"}
+                          </span>
                         </div>
                       </div>
 

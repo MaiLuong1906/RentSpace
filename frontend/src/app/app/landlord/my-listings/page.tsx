@@ -48,8 +48,8 @@ export default function MyListingsPage() {
       : ["https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800&h=600&fit=crop"],
     status: l.status,
     originalStatus: l.status,
-    rating: 4.8,
-    reviewCount: 12,
+    rating: l.averageRating !== undefined && l.averageRating !== null ? l.averageRating : 0,
+    reviewCount: l.reviewCount || 0,
   }));
 
   const handleToggleStatus = async (id: string, currentStatus: ListingStatus) => {
@@ -253,7 +253,7 @@ export default function MyListingsPage() {
                             <td className="px-6 py-4">
                               <div className="flex items-center gap-1">
                                 <span className="text-yellow-500">★</span>
-                                <span className="font-semibold">{listing.rating}</span>
+                                <span className="font-semibold">{listing.rating > 0 ? listing.rating.toFixed(1) : "—"}</span>
                                 <span className="text-gray-500 text-sm">({listing.reviewCount})</span>
                               </div>
                             </td>

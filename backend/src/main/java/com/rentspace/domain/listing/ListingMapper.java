@@ -16,6 +16,8 @@ public interface ListingMapper {
     @Mapping(source = "landlord.id",        target = "landlordId")
     @Mapping(source = "landlord.fullName",   target = "landlordName")
     @Mapping(source = "landlord.avatarUrl",  target = "landlordAvatar")
+    @Mapping(target = "averageRating",      ignore = true)
+    @Mapping(target = "reviewCount",        ignore = true)
     ListingResponse toResponse(Listing listing);
 
     // Mapping ListingImage entity → ListingImageResponse DTO

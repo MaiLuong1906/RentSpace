@@ -40,6 +40,9 @@ public class ListingResponse {
     private ListingStatus status;
     private List<ListingImageResponse> images;
 
+    private Double averageRating;
+    private Integer reviewCount;
+
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }
