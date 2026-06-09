@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { authApi } from "@/lib/api/auth.api";
 import { useChat } from "@/hooks/useChat";
+import { useChatStore } from "@/store/chatStore";
 
 export default function DashboardLayout({
   children,
@@ -26,6 +27,7 @@ export default function DashboardLayout({
 }) {
   const { data: session, status } = useSession();
   useChat(); // Kích hoạt kết nối WebSocket STOMP toàn cục khi người dùng đăng nhập
+  const totalUnread = useChatStore((state) => state.totalUnread);
 
   const rawRole = session?.user?.role;
   const userRole = (rawRole?.toLowerCase() || "tenant") as "tenant" | "landlord" | "admin";
@@ -39,6 +41,13 @@ export default function DashboardLayout({
       signOut({ callbackUrl: "/auth/login" });
     }
   }, [session]);
+
+  // Reset active conversation khi rời khỏi các trang chat (messages / chat)
+  useEffect(() => {
+    if (pathname && !pathname.startsWith("/app/messages") && !pathname.startsWith("/app/chat")) {
+      useChatStore.getState().setActiveConversation(null);
+    }
+  }, [pathname]);
 
   const isActive = (path: string) => pathname?.startsWith(path);
 
@@ -100,7 +109,14 @@ export default function DashboardLayout({
                         : "text-gray-700 hover:bg-gray-50"
                     }`}
                   >
-                    <item.icon className="h-5 w-5 shrink-0" />
+                    <div className="relative">
+                      <item.icon className="h-5 w-5 shrink-0" />
+                      {item.path === "/app/messages" && totalUnread > 0 && (
+                        <span className="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[9px] font-bold text-white shadow-sm">
+                          {totalUnread}
+                        </span>
+                      )}
+                    </div>
                     <span>{item.label}</span>
                   </Link>
                 ))}
@@ -218,7 +234,14 @@ export default function DashboardLayout({
                         : "text-gray-700 hover:bg-gray-50"
                     }`}
                   >
-                    <item.icon className="h-5 w-5" />
+                    <div className="relative">
+                      <item.icon className="h-5 w-5" />
+                      {item.path === "/app/messages" && totalUnread > 0 && (
+                        <span className="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[9px] font-bold text-white shadow-sm">
+                          {totalUnread}
+                        </span>
+                      )}
+                    </div>
                     <span>{item.label}</span>
                   </Link>
                 ))}
