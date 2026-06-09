@@ -71,6 +71,9 @@ public class ReviewServiceImpl implements ReviewService {
                 .tenant(tenant)
                 .rating(request.getRating())
                 .comment(request.getComment())
+                .cleanlinessRating(request.getCleanlinessRating())
+                .securityRating(request.getSecurityRating())
+                .landlordRating(request.getLandlordRating())
                 .build();
 
         Review savedReview = reviewRepository.save(review);
@@ -96,6 +99,9 @@ public class ReviewServiceImpl implements ReviewService {
         // Cập nhật thông tin
         review.setRating(request.getRating());
         review.setComment(request.getComment());
+        review.setCleanlinessRating(request.getCleanlinessRating());
+        review.setSecurityRating(request.getSecurityRating());
+        review.setLandlordRating(request.getLandlordRating());
 
         Review updatedReview = reviewRepository.save(review);
         return reviewMapper.toResponse(updatedReview);

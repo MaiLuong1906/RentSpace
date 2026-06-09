@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Star, Loader2 } from "lucide-react";
+import { Star, Loader2, Sparkles } from "lucide-react";
 import { useCreateReview } from "@/hooks/useReviews";
 
 interface ReviewFormProps {
@@ -12,11 +12,65 @@ interface ReviewFormProps {
 
 const RATING_LABELS = ["", "Rất tệ", "Tệ", "Bình thường", "Tốt", "Xuất sắc"];
 
+// Component nhỏ cho mỗi tiêu chí đánh giá chi tiết
+function MiniStarPicker({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: number;
+  onChange: (v: number) => void;
+}) {
+  const [hovered, setHovered] = useState(0);
+  const display = hovered || value;
+
+  return (
+    <div className="flex items-center justify-between">
+      <span className="text-sm text-gray-600 font-medium">{label}</span>
+      <div className="flex items-center gap-0.5">
+        {Array.from({ length: 5 }).map((_, i) => {
+          const starVal = i + 1;
+          return (
+            <button
+              key={i}
+              type="button"
+              onClick={() => onChange(starVal)}
+              onMouseEnter={() => setHovered(starVal)}
+              onMouseLeave={() => setHovered(0)}
+              className="p-0.5 transition-transform hover:scale-110"
+            >
+              <Star
+                size={16}
+                className={
+                  starVal <= display
+                    ? "fill-yellow-400 text-yellow-400"
+                    : "text-gray-300"
+                }
+              />
+            </button>
+          );
+        })}
+        {display > 0 && (
+          <span className="ml-1.5 text-xs font-semibold text-gray-500 w-5 text-center">
+            {display}
+          </span>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export function ReviewForm({ listingId, onSuccess, onCancel }: ReviewFormProps) {
   const [rating, setRating] = useState(0);
   const [hoveredRating, setHoveredRating] = useState(0);
   const [comment, setComment] = useState("");
   const [error, setError] = useState<string | null>(null);
+
+  // Đánh giá chi tiết
+  const [cleanlinessRating, setCleanlinessRating] = useState(0);
+  const [securityRating, setSecurityRating] = useState(0);
+  const [landlordRating, setLandlordRating] = useState(0);
 
   const createReview = useCreateReview(listingId);
 
@@ -25,14 +79,23 @@ export function ReviewForm({ listingId, onSuccess, onCancel }: ReviewFormProps) 
     setError(null);
 
     if (rating === 0) {
-      setError("Vui lòng chọn số sao đánh giá");
+      setError("Vui lòng chọn số sao đánh giá tổng thể");
       return;
     }
 
     try {
-      await createReview.mutateAsync({ rating, comment: comment.trim() || undefined });
+      await createReview.mutateAsync({
+        rating,
+        comment: comment.trim() || undefined,
+        cleanlinessRating: cleanlinessRating || undefined,
+        securityRating: securityRating || undefined,
+        landlordRating: landlordRating || undefined,
+      });
       setRating(0);
       setComment("");
+      setCleanlinessRating(0);
+      setSecurityRating(0);
+      setLandlordRating(0);
       onSuccess?.();
     } catch (err: unknown) {
       const apiError = err as { response?: { data?: { message?: string } } };
@@ -49,9 +112,9 @@ export function ReviewForm({ listingId, onSuccess, onCancel }: ReviewFormProps) 
     >
       <h3 className="text-base font-semibold text-gray-800 mb-4">Viết đánh giá của bạn</h3>
 
-      {/* Chọn số sao */}
+      {/* Chọn số sao tổng thể */}
       <div className="mb-4">
-        <p className="text-sm font-medium text-gray-700 mb-2">Đánh giá *</p>
+        <p className="text-sm font-medium text-gray-700 mb-2">Đánh giá tổng thể *</p>
         <div className="flex items-center gap-1">
           {Array.from({ length: 5 }).map((_, i) => {
             const starVal = i + 1;
@@ -81,6 +144,31 @@ export function ReviewForm({ listingId, onSuccess, onCancel }: ReviewFormProps) 
             </span>
           )}
         </div>
+      </div>
+
+      {/* Đánh giá chi tiết — Vệ sinh, An ninh, Thái độ */}
+      <div className="mb-4 bg-white/70 border border-blue-100 rounded-lg p-4 space-y-3">
+        <div className="flex items-center gap-1.5 mb-1">
+          <Sparkles size={14} className="text-blue-500" />
+          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+            Đánh giá chi tiết <span className="text-gray-400 font-normal normal-case">(không bắt buộc)</span>
+          </p>
+        </div>
+        <MiniStarPicker
+          label="🧹 Vệ sinh"
+          value={cleanlinessRating}
+          onChange={setCleanlinessRating}
+        />
+        <MiniStarPicker
+          label="🔒 An ninh"
+          value={securityRating}
+          onChange={setSecurityRating}
+        />
+        <MiniStarPicker
+          label="🤝 Thái độ chủ trọ"
+          value={landlordRating}
+          onChange={setLandlordRating}
+        />
       </div>
 
       {/* Textarea bình luận */}

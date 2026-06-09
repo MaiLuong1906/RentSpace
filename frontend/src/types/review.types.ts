@@ -16,14 +16,20 @@ export interface Review {
   author: ReviewAuthor;
   rating: number;
   comment?: string;
+  cleanlinessRating?: number; // 1-5, Vệ sinh
+  securityRating?: number;    // 1-5, An ninh
+  landlordRating?: number;    // 1-5, Thái độ chủ trọ
   createdAt: string;
   updatedAt: string;
 }
 
 // --- Request tạo/cập nhật đánh giá (khớp ReviewRequest.java) ---
 export interface ReviewRequest {
-  rating: number;   // 1-5 sao
-  comment?: string; // tối đa 1000 ký tự
+  rating: number;              // 1-5 sao (bắt buộc)
+  comment?: string;            // tối đa 1000 ký tự
+  cleanlinessRating?: number;  // 1-5, Vệ sinh
+  securityRating?: number;     // 1-5, An ninh
+  landlordRating?: number;     // 1-5, Thái độ chủ trọ
 }
 
 // --- Trạng thái báo cáo (khớp ReportStatus.java enum) ---
