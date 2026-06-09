@@ -8,6 +8,7 @@ import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.S3ClientBuilder;
+import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 
 import java.net.URI;
 
@@ -42,6 +43,26 @@ public class S3Config {
         if (endpointUrl != null && !endpointUrl.isBlank()) {
             builder.endpointOverride(URI.create(endpointUrl));
             builder.forcePathStyle(true); // MinIO/LocalStack require path style access
+        }
+
+        return builder.build();
+    }
+
+    @Bean
+    public S3Presigner s3Presigner() {
+        AwsBasicCredentials credentials;
+        if ("none".equals(accessKey) || "none".equals(secretKey)) {
+            credentials = AwsBasicCredentials.create("dummy", "dummy");
+        } else {
+            credentials = AwsBasicCredentials.create(accessKey, secretKey);
+        }
+
+        S3Presigner.Builder builder = S3Presigner.builder()
+                .region(Region.of(region))
+                .credentialsProvider(StaticCredentialsProvider.create(credentials));
+
+        if (endpointUrl != null && !endpointUrl.isBlank()) {
+            builder.endpointOverride(URI.create(endpointUrl));
         }
 
         return builder.build();
