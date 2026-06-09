@@ -49,6 +49,12 @@ const osmStyle = {
   ],
 };
 
+const CITY_DISTRICTS: Record<string, string[]> = {
+  "Đà Nẵng": ["Hải Châu", "Thanh Khê", "Sơn Trà", "Liên Chiểu", "Ngũ Hành Sơn", "Cẩm Lệ"],
+  "Hà Nội": ["Cầu Giấy", "Đống Đa", "Ba Đình", "Hai Bà Trưng", "Tây Hồ", "Thanh Xuân"],
+  "Hồ Chí Minh": ["Quận 1", "Quận 3", "Quận 10", "Bình Thạnh", "Thủ Đức", "Tân Bình"],
+};
+
 type ViewMode = "list" | "map";
 type SearchMode = "standard" | "nearby";
 
@@ -85,6 +91,7 @@ export default function SearchPage() {
   // Standard Filters
   const [filters, setFilters] = useState({
     query: "",
+    city: "",
     district: "",
     roomType: "",
     minPrice: "",
@@ -108,7 +115,7 @@ export default function SearchPage() {
 
   // Fetch standard listings
   const { data: standardResponse, isLoading: standardLoading } = useListings({
-    city: "Đà Nẵng",
+    city: filters.city || undefined,
     district: filters.district || undefined,
     minPrice: filters.minPrice ? Number(filters.minPrice) : undefined,
     maxPrice: filters.maxPrice ? Number(filters.maxPrice) : undefined,
@@ -208,6 +215,7 @@ export default function SearchPage() {
   const resetFilters = () => {
     setFilters({
       query: "",
+      city: "",
       district: "",
       roomType: "",
       minPrice: "",
@@ -272,14 +280,18 @@ export default function SearchPage() {
       // Find average coordinates of listings
       const avgLat = filteredListings.reduce((sum, l) => sum + l.lat, 0) / filteredListings.length;
       const avgLng = filteredListings.reduce((sum, l) => sum + l.lng, 0) / filteredListings.length;
+      
+      const zoom = filters.city ? 12 : 5;
+      
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setMapViewport((prev) => ({
         ...prev,
         latitude: avgLat,
         longitude: avgLng,
+        zoom: zoom,
       }));
     }
-  }, [filteredListings, searchMode]);
+  }, [filteredListings, searchMode, filters.city]);
 
   return (
     <div className="min-h-screen bg-gray-50/50">
@@ -494,21 +506,38 @@ export default function SearchPage() {
                 </button>
               </div>
 
-              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-gray-600 mb-2">Quận/Huyện (Đà Nẵng)</label>
+                  <label className="block text-xs font-bold text-gray-600 mb-2">Tỉnh/Thành phố</label>
+                  <select
+                    value={filters.city}
+                    onChange={(e) => setFilters({ ...filters, city: e.target.value, district: "" })}
+                    className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30 bg-gray-55"
+                  >
+                    <option value="">Tất cả tỉnh thành</option>
+                    <option value="Đà Nẵng">Đà Nẵng</option>
+                    <option value="Hà Nội">Hà Nội</option>
+                    <option value="Hồ Chí Minh">Hồ Chí Minh</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-gray-600 mb-2">Quận/Huyện</label>
                   <select
                     value={filters.district}
                     onChange={(e) => setFilters({ ...filters, district: e.target.value })}
-                    className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30 bg-gray-55"
+                    disabled={!filters.city}
+                    className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30 bg-gray-55 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    <option value="">Tất cả quận huyện</option>
-                    <option value="Hải Châu">Quận Hải Châu</option>
-                    <option value="Thanh Khê">Quận Thanh Khê</option>
-                    <option value="Sơn Trà">Quận Sơn Trà</option>
-                    <option value="Liên Chiểu">Quận Liên Chiểu</option>
-                    <option value="Ngũ Hành Sơn">Quận Ngũ Hành Sơn</option>
-                    <option value="Cẩm Lệ">Quận Cẩm Lệ</option>
+                    <option value="">
+                      {filters.city ? "Tất cả quận huyện" : "Chọn Tỉnh/Thành phố trước"}
+                    </option>
+                    {filters.city &&
+                      CITY_DISTRICTS[filters.city]?.map((district) => (
+                        <option key={district} value={district}>
+                          {district}
+                        </option>
+                      ))}
                   </select>
                 </div>
 
