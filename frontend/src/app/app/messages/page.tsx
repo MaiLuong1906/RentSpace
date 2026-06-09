@@ -32,6 +32,13 @@ export default function MessagesPage() {
     }
   }, [token, setConversations]);
 
+  // 2. Reset active conversation khi rời khỏi trang nhắn tin
+  useEffect(() => {
+    return () => {
+      setActiveConversation(null);
+    };
+  }, [setActiveConversation]);
+
   return (
     <div className="h-[calc(100vh-4rem)] bg-gray-50 overflow-hidden">
       <div className="h-full max-w-7xl mx-auto flex">
