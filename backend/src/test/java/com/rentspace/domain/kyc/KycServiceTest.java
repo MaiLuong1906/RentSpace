@@ -7,8 +7,6 @@ import com.rentspace.domain.user.User;
 import com.rentspace.domain.user.UserRepository;
 import com.rentspace.domain.user.enums.KycStatus;
 import com.rentspace.infrastructure.storage.StorageService;
-import com.rentspace.infrastructure.email.EmailService;
-import com.rentspace.domain.notification.NotificationService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -30,12 +28,6 @@ class KycServiceTest {
 
     @Mock
     private StorageService storageService;
-
-    @Mock
-    private EmailService emailService;
-
-    @Mock
-    private NotificationService notificationService;
 
     @InjectMocks
     private KycService kycService;
