@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { useListing } from "@/hooks/useListings";
 import { ReviewSection, ReportModal } from "@/components/review";
+import { ListingDetailSkeleton } from "@/components/listing";
 import { chatApi } from "@/lib/api/chat";
 import { useChatStore } from "@/store/chatStore";
 import { useChat } from "@/hooks/useChat";
@@ -97,14 +98,7 @@ export default function ListingDetailPage() {
 
   // --- Trạng thái Loading ---
   if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="h-12 w-12 animate-spin text-blue-600 mx-auto mb-4" />
-          <p className="text-gray-600">Đang tải thông tin phòng trọ...</p>
-        </div>
-      </div>
-    );
+    return <ListingDetailSkeleton />;
   }
 
   // --- Trạng thái Lỗi / Không tìm thấy ---

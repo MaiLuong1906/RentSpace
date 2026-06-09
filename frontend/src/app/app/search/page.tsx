@@ -19,6 +19,7 @@ import {
 import { useListings, useNearbyListings } from "@/hooks/useListings";
 import { toast } from "sonner";
 import { formatPrice, getRoomTypeLabel } from "@/lib/mockData";
+import { ListingCardSkeleton } from "@/components/listing";
 
 // Import React Map GL and MapLibre GL (OpenStreetMap, no token needed)
 import Map, { Marker, Popup, NavigationControl } from "react-map-gl/maplibre";
@@ -584,11 +585,19 @@ export default function SearchPage() {
 
         {/* Dynamic Views Rendering */}
         {isLoading ? (
-          <div className="flex flex-col items-center justify-center py-20 bg-white border border-gray-100 rounded-3xl shadow-xl shadow-gray-200/5">
-            <Loader2 className="h-10 w-10 text-blue-600 animate-spin mb-4" />
-            <p className="text-gray-500 text-sm font-semibold">Đang tìm kiếm phòng trọ phù hợp...</p>
-            <p className="text-gray-400 text-xs mt-1 font-medium">Vui lòng đợi trong giây lát</p>
-          </div>
+          viewMode === "list" ? (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {Array.from({ length: 6 }).map((_, idx) => (
+                <ListingCardSkeleton key={idx} />
+              ))}
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center py-20 bg-white border border-gray-100 rounded-3xl shadow-xl shadow-gray-200/5 h-[450px]">
+              <Loader2 className="h-10 w-10 text-blue-600 animate-spin mb-4" />
+              <p className="text-gray-500 text-sm font-semibold">Đang tìm kiếm phòng trọ phù hợp...</p>
+              <p className="text-gray-400 text-xs mt-1 font-medium">Vui lòng đợi trong giây lát</p>
+            </div>
+          )
         ) : (
           <>
             {/* List View Mode */}
