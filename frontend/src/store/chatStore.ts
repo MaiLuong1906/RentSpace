@@ -21,6 +21,7 @@ export interface ChatConversation {
   lastMessage?: string;
   lastMessageTime?: string;
   unreadCount: number;
+  isOnline?: boolean;
 }
 
 interface ChatState {
@@ -40,6 +41,7 @@ interface ChatState {
   markAsRead: (conversationId: number) => void;
   markAllMessagesAsReadForParticipant: (conversationId: number, readerId: number) => void;
   setTyping: (conversationId: number, isTyping: boolean) => void;
+  setUserOnlineStatus: (userId: number, isOnline: boolean) => void;
 }
 
 export const useChatStore = create<ChatState>((set) => ({
@@ -169,5 +171,12 @@ export const useChatStore = create<ChatState>((set) => ({
         ...state.typingStatus,
         [conversationId]: isTyping,
       },
+    })),
+
+  setUserOnlineStatus: (userId, isOnline) =>
+    set((state) => ({
+      conversations: state.conversations.map((c) =>
+        c.otherParticipantId === userId ? { ...c, isOnline } : c
+      ),
     })),
 }));

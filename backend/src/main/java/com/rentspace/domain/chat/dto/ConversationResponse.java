@@ -20,4 +20,5 @@ public class ConversationResponse {
     private String lastMessage;
     private LocalDateTime lastMessageTime;
     private Long unreadCount;
+    private Boolean isOnline;
 }

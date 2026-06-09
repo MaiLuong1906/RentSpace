@@ -47,4 +47,9 @@ public interface ChatService {
      * Lấy ID của đối phương trong cuộc hội thoại để gửi WebSocket an toàn (tránh LazyInitializationException).
      */
     Long getOtherParticipantId(Long conversationId, Long currentUserId);
+
+    /**
+     * Kiểm tra trạng thái hoạt động (online/offline) của người dùng.
+     */
+    boolean isUserOnline(Long userId);
 }

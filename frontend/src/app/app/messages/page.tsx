@@ -266,6 +266,11 @@ export default function MessagesPage() {
                         alt={conv.otherParticipantName}
                         className="w-12 h-12 rounded-full object-cover"
                       />
+                      <span
+                        className={`absolute bottom-0 right-0 block h-3 w-3 rounded-full border-2 border-white shadow-sm ${
+                          conv.isOnline ? "bg-green-500" : "bg-gray-300"
+                        }`}
+                      />
                     </div>
 
                     <div className="flex-1 text-left min-w-0">
@@ -319,12 +324,24 @@ export default function MessagesPage() {
                     alt={selectedConv.otherParticipantName}
                     className="w-10 h-10 rounded-full object-cover"
                   />
+                  <span
+                    className={`absolute bottom-0 right-0 block h-2.5 w-2.5 rounded-full border-2 border-white shadow-sm ${
+                      selectedConv.isOnline ? "bg-green-500" : "bg-gray-300"
+                    }`}
+                  />
                 </div>
                 <div>
                   <h2 className="font-semibold text-gray-950 text-sm">
                     {selectedConv.otherParticipantName}
                   </h2>
-                  <p className="text-xs text-gray-400">Người dùng RentSpace</p>
+                  <p className="text-[11px] flex items-center gap-1.5 mt-0.5">
+                    <span className={`inline-block w-1.5 h-1.5 rounded-full ${
+                      selectedConv.isOnline ? "bg-green-500 animate-pulse" : "bg-gray-400"
+                    }`} />
+                    <span className={selectedConv.isOnline ? "text-green-600 font-semibold" : "text-gray-400"}>
+                      {selectedConv.isOnline ? "Đang hoạt động" : "Ngoại tuyến"}
+                    </span>
+                  </p>
                 </div>
               </div>
 

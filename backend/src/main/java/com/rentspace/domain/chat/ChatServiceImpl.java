@@ -6,6 +6,7 @@ import com.rentspace.domain.chat.dto.ConversationResponse;
 import com.rentspace.domain.chat.dto.MessageResponse;
 import com.rentspace.domain.user.User;
 import com.rentspace.domain.user.UserRepository;
+import com.rentspace.domain.chat.UserPresenceService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -36,6 +37,7 @@ public class ChatServiceImpl implements ChatService {
     private final MessageRepository messageRepository;
     private final UserRepository userRepository;
     private final SimpMessagingTemplate messagingTemplate;
+    private final UserPresenceService presenceService;
 
     @Override
     @Transactional
@@ -116,15 +118,20 @@ public class ChatServiceImpl implements ChatService {
         List<Object[]> rows = conversationRepository.findConversationSummariesByUserId(user.getId());
 
         return rows.stream().map(row -> {
-            Long conversationId = ((BigInteger) row[0]).longValue();
-            Long otherUserId    = ((BigInteger) row[1]).longValue();
+            Long conversationId = row[0] != null ? ((Number) row[0]).longValue() : null;
+            Long otherUserId    = row[1] != null ? ((Number) row[1]).longValue() : null;
             String otherName    = (String) row[2];
             String otherAvatar  = (String) row[3];
             String lastMessage  = (String) row[4];
-            LocalDateTime lastMessageTime = row[5] != null
-                    ? ((Timestamp) row[5]).toLocalDateTime()
-                    : null;
-            Long unreadCount = ((BigInteger) row[6]).longValue();
+            LocalDateTime lastMessageTime = null;
+            if (row[5] != null) {
+                if (row[5] instanceof java.sql.Timestamp ts) {
+                    lastMessageTime = ts.toLocalDateTime();
+                } else if (row[5] instanceof java.time.LocalDateTime ldt) {
+                    lastMessageTime = ldt;
+                }
+            }
+            Long unreadCount = row[6] != null ? ((Number) row[6]).longValue() : 0L;
 
             return ConversationResponse.builder()
                     .id(conversationId)
@@ -134,6 +141,7 @@ public class ChatServiceImpl implements ChatService {
                     .lastMessage(lastMessage != null ? lastMessage : "")
                     .lastMessageTime(lastMessageTime)
                     .unreadCount(unreadCount)
+                    .isOnline(presenceService.isOnline(otherUserId))
                     .build();
         }).collect(Collectors.toList());
     }
@@ -206,5 +214,10 @@ public class ChatServiceImpl implements ChatService {
         return conversation.getTenant().getId().equals(currentUserId)
                 ? conversation.getLandlord().getId()
                 : conversation.getTenant().getId();
+    }
+
+    @Override
+    public boolean isUserOnline(Long userId) {
+        return presenceService.isOnline(userId);
     }
 }
