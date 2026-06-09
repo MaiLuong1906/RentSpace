@@ -14,6 +14,7 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     private final AuthChannelInterceptor authChannelInterceptor;
+    private final WebSocketErrorHandler webSocketErrorHandler;
 
     @Override
     public void configureMessageBroker(MessageBrokerRegistry registry) {
@@ -30,6 +31,8 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
         registry.addEndpoint("/ws")
                 .setAllowedOriginPatterns("http://localhost:3000", "https://rentspace.vn")
                 .withSockJS(); // Fallback for browsers that don't support WebSocket
+        
+        registry.setErrorHandler(webSocketErrorHandler);
     }
 
     @Override
@@ -37,3 +40,4 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
         registration.interceptors(authChannelInterceptor);
     }
 }
+
