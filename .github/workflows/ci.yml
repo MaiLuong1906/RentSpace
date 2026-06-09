@@ -158,7 +158,7 @@ jobs:
           REDIS_HOST: localhost
           REDIS_PORT: 6379
           # JWT — Dùng secret fake cho CI (không phải production key)
-          JWT_SECRET: ci_test_secret_key_min_256bit_do_not_use_in_production_xxxxxxxxxxx
+          JWT_SECRET: VmVyeVNlY3JldEtleUZvclJlbnRTcGFjZUFwcGxpY2F0aW9uMjAyNjEyMzQ1Njc4OTA=
           # AWS — Dùng giá trị fake để Spring context load được
           AWS_ACCESS_KEY: ci-fake-access-key
           AWS_SECRET_KEY: ci-fake-secret-key
