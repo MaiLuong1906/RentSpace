@@ -54,8 +54,8 @@ export function useChat() {
                 if (conv) {
                   const avatar = conv.otherParticipantAvatar || `https://api.dicebear.com/7.x/adventurer/svg?seed=${conv.otherParticipantName}`;
                   const tId = toast(
-                    <div 
-                      className="flex items-center gap-3 cursor-pointer py-1.5 w-full active:scale-98 transition-transform"
+                    <button 
+                      className="flex items-center gap-3 w-full text-left active:scale-95 transition-transform focus:outline-none"
                       onClick={() => {
                         toast.dismiss(tId);
                         store.setActiveConversation(message.conversationId);
@@ -78,7 +78,7 @@ export function useChat() {
                           {message.content}
                         </div>
                       </div>
-                    </div>,
+                    </button>,
                     { duration: 6000 }
                   );
                 } else {
@@ -91,8 +91,8 @@ export function useChat() {
                       const avatar = newConv?.otherParticipantAvatar || `https://api.dicebear.com/7.x/adventurer/svg?seed=${name}`;
                       
                       const tId = toast(
-                        <div 
-                          className="flex items-center gap-3 cursor-pointer py-1.5 w-full active:scale-98 transition-transform"
+                        <button 
+                          className="flex items-center gap-3 w-full text-left active:scale-95 transition-transform focus:outline-none"
                           onClick={() => {
                             toast.dismiss(tId);
                             store.setActiveConversation(message.conversationId);
@@ -115,7 +115,7 @@ export function useChat() {
                               {message.content}
                             </div>
                           </div>
-                        </div>,
+                        </button>,
                         { duration: 6000 }
                       );
                     })
