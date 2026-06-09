@@ -4,8 +4,7 @@ import { useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useChatStore } from "@/store/chatStore";
 import { chatApi } from "@/lib/api/chat";
-import { ConversationList, ChatWindow } from "@/components/chat";
-
+import { ConversationList, ChatWindow } from "../../../components/chat";
 export default function MessagesPage() {
   const { data: session } = useSession();
   const token = session?.accessToken;
