@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.rentspace.domain.review.ReviewRepository;
 import java.math.BigDecimal;
 import java.util.List;
 
@@ -31,6 +32,7 @@ public class ListingService {
     private final UserRepository userRepository;
     private final StorageService storageService;
     private final ListingMapper listingMapper;
+    private final ReviewRepository reviewRepository;
 
     // ===== GET /api/v1/listings =====
     public Page<ListingResponse> search(String city, String district,
@@ -38,7 +40,8 @@ public class ListingService {
                                         BigDecimal minArea, Pageable pageable) {
         return listingRepository
                 .search(ListingStatus.ACTIVE, city, district, minPrice, maxPrice, minArea, pageable)
-                .map(listingMapper::toResponse);
+                .map(listingMapper::toResponse)
+                .map(this::enrichWithRating);
     }
 
     // ===== GET /api/v1/listings/nearby =====
@@ -46,6 +49,7 @@ public class ListingService {
         return listingRepository.findNearby(lat, lng, radiusKm, limit)
                 .stream()
                 .map(listingMapper::toResponse)
+                .map(this::enrichWithRating)
                 .toList();
     }
 
@@ -53,10 +57,12 @@ public class ListingService {
     public Page<ListingResponse> getMyListings(String email, ListingStatus status, Pageable pageable) {
         if (status != null) {
             return listingRepository.findByLandlord_EmailAndStatus(email, status, pageable)
-                    .map(listingMapper::toResponse);
+                    .map(listingMapper::toResponse)
+                    .map(this::enrichWithRating);
         }
         return listingRepository.findByLandlord_EmailAndStatusNot(email, ListingStatus.DELETED, pageable)
-                .map(listingMapper::toResponse);
+                .map(listingMapper::toResponse)
+                .map(this::enrichWithRating);
     }
 
     // ===== GET /api/v1/listings/{id} =====
@@ -78,7 +84,7 @@ public class ListingService {
             }
         }
 
-        return listingMapper.toResponse(listing);
+        return enrichWithRating(listingMapper.toResponse(listing));
     }
 
     // ===== POST /api/v1/listings =====
@@ -283,5 +289,14 @@ public class ListingService {
             throw new BusinessException("Bạn không có quyền chỉnh sửa tin đăng này");
         }
         return listing;
+    }
+
+    private ListingResponse enrichWithRating(ListingResponse response) {
+        if (response == null) return null;
+        Double avg = reviewRepository.getAverageRatingForListing(response.getId());
+        Long count = reviewRepository.getReviewCountForListing(response.getId());
+        response.setAverageRating(avg != null ? Math.round(avg * 10.0) / 10.0 : 0.0);
+        response.setReviewCount(count != null ? count.intValue() : 0);
+        return response;
     }
 }

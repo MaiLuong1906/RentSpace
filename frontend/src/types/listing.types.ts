@@ -51,6 +51,9 @@ export interface Listing {
   status: ListingStatus;
   images: ListingImage[];
 
+  averageRating?: number;
+  reviewCount?: number;
+
   createdAt: string;
   updatedAt: string;
 }

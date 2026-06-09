@@ -21,6 +21,12 @@ import { toast } from "sonner";
 import { formatPrice, getRoomTypeLabel } from "@/lib/mockData";
 import { ListingCardSkeleton } from "@/components/listing";
 
+const CITY_DISTRICTS: Record<string, string[]> = {
+  "Đà Nẵng": ["Hải Châu", "Thanh Khê", "Sơn Trà", "Liên Chiểu", "Ngũ Hành Sơn", "Cẩm Lệ", "Hòa Vang"],
+  "Hà Nội": ["Cầu Giấy", "Đống Đa", "Ba Đình", "Hai Bà Trưng", "Hoàn Kiếm", "Thanh Xuân", "Nam Từ Liêm", "Bắc Từ Liêm", "Tây Hồ", "Hoàng Mai", "Long Biên", "Hà Đông"],
+  "Hồ Chí Minh": ["Quận 1", "Quận 3", "Quận 4", "Quận 5", "Quận 6", "Quận 7", "Quận 8", "Quận 10", "Quận 11", "Quận 12", "Bình Thạnh", "Gò Vấp", "Tân Bình", "Tân Phú", "Bình Tân", "Thủ Đức", "Phú Nhuận"],
+};
+
 // Import React Map GL and MapLibre GL (OpenStreetMap, no token needed)
 import Map, { Marker, Popup, NavigationControl } from "react-map-gl/maplibre";
 import type { ViewStateChangeEvent } from "react-map-gl/maplibre";
@@ -86,6 +92,7 @@ export default function SearchPage() {
   // Standard Filters
   const [filters, setFilters] = useState({
     query: "",
+    city: "",
     district: "",
     roomType: "",
     minPrice: "",
@@ -109,7 +116,7 @@ export default function SearchPage() {
 
   // Fetch standard listings
   const { data: standardResponse, isLoading: standardLoading } = useListings({
-    city: "Đà Nẵng",
+    city: filters.city || undefined,
     district: filters.district || undefined,
     minPrice: filters.minPrice ? Number(filters.minPrice) : undefined,
     maxPrice: filters.maxPrice ? Number(filters.maxPrice) : undefined,
@@ -163,8 +170,8 @@ export default function SearchPage() {
         landlordVerified: true,
         status: l.status === "ACTIVE" ? ("available" as const) : ("rented" as const),
         createdAt: l.createdAt,
-        rating: 4.8,
-        reviewCount: 12,
+        rating: l.averageRating !== undefined && l.averageRating !== null ? l.averageRating : 0,
+        reviewCount: l.reviewCount || 0,
       };
     });
   }, [standardResponse, nearbyResponse, searchMode]);
@@ -209,6 +216,7 @@ export default function SearchPage() {
   const resetFilters = () => {
     setFilters({
       query: "",
+      city: "",
       district: "",
       roomType: "",
       minPrice: "",
@@ -495,21 +503,40 @@ export default function SearchPage() {
                 </button>
               </div>
 
-              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-gray-600 mb-2">Quận/Huyện (Đà Nẵng)</label>
+                  <label className="block text-xs font-bold text-gray-600 mb-2">Tỉnh/Thành phố</label>
+                  <select
+                    value={filters.city}
+                    onChange={(e) => {
+                      setFilters({ ...filters, city: e.target.value, district: "" });
+                    }}
+                    className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30 bg-gray-55"
+                  >
+                    <option value="">Toàn quốc</option>
+                    <option value="Đà Nẵng">Đà Nẵng</option>
+                    <option value="Hà Nội">Hà Nội</option>
+                    <option value="Hồ Chí Minh">TP. Hồ Chí Minh</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-gray-600 mb-2">
+                    Quận/Huyện {filters.city ? `(${filters.city})` : ""}
+                  </label>
                   <select
                     value={filters.district}
                     onChange={(e) => setFilters({ ...filters, district: e.target.value })}
-                    className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30 bg-gray-55"
+                    disabled={!filters.city}
+                    className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30 bg-gray-55 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <option value="">Tất cả quận huyện</option>
-                    <option value="Hải Châu">Quận Hải Châu</option>
-                    <option value="Thanh Khê">Quận Thanh Khê</option>
-                    <option value="Sơn Trà">Quận Sơn Trà</option>
-                    <option value="Liên Chiểu">Quận Liên Chiểu</option>
-                    <option value="Ngũ Hành Sơn">Quận Ngũ Hành Sơn</option>
-                    <option value="Cẩm Lệ">Quận Cẩm Lệ</option>
+                    {filters.city &&
+                      CITY_DISTRICTS[filters.city]?.map((district) => (
+                        <option key={district} value={district}>
+                          {district}
+                        </option>
+                      ))}
                   </select>
                 </div>
 
@@ -646,7 +673,9 @@ export default function SearchPage() {
 
                         <div className="flex items-center gap-1 text-yellow-500">
                           <Star className="h-4 w-4 fill-yellow-500 text-yellow-500" />
-                          <span className="font-extrabold text-gray-900 text-xs">{listing.rating}</span>
+                          <span className="font-extrabold text-gray-900 text-xs">
+                            {listing.rating > 0 ? listing.rating.toFixed(1) : "Chưa có"}
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -700,7 +729,7 @@ export default function SearchPage() {
                           </span>
                           <span className="text-gray-800 flex items-center gap-0.5">
                             <Star className="h-3 w-3 text-yellow-500 fill-yellow-500" />
-                            {listing.rating}
+                            {listing.rating > 0 ? listing.rating.toFixed(1) : "—"}
                           </span>
                         </div>
                       </div>
