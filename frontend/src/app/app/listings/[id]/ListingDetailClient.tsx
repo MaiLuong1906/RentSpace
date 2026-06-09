@@ -182,9 +182,16 @@ export function ListingDetailClient({ listingId }: ListingDetailClientProps) {
             {/* Title & Basic Info */}
             <div className="bg-white rounded-xl shadow-md p-6 space-y-4">
               <h1 className="text-3xl font-bold text-gray-900">{listing.title}</h1>
-              <div className="flex items-center gap-2 text-gray-650 text-sm">
-                <MapPin className="h-4 w-4 text-gray-500" />
-                <span>{listing.address}, {listing.district}, {listing.city}</span>
+              <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
+                <div className="flex items-center gap-1.5">
+                  <MapPin className="h-4 w-4 text-gray-500 shrink-0" />
+                  <span>{listing.address}, {listing.district}, {listing.city}</span>
+                </div>
+                {listing.averageRating !== undefined && listing.averageRating !== null && listing.averageRating > 0 && (
+                  <div className="flex items-center gap-1 bg-yellow-50 text-yellow-700 px-2.5 py-0.5 rounded-full border border-yellow-250 font-semibold text-xs">
+                    ★ {listing.averageRating.toFixed(1)} ({listing.reviewCount} đánh giá)
+                  </div>
+                )}
               </div>
               <div className="flex items-baseline gap-4 pt-2">
                 <span className="text-3xl font-extrabold text-blue-600">
