@@ -88,7 +88,7 @@ management:
 # ===== App Custom Config =====
 app:
   jwt:
-    secret: ${JWT_SECRET:dev_secret_please_change_me_to_64_chars_minimum_length_ok_for_local_test}
+    secret: ${JWT_SECRET:VmVyeVNlY3JldEtleUZvclJlbnRTcGFjZUFwcGxpY2F0aW9uMjAyNjEyMzQ1Njc4OTA=}
     expiration-ms: 900000          # 15 phút
     refresh-expiration-ms: 604800000  # 7 ngày
   frontend-url: ${FRONTEND_URL:http://localhost:3000}
