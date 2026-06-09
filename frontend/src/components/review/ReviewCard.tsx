@@ -118,6 +118,43 @@ export function ReviewCard({ review, listingId, onDelete, canDelete, canEdit }: 
             ))}
             <span className="text-xs text-gray-500 ml-1 font-medium">{review.rating}/5</span>
           </div>
+
+          {/* Đánh giá chi tiết — chỉ hiển thị nếu có ít nhất 1 tiêu chí */}
+          {(review.cleanlinessRating || review.securityRating || review.landlordRating) && (
+            <div className="flex flex-wrap gap-x-5 gap-y-1.5 mb-3 text-xs">
+              {review.cleanlinessRating && (
+                <div className="flex items-center gap-1.5">
+                  <span className="text-gray-400">🧹 Vệ sinh</span>
+                  <div className="flex items-center gap-0.5">
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <Star key={i} size={10} className={i < review.cleanlinessRating! ? "fill-emerald-400 text-emerald-400" : "text-gray-200"} />
+                    ))}
+                  </div>
+                </div>
+              )}
+              {review.securityRating && (
+                <div className="flex items-center gap-1.5">
+                  <span className="text-gray-400">🔒 An ninh</span>
+                  <div className="flex items-center gap-0.5">
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <Star key={i} size={10} className={i < review.securityRating! ? "fill-blue-400 text-blue-400" : "text-gray-200"} />
+                    ))}
+                  </div>
+                </div>
+              )}
+              {review.landlordRating && (
+                <div className="flex items-center gap-1.5">
+                  <span className="text-gray-400">🤝 Chủ trọ</span>
+                  <div className="flex items-center gap-0.5">
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <Star key={i} size={10} className={i < review.landlordRating! ? "fill-purple-400 text-purple-400" : "text-gray-200"} />
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
           {review.comment && (
             <p className="text-sm text-gray-700 leading-relaxed">{review.comment}</p>
           )}

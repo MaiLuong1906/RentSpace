@@ -18,6 +18,9 @@ public class ReviewResponse {
     private ReviewAuthorResponse author;
     private Integer rating;
     private String comment;
+    private Integer cleanlinessRating;
+    private Integer securityRating;
+    private Integer landlordRating;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

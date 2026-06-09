@@ -42,6 +42,16 @@ public class Review {
     @Column(columnDefinition = "TEXT")
     private String comment;
 
+    // Đánh giá chi tiết (không bắt buộc, 1-5 sao)
+    @Column(name = "cleanliness_rating")
+    private Integer cleanlinessRating;
+
+    @Column(name = "security_rating")
+    private Integer securityRating;
+
+    @Column(name = "landlord_rating")
+    private Integer landlordRating;
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;

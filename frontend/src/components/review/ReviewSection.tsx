@@ -88,6 +88,59 @@ export function ReviewSection({ listingId }: ReviewSectionProps) {
         />
       )}
 
+      {/* Tổng hợp đánh giá chi tiết */}
+      {reviews.length > 0 && (() => {
+        // Tính trung bình từng tiêu chí
+        const withCleanliness = reviews.filter((r) => r.cleanlinessRating);
+        const withSecurity = reviews.filter((r) => r.securityRating);
+        const withLandlord = reviews.filter((r) => r.landlordRating);
+
+        const avgCleanliness = withCleanliness.length > 0
+          ? (withCleanliness.reduce((s, r) => s + r.cleanlinessRating!, 0) / withCleanliness.length)
+          : null;
+        const avgSecurity = withSecurity.length > 0
+          ? (withSecurity.reduce((s, r) => s + r.securityRating!, 0) / withSecurity.length)
+          : null;
+        const avgLandlord = withLandlord.length > 0
+          ? (withLandlord.reduce((s, r) => s + r.landlordRating!, 0) / withLandlord.length)
+          : null;
+
+        const hasAny = avgCleanliness || avgSecurity || avgLandlord;
+        if (!hasAny) return null;
+
+        const categories = [
+          { label: "🧹 Vệ sinh", avg: avgCleanliness, color: "bg-emerald-500" },
+          { label: "🔒 An ninh", avg: avgSecurity, color: "bg-blue-500" },
+          { label: "🤝 Thái độ chủ trọ", avg: avgLandlord, color: "bg-purple-500" },
+        ].filter((c) => c.avg !== null);
+
+        return (
+          <div className="bg-gray-50 border border-gray-100 rounded-xl p-4 mb-5">
+            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">
+              Đánh giá trung bình theo tiêu chí
+            </p>
+            <div className="space-y-2.5">
+              {categories.map((cat) => (
+                <div key={cat.label} className="flex items-center gap-3">
+                  <span className="text-sm text-gray-600 font-medium w-36 flex-shrink-0">
+                    {cat.label}
+                  </span>
+                  <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
+                    <div
+                      className={`h-full rounded-full transition-all duration-500 ${cat.color}`}
+                      style={{ width: `${(cat.avg! / 5) * 100}%` }}
+                    />
+                  </div>
+                  <span className="text-sm font-bold text-gray-700 w-8 text-right">
+                    {cat.avg!.toFixed(1)}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      })()}
+
       {/* Danh sách reviews */}
       {isLoading ? (
         <div className="flex items-center justify-center gap-2 py-10 text-gray-500">

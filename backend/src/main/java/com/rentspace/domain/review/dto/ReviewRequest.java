@@ -21,4 +21,17 @@ public class ReviewRequest {
 
     @Size(max = 1000, message = "Nội dung bình luận không được vượt quá 1000 ký tự")
     private String comment;
+
+    // Đánh giá chi tiết (không bắt buộc, 1-5 sao)
+    @Min(value = 1, message = "Điểm vệ sinh tối thiểu là 1")
+    @Max(value = 5, message = "Điểm vệ sinh tối đa là 5")
+    private Integer cleanlinessRating;
+
+    @Min(value = 1, message = "Điểm an ninh tối thiểu là 1")
+    @Max(value = 5, message = "Điểm an ninh tối đa là 5")
+    private Integer securityRating;
+
+    @Min(value = 1, message = "Điểm thái độ chủ trọ tối thiểu là 1")
+    @Max(value = 5, message = "Điểm thái độ chủ trọ tối đa là 5")
+    private Integer landlordRating;
 }
