@@ -1,7 +1,7 @@
 -- ============================================================
 -- V16: ROOMMATE — Hồ sơ tìm bạn ở ghép
 -- ============================================================
-CREATE TABLE roommate_profiles (
+CREATE TABLE IF NOT EXISTS roommate_profiles (
     id              BIGSERIAL PRIMARY KEY,
     user_id         BIGINT NOT NULL REFERENCES users(id) UNIQUE,
     gender          VARCHAR(20),
@@ -17,7 +17,7 @@ CREATE TABLE roommate_profiles (
     updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE TABLE roommate_matches (
+CREATE TABLE IF NOT EXISTS roommate_matches (
     id              BIGSERIAL PRIMARY KEY,
     profile_a_id    BIGINT NOT NULL REFERENCES roommate_profiles(id),
     profile_b_id    BIGINT NOT NULL REFERENCES roommate_profiles(id),
@@ -28,5 +28,5 @@ CREATE TABLE roommate_matches (
     UNIQUE (profile_a_id, profile_b_id)
 );
 
-CREATE INDEX idx_roommate_profiles_active ON roommate_profiles(is_active);
-CREATE INDEX idx_roommate_matches_score ON roommate_matches(match_score DESC);
+CREATE INDEX IF NOT EXISTS idx_roommate_profiles_active ON roommate_profiles(is_active);
+CREATE INDEX IF NOT EXISTS idx_roommate_matches_score ON roommate_matches(match_score DESC);

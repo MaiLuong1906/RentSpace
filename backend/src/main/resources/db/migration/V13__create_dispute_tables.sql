@@ -1,7 +1,7 @@
 -- ============================================================
 -- V13: DISPUTES — Tranh chấp giao dịch đặt cọc
 -- ============================================================
-CREATE TABLE deposit_disputes (
+CREATE TABLE IF NOT EXISTS deposit_disputes (
     id              BIGSERIAL PRIMARY KEY,
     transaction_id  BIGINT NOT NULL REFERENCES deposit_transactions(id) UNIQUE,
     opened_by       BIGINT NOT NULL REFERENCES users(id),

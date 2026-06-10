@@ -1,7 +1,7 @@
 -- ============================================================
 -- V15: POSTS — Bài đăng cộng đồng
 -- ============================================================
-CREATE TABLE posts (
+CREATE TABLE IF NOT EXISTS posts (
     id              BIGSERIAL PRIMARY KEY,
     author_id       BIGINT NOT NULL REFERENCES users(id),
     type            VARCHAR(30) NOT NULL
@@ -23,14 +23,14 @@ CREATE TABLE posts (
     updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE TABLE post_likes (
+CREATE TABLE IF NOT EXISTS post_likes (
     post_id     BIGINT REFERENCES posts(id) ON DELETE CASCADE,
     user_id     BIGINT REFERENCES users(id) ON DELETE CASCADE,
     created_at  TIMESTAMPTZ DEFAULT NOW(),
     PRIMARY KEY (post_id, user_id)
 );
 
-CREATE TABLE post_comments (
+CREATE TABLE IF NOT EXISTS post_comments (
     id          BIGSERIAL PRIMARY KEY,
     post_id     BIGINT NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
     author_id   BIGINT NOT NULL REFERENCES users(id),
@@ -39,7 +39,7 @@ CREATE TABLE post_comments (
     created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE TABLE post_reports (
+CREATE TABLE IF NOT EXISTS post_reports (
     id          BIGSERIAL PRIMARY KEY,
     post_id     BIGINT NOT NULL REFERENCES posts(id),
     reporter_id BIGINT NOT NULL REFERENCES users(id),
@@ -48,5 +48,5 @@ CREATE TABLE post_reports (
     UNIQUE (post_id, reporter_id)
 );
 
-CREATE INDEX idx_posts_author ON posts(author_id, created_at DESC);
-CREATE INDEX idx_posts_type ON posts(type);
+CREATE INDEX IF NOT EXISTS idx_posts_author ON posts(author_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_posts_type ON posts(type);

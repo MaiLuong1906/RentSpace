@@ -26,7 +26,7 @@ public class VnpayService {
      * Tạo URL thanh toán VNPay
      */
     public String createPaymentUrl(Long amount, String txnRef, String ipAddress) {
-        // TODO: Implement VNPay URL generation logic
+        // TODO [RS-123]: Implement VNPay URL generation logic
         log.info("Generating VNPay URL for txnRef: {}, amount: {}", txnRef, amount);
         return payUrl + "?vnp_Amount=" + amount + "&vnp_TxnRef=" + txnRef;
     }
@@ -35,8 +35,8 @@ public class VnpayService {
      * Kiểm tra chữ ký VNPay (Checksum)
      */
     public boolean verifySignature(Map<String, String> params) {
-        // TODO: Implement VNPay signature verification logic
+        // TODO [RS-124]: Implement VNPay signature verification logic
         log.info("Verifying VNPay signature for params: {}", params);
-        return true; 
+        throw new UnsupportedOperationException("Chưa implement VNPay signature verification"); 
     }
 }

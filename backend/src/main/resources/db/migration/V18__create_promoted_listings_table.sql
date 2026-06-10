@@ -1,7 +1,7 @@
 -- ============================================================
 -- V18: PROMOTED LISTINGS — Tin đăng nổi bật (boost)
 -- ============================================================
-CREATE TABLE promoted_listings (
+CREATE TABLE IF NOT EXISTS promoted_listings (
     id              BIGSERIAL PRIMARY KEY,
     listing_id      BIGINT NOT NULL REFERENCES listings(id),
     landlord_id     BIGINT NOT NULL REFERENCES users(id),
@@ -12,4 +12,4 @@ CREATE TABLE promoted_listings (
     is_active       BOOLEAN DEFAULT TRUE
 );
 
-CREATE INDEX idx_promoted_active ON promoted_listings(is_active, expires_at);
+CREATE INDEX IF NOT EXISTS idx_promoted_active ON promoted_listings(is_active, expires_at);

@@ -1,7 +1,7 @@
 -- ============================================================
 -- V12: DEPOSIT — Giao dịch đặt cọc Escrow
 -- ============================================================
-CREATE TABLE deposit_transactions (
+CREATE TABLE IF NOT EXISTS deposit_transactions (
     id                  BIGSERIAL PRIMARY KEY,
     listing_id          BIGINT NOT NULL REFERENCES listings(id),
     tenant_id           BIGINT NOT NULL REFERENCES users(id),
@@ -31,7 +31,7 @@ CREATE TABLE deposit_transactions (
     updated_at          TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE TABLE deposit_transaction_events (
+CREATE TABLE IF NOT EXISTS deposit_transaction_events (
     id              BIGSERIAL PRIMARY KEY,
     transaction_id  BIGINT NOT NULL REFERENCES deposit_transactions(id),
     event_type      VARCHAR(50) NOT NULL,
@@ -41,7 +41,7 @@ CREATE TABLE deposit_transaction_events (
     created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE INDEX idx_deposit_tx_tenant ON deposit_transactions(tenant_id);
-CREATE INDEX idx_deposit_tx_landlord ON deposit_transactions(landlord_id);
-CREATE INDEX idx_deposit_tx_status ON deposit_transactions(status);
-CREATE INDEX idx_deposit_tx_listing ON deposit_transactions(listing_id);
+CREATE INDEX IF NOT EXISTS idx_deposit_tx_tenant ON deposit_transactions(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_deposit_tx_landlord ON deposit_transactions(landlord_id);
+CREATE INDEX IF NOT EXISTS idx_deposit_tx_status ON deposit_transactions(status);
+CREATE INDEX IF NOT EXISTS idx_deposit_tx_listing ON deposit_transactions(listing_id);
