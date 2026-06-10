@@ -80,8 +80,34 @@ public class LocalStorageService implements StorageService {
     }
 
     @Override
+    public String uploadFile(byte[] content, String filename, String contentType, String folder) {
+        if (content == null || content.length == 0) {
+            throw new RuntimeException("Nội dung file không được để trống");
+        }
+
+        String safeFilename = UUID.randomUUID() + "_" + filename.replaceAll("[^a-zA-Z0-9._-]", "_");
+
+        try {
+            Path targetDir = Paths.get(uploadDir, folder);
+            Files.createDirectories(targetDir);
+
+            Path targetFile = targetDir.resolve(safeFilename);
+            Files.write(targetFile, content);
+
+            String fileUrl = baseUrl + "/" + folder + "/" + safeFilename;
+            log.info("Upload byte array local thành công: {}", fileUrl);
+            return fileUrl;
+
+        } catch (IOException e) {
+            log.error("Lỗi khi lưu file local từ byte array: {}", e.getMessage());
+            throw new RuntimeException("Không thể lưu file: " + e.getMessage());
+        }
+    }
+
+    @Override
     public String getPresignedUrl(String fileUrl) {
         // Môi trường local dev không cần ký bảo mật, trả trực tiếp URL để frontend hiển thị
         return fileUrl;
     }
 }
+

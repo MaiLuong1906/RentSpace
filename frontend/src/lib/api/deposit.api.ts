@@ -1,6 +1,6 @@
 import apiClient from "./axios";
 import { ApiResponse } from "@/types/api.types";
-import { DepositTransaction } from "@/types/phase2.types";
+import { DepositTransaction, DisputeResponse } from "@/types/phase2.types";
 
 export const depositApi = {
   // Tạo giao dịch đặt cọc
@@ -41,6 +41,21 @@ export const depositApi = {
   // Mở tranh chấp
   openDispute: async (id: number, data: { reason: string; description: string; evidenceUrls: string[] }) => {
     const response = await apiClient.patch<ApiResponse<DepositTransaction>>(`/deposits/${id}/dispute`, data);
+    return response.data;
+  },
+
+  // ADMIN: Lấy danh sách tất cả tranh chấp đặt cọc
+  adminGetAllDisputes: async () => {
+    const response = await apiClient.get<ApiResponse<DisputeResponse[]>>("/admin/disputes");
+    return response.data;
+  },
+
+  // ADMIN: Phán quyết tranh chấp
+  adminResolveDispute: async (id: number, resolution: 'RESOLVED_TENANT' | 'RESOLVED_LANDLORD' | 'RESOLVED_PLATFORM', resolutionNote: string) => {
+    const response = await apiClient.patch<ApiResponse<DepositTransaction>>(`/admin/disputes/${id}/resolve`, {
+      resolution,
+      resolutionNote
+    });
     return response.data;
   },
 };

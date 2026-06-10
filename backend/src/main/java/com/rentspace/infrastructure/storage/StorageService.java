@@ -18,6 +18,17 @@ public interface StorageService {
     String uploadFile(MultipartFile file, String folder);
 
     /**
+     * Upload file dưới dạng byte array vào thư mục chỉ định, trả về URL có thể truy cập.
+     *
+     * @param content     mảng byte nội dung file
+     * @param filename    tên file mong muốn
+     * @param contentType kiểu MIME file (vd: "application/pdf")
+     * @param folder      thư mục con (ví dụ: "contracts")
+     * @return URL đầy đủ của file đã upload
+     */
+    String uploadFile(byte[] content, String filename, String contentType, String folder);
+
+    /**
      * Xóa file theo URL.
      *
      * @param fileUrl URL của file cần xóa
