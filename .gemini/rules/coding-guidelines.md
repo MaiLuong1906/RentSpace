@@ -168,6 +168,8 @@ dto.setTitle(listing.getTitle()); // Lỗi thường gặp: quên map field
 | `Optional.get()` không kiểm tra | `NoSuchElementException` | Dùng `orElseThrow()` |
 | Password/secret trong code | Security vulnerability | Dùng `application.yml` + env vars |
 | Catch Exception chung | Che giấu lỗi | Catch exception cụ thể |
+| Dùng `@DataJpaTest` mặc định | Lỗi thiếu embedded DB (H2) | Thêm `@AutoConfigureTestDatabase(replace = NONE)` |
+| Import class `User` gây xung đột | Lỗi biên dịch (Ambiguity) | Luôn dùng FQN cho `domain.user.User` trong Test |
 
 ---
 
