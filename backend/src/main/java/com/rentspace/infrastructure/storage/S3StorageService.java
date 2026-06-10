@@ -107,4 +107,28 @@ public class S3StorageService implements StorageService {
             return fileUrl;
         }
     }
+
+    @Override
+    public String uploadFile(byte[] content, String filename, String contentType, String folder) {
+        String fileName = folder + "/" + UUID.randomUUID() + "_" + filename.replaceAll("[^a-zA-Z0-9._-]", "_");
+
+        try {
+            PutObjectRequest request = PutObjectRequest.builder()
+                    .bucket(bucketName)
+                    .key(fileName)
+                    .contentType(contentType)
+                    .contentLength((long) content.length)
+                    .build();
+
+            s3Client.putObject(request, RequestBody.fromBytes(content));
+            String fileUrl = String.format("https://%s.s3.%s.amazonaws.com/%s", bucketName, region, fileName);
+            log.info("Upload byte array lên S3 thành công: {}", fileUrl);
+            return fileUrl;
+
+        } catch (Exception e) {
+            log.error("Lỗi khi upload byte array lên S3: {}", e.getMessage());
+            throw new RuntimeException("Không thể upload file: " + e.getMessage());
+        }
+    }
 }
+

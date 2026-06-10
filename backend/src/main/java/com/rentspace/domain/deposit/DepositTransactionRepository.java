@@ -21,4 +21,7 @@ public interface DepositTransactionRepository extends JpaRepository<DepositTrans
     List<DepositTransaction> findAllByTenantIdOrLandlordIdOrderByCreatedAtDesc(Long tenantId, Long landlordId);
 
     boolean existsByListingIdAndTenantIdAndStatusIn(Long listingId, Long tenantId, java.util.List<DepositStatus> statuses);
+
+    List<DepositTransaction> findAllByStatusAndReleaseDeadlineBefore(DepositStatus status, java.time.LocalDateTime dateTime);
 }
+

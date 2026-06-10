@@ -22,4 +22,5 @@ public class DepositResponse {
     private String paymentUrl;
     private LocalDate moveInDate;
     private LocalDateTime createdAt;
+    private String contractUrl;
 }

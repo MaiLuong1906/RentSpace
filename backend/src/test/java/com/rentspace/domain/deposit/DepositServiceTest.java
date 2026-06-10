@@ -4,6 +4,7 @@ import com.rentspace.common.exception.BusinessException;
 import com.rentspace.common.exception.ResourceNotFoundException;
 import com.rentspace.domain.deposit.dto.DepositRequest;
 import com.rentspace.domain.deposit.dto.DepositResponse;
+import com.rentspace.domain.deposit.dto.LandlordDepositSummary;
 import com.rentspace.domain.deposit.enums.DepositStatus;
 import com.rentspace.domain.listing.Listing;
 import com.rentspace.domain.listing.ListingRepository;
@@ -55,6 +56,12 @@ class DepositServiceTest {
 
     @Mock
     private com.rentspace.infrastructure.email.EmailService emailService;
+
+    @Mock
+    private DepositDisputeRepository disputeRepository;
+
+    @Mock
+    private com.rentspace.domain.contract.RentalContractService rentalContractService;
 
     @InjectMocks
     private DepositService depositService;
@@ -327,5 +334,110 @@ class DepositServiceTest {
         assertEquals(DepositStatus.CANCELLED, transaction.getStatus());
         verify(depositRepository, times(1)).save(transaction);
         verify(eventRepository, times(1)).save(any(DepositTransactionEvent.class));
+    }
+
+    @Test
+    void confirmMoveIn_HappyPath_ShouldTransitionToReleasedAndTriggerContractGeneration() {
+        // Given
+        transaction.setStatus(DepositStatus.PAID);
+        DepositResponse mockResponse = DepositResponse.builder()
+                .id(10L)
+                .status(DepositStatus.RELEASED)
+                .build();
+
+        when(userRepository.findByEmail("tenant@example.com")).thenReturn(Optional.of(tenant));
+        when(depositRepository.findById(10L)).thenReturn(Optional.of(transaction));
+        when(depositRepository.save(any(DepositTransaction.class))).thenReturn(transaction);
+        when(depositMapper.toResponse(any(DepositTransaction.class))).thenReturn(mockResponse);
+
+        // When
+        DepositResponse response = depositService.confirmMoveIn(10L, "tenant@example.com");
+
+        // Then
+        assertNotNull(response);
+        assertEquals(DepositStatus.RELEASED, transaction.getStatus());
+        assertNotNull(transaction.getReleasedAt());
+        verify(rentalContractService, times(1)).generateAndSaveContract(transaction);
+        verify(depositRepository, times(1)).save(transaction);
+        verify(eventRepository, times(1)).save(any(DepositTransactionEvent.class));
+    }
+
+    @Test
+    void resolveDispute_ResolveToLandlord_ShouldTransitionToReleasedAndTriggerContractGeneration() {
+        // Given
+        User admin = User.builder().id(99L).email("admin@example.com").fullName("Admin Admin").build();
+        com.rentspace.domain.deposit.DepositDispute dispute = com.rentspace.domain.deposit.DepositDispute.builder()
+                .id(100L)
+                .transaction(transaction)
+                .status(com.rentspace.domain.deposit.enums.DisputeStatus.OPEN)
+                .build();
+        
+        transaction.setStatus(DepositStatus.DISPUTED);
+        
+        DepositResponse mockResponse = DepositResponse.builder()
+                .id(10L)
+                .status(DepositStatus.RELEASED)
+                .build();
+
+        when(userRepository.findByEmail("admin@example.com")).thenReturn(Optional.of(admin));
+        when(disputeRepository.findById(100L)).thenReturn(Optional.of(dispute));
+        when(disputeRepository.save(any(com.rentspace.domain.deposit.DepositDispute.class))).thenReturn(dispute);
+        when(depositRepository.save(any(DepositTransaction.class))).thenReturn(transaction);
+        when(depositMapper.toResponse(any(DepositTransaction.class))).thenReturn(mockResponse);
+
+        // When
+        DepositResponse response = depositService.resolveDispute(
+                100L, 
+                com.rentspace.domain.deposit.enums.DisputeStatus.RESOLVED_LANDLORD, 
+                "Dispute resolved in favor of landlord due to tenant no-show", 
+                "admin@example.com"
+        );
+
+        // Then
+        assertNotNull(response);
+        assertEquals(DepositStatus.RELEASED, transaction.getStatus());
+        assertNotNull(transaction.getReleasedAt());
+        verify(rentalContractService, times(1)).generateAndSaveContract(transaction);
+        verify(disputeRepository, times(1)).save(dispute);
+        verify(depositRepository, times(1)).save(transaction);
+    }
+
+    @Test
+    void getLandlordSummary_HappyPath_ShouldCalculateCorrectStats() {
+        // Given
+        java.time.LocalDateTime now = java.time.LocalDateTime.now();
+        
+        DepositTransaction releasedTx1 = DepositTransaction.builder()
+                .id(11L)
+                .status(DepositStatus.RELEASED)
+                .netAmount(3000000L)
+                .releasedAt(now.minusDays(2))
+                .build();
+                
+        DepositTransaction releasedTx2 = DepositTransaction.builder()
+                .id(12L)
+                .status(DepositStatus.RELEASED)
+                .netAmount(2000000L)
+                .releasedAt(now.minusDays(10))
+                .build();
+
+        DepositTransaction pendingTx = DepositTransaction.builder()
+                .id(13L)
+                .status(DepositStatus.PAID)
+                .netAmount(4000000L)
+                .build();
+
+        when(userRepository.findByEmail("landlord@example.com")).thenReturn(Optional.of(landlord));
+        when(depositRepository.findByLandlordId(landlord.getId())).thenReturn(java.util.List.of(releasedTx1, releasedTx2, pendingTx));
+
+        // When
+        LandlordDepositSummary summary = depositService.getLandlordSummary("landlord@example.com");
+
+        // Then
+        assertNotNull(summary);
+        assertEquals(2, summary.getCompletedCount()); // Only status RELEASED
+        assertEquals(5000000L, summary.getTotalNetAmount()); // 3M + 2M
+        assertEquals(3000000L, summary.getWeeklyNetAmount()); // Only releasedTx1 (2 days ago)
+        assertEquals(5000000L, summary.getMonthlyNetAmount()); // Both releasedTx1 and releasedTx2 (2 and 10 days ago)
     }
 }

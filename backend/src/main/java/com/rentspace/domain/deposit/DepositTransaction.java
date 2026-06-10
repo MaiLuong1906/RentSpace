@@ -89,4 +89,7 @@ public class DepositTransaction {
     @UpdateTimestamp
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
+
+    @OneToOne(mappedBy = "transaction", fetch = FetchType.LAZY)
+    private com.rentspace.domain.contract.RentalContract contract;
 }

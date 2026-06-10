@@ -3,6 +3,7 @@ package com.rentspace.domain.deposit;
 import com.rentspace.common.response.ApiResponse;
 import com.rentspace.domain.deposit.dto.DepositRequest;
 import com.rentspace.domain.deposit.dto.DepositResponse;
+import com.rentspace.domain.deposit.dto.LandlordDepositSummary;
 import com.rentspace.domain.deposit.dto.PaymentResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -32,7 +33,13 @@ public class DepositController {
 
     @GetMapping("/webhook/vnpay")
     @Operation(summary = "VNPay IPN Callback (Public)")
-    public ResponseEntity<Map<String, String>> vnpayWebhook(HttpServletRequest request) {
+    public ResponseEntity<Map<String, String>> vnpayWebhook(
+            @RequestParam(value = "vnp_TxnRef", required = false) String vnp_TxnRef,
+            @RequestParam(value = "vnp_Amount", required = false) String vnp_Amount,
+            @RequestParam(value = "vnp_ResponseCode", required = false) String vnp_ResponseCode,
+            @RequestParam(value = "vnp_TransactionNo", required = false) String vnp_TransactionNo,
+            @RequestParam(value = "vnp_SecureHash", required = false) String vnp_SecureHash,
+            HttpServletRequest request) {
         try {
             java.util.Map<String, String> params = new java.util.HashMap<>();
             for (java.util.Map.Entry<String, String[]> entry : request.getParameterMap().entrySet()) {
@@ -88,6 +95,15 @@ public class DepositController {
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
+    @GetMapping("/landlord/summary")
+    @Operation(summary = "Lấy báo cáo tài chính tóm tắt của chủ nhà")
+    @SecurityRequirement(name = "bearerAuth")
+    public ResponseEntity<ApiResponse<LandlordDepositSummary>> getLandlordSummary(
+            @AuthenticationPrincipal UserDetails userDetails) {
+        LandlordDepositSummary response = depositService.getLandlordSummary(userDetails.getUsername());
+        return ResponseEntity.ok(ApiResponse.success(response));
+    }
+
     @GetMapping("/{id}")
     @Operation(summary = "Chi tiết giao dịch đặt cọc")
     @SecurityRequirement(name = "bearerAuth")
@@ -97,4 +113,43 @@ public class DepositController {
         DepositResponse response = depositService.getDepositById(id, userDetails.getUsername());
         return ResponseEntity.ok(ApiResponse.success(response));
     }
+
+    @PatchMapping("/{id}/confirm-move-in")
+    @Operation(summary = "Người thuê xác nhận đã nhận phòng & giải ngân")
+    @SecurityRequirement(name = "bearerAuth")
+    public ResponseEntity<ApiResponse<DepositResponse>> confirmMoveIn(
+            @PathVariable Long id,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        DepositResponse response = depositService.confirmMoveIn(id, userDetails.getUsername());
+        return ResponseEntity.ok(ApiResponse.success("Xác nhận nhận phòng thành công, tiền đặt cọc đã được giải ngân", response));
+    }
+
+    @PostMapping("/{id}/dispute")
+    @Operation(summary = "Yêu cầu khiếu nại giao dịch đặt cọc")
+    @SecurityRequirement(name = "bearerAuth")
+    public ResponseEntity<ApiResponse<DepositResponse>> openDispute(
+            @PathVariable Long id,
+            @AuthenticationPrincipal UserDetails userDetails,
+            @Valid @RequestBody com.rentspace.domain.deposit.dto.DisputeRequest request) {
+        DepositResponse response = depositService.openDispute(
+                id,
+                request.getReason(),
+                request.getDescription(),
+                request.getEvidenceUrls(),
+                userDetails.getUsername()
+        );
+        return ResponseEntity.ok(ApiResponse.success("Yêu cầu khiếu nại đã được gửi thành công", response));
+    }
+
+    @GetMapping("/{id}/dispute")
+    @Operation(summary = "Lấy thông tin khiếu nại của giao dịch đặt cọc")
+    @SecurityRequirement(name = "bearerAuth")
+    public ResponseEntity<ApiResponse<com.rentspace.domain.deposit.dto.DisputeResponse>> getDispute(
+            @PathVariable Long id,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        com.rentspace.domain.deposit.dto.DisputeResponse response = depositService.getDisputeByTransactionId(id, userDetails.getUsername());
+        return ResponseEntity.ok(ApiResponse.success(response));
+    }
 }
+
+

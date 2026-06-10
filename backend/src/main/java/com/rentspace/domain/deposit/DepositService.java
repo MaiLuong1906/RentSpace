@@ -4,6 +4,7 @@ import com.rentspace.common.exception.BusinessException;
 import com.rentspace.common.exception.ResourceNotFoundException;
 import com.rentspace.domain.deposit.dto.DepositRequest;
 import com.rentspace.domain.deposit.dto.DepositResponse;
+import com.rentspace.domain.deposit.dto.LandlordDepositSummary;
 import com.rentspace.domain.deposit.enums.DepositStatus;
 import com.rentspace.domain.listing.Listing;
 import com.rentspace.domain.listing.ListingRepository;
@@ -21,6 +22,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.rentspace.domain.deposit.dto.DisputeResponse;
+import com.rentspace.domain.user.enums.Role;
+import com.rentspace.domain.deposit.enums.DisputeReason;
+import com.rentspace.domain.deposit.enums.DisputeStatus;
+import org.springframework.scheduling.annotation.Scheduled;
+import java.util.Optional;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -36,9 +44,12 @@ public class DepositService {
     private final org.springframework.data.redis.core.StringRedisTemplate redisTemplate;
     private final com.rentspace.domain.notification.NotificationService notificationService;
     private final com.rentspace.infrastructure.email.EmailService emailService;
+    private final DepositDisputeRepository disputeRepository;
+    private final com.rentspace.domain.contract.RentalContractService rentalContractService;
 
     private static final double PLATFORM_FEE_PERCENT = 0.02; // 2%
     private static final long MAX_PLATFORM_FEE = 100000L; // 100,000 VND
+
 
     @Transactional
     public Map<String, String> processVnpayWebhook(Map<String, String> params) {
@@ -279,6 +290,276 @@ public class DepositService {
         return depositMapper.toResponse(transaction);
     }
 
+    @Transactional
+    public DepositResponse confirmMoveIn(Long id, String email) {
+        User currentUser = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("Người dùng không tồn tại"));
+
+        DepositTransaction transaction = depositRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Giao dịch đặt cọc không tồn tại"));
+
+        if (!transaction.getTenant().getId().equals(currentUser.getId())) {
+            throw new BusinessException("Chỉ người thuê mới có quyền xác nhận nhận phòng");
+        }
+
+        if (transaction.getStatus() != DepositStatus.PAID) {
+            throw new BusinessException("Giao dịch không ở trạng thái ĐÃ THANH TOÁN");
+        }
+
+        transaction.setStatus(DepositStatus.RELEASED);
+        transaction.setReleasedAt(LocalDateTime.now());
+        depositRepository.save(transaction);
+
+        // Log event
+        logEvent(transaction, "MOVE_IN_CONFIRMED", currentUser, "Người thuê xác nhận đã nhận phòng. Tiền đặt cọc được giải ngân.");
+
+        // Generate and save contract PDF
+        try {
+            rentalContractService.generateAndSaveContract(transaction);
+        } catch (Exception e) {
+            log.error("Failed to generate rental contract for transaction {}", transaction.getId(), e);
+        }
+
+        // Send notifications
+        try {
+            notificationService.createAndSendNotification(
+                    transaction.getLandlord(),
+                    "Giải ngân tiền đặt cọc",
+                    "Người thuê đã xác nhận nhận phòng thành công cho tin đăng \"" + transaction.getListing().getTitle() + "\". Tiền cọc đã được giải ngân.",
+                    com.rentspace.domain.notification.enums.NotificationType.DEPOSIT
+            );
+        } catch (Exception e) {
+            log.error("Failed to send release notification", e);
+        }
+
+        return depositMapper.toResponse(transaction);
+    }
+
+    @Transactional
+    public DepositResponse openDispute(Long id, DisputeReason reason, String description, List<String> evidenceUrls, String email) {
+        User currentUser = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("Người dùng không tồn tại"));
+
+        DepositTransaction transaction = depositRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Giao dịch đặt cọc không tồn tại"));
+
+        if (!transaction.getTenant().getId().equals(currentUser.getId()) &&
+            !transaction.getLandlord().getId().equals(currentUser.getId())) {
+            throw new BusinessException("Bạn không có quyền khiếu nại giao dịch này");
+        }
+
+        if (transaction.getStatus() != DepositStatus.PAID) {
+            throw new BusinessException("Chỉ có thể khiếu nại các giao dịch ở trạng thái ĐÃ THANH TOÁN");
+        }
+
+        if (disputeRepository.findByTransactionId(id).isPresent()) {
+            throw new BusinessException("Giao dịch đặt cọc này đã có khiếu nại đang mở");
+        }
+
+        DepositDispute dispute = DepositDispute.builder()
+                .transaction(transaction)
+                .openedBy(currentUser)
+                .reason(reason)
+                .description(description)
+                .evidenceUrls(evidenceUrls)
+                .status(DisputeStatus.OPEN)
+                .build();
+
+        disputeRepository.save(dispute);
+
+        transaction.setStatus(DepositStatus.DISPUTED);
+        depositRepository.save(transaction);
+
+        // Log event
+        logEvent(transaction, "DISPUTE_OPENED", currentUser, "Yêu cầu khiếu nại đã được mở bởi " + currentUser.getFullName() + ". Lý do: " + reason);
+
+        // Send notifications to the other party
+        User otherParty = transaction.getTenant().getId().equals(currentUser.getId()) ? transaction.getLandlord() : transaction.getTenant();
+        try {
+            notificationService.createAndSendNotification(
+                    otherParty,
+                    "Giao dịch đặt cọc bị tranh chấp",
+                    currentUser.getFullName() + " đã yêu cầu khiếu nại giao dịch đặt cọc cho tin đăng \"" + transaction.getListing().getTitle() + "\".",
+                    com.rentspace.domain.notification.enums.NotificationType.DEPOSIT
+            );
+        } catch (Exception e) {
+            log.error("Failed to send dispute notifications", e);
+        }
+
+        return depositMapper.toResponse(transaction);
+    }
+
+    @Transactional
+    public DepositResponse resolveDispute(Long disputeId, DisputeStatus resolution, String resolutionNote, String adminEmail) {
+        User admin = userRepository.findByEmail(adminEmail)
+                .orElseThrow(() -> new ResourceNotFoundException("Admin không tồn tại"));
+
+        DepositDispute dispute = disputeRepository.findById(disputeId)
+                .orElseThrow(() -> new ResourceNotFoundException("Tranh chấp không tồn tại"));
+
+        if (dispute.getStatus() != DisputeStatus.OPEN && dispute.getStatus() != DisputeStatus.UNDER_REVIEW) {
+            throw new BusinessException("Tranh chấp này đã được đóng hoặc giải quyết trước đó");
+        }
+
+        DepositTransaction transaction = dispute.getTransaction();
+
+        dispute.setStatus(resolution);
+        dispute.setResolutionNote(resolutionNote);
+        dispute.setResolvedBy(admin);
+        dispute.setResolvedAt(LocalDateTime.now());
+        disputeRepository.save(dispute);
+
+        if (resolution == DisputeStatus.RESOLVED_TENANT) {
+            transaction.setStatus(DepositStatus.REFUNDED);
+            transaction.setRefundedAt(LocalDateTime.now());
+            logEvent(transaction, "DISPUTE_RESOLVED_REFUND", admin, "Admin giải quyết tranh chấp: Hoàn trả tiền cọc cho người thuê. Lý do: " + resolutionNote);
+        } else if (resolution == DisputeStatus.RESOLVED_LANDLORD) {
+            transaction.setStatus(DepositStatus.RELEASED);
+            transaction.setReleasedAt(LocalDateTime.now());
+            logEvent(transaction, "DISPUTE_RESOLVED_RELEASE", admin, "Admin giải quyết tranh chấp: Giải ngân tiền cọc cho chủ nhà. Lý do: " + resolutionNote);
+            
+            // Generate and save contract PDF
+            try {
+                rentalContractService.generateAndSaveContract(transaction);
+            } catch (Exception e) {
+                log.error("Failed to generate contract after dispute resolution for transaction {}", transaction.getId(), e);
+            }
+        } else {
+            transaction.setStatus(DepositStatus.CANCELLED);
+            logEvent(transaction, "DISPUTE_CLOSED", admin, "Admin đóng tranh chấp. Lý do: " + resolutionNote);
+        }
+
+        depositRepository.save(transaction);
+
+        // Send notifications to both parties
+        try {
+            notificationService.createAndSendNotification(
+                    transaction.getTenant(),
+                    "Kết quả giải quyết tranh chấp",
+                    "Tranh chấp đặt cọc của bạn đã được giải quyết bởi Admin. Kết quả: " + resolution,
+                    com.rentspace.domain.notification.enums.NotificationType.DEPOSIT
+            );
+            notificationService.createAndSendNotification(
+                    transaction.getLandlord(),
+                    "Kết quả giải quyết tranh chấp",
+                    "Tranh chấp đặt cọc của bạn đã được giải quyết bởi Admin. Kết quả: " + resolution,
+                    com.rentspace.domain.notification.enums.NotificationType.DEPOSIT
+            );
+        } catch (Exception e) {
+            log.error("Failed to send dispute resolution notifications", e);
+        }
+
+        return depositMapper.toResponse(transaction);
+    }
+
+    @Transactional
+    @Scheduled(cron = "0 0 * * * *")
+    public void autoReleaseDeposits() {
+        log.info("Starting auto-release cron job for deposits...");
+        LocalDateTime now = LocalDateTime.now();
+        
+        List<DepositTransaction> expiredDeposits = depositRepository.findAllByStatusAndReleaseDeadlineBefore(DepositStatus.PAID, now);
+        
+        int processedCount = 0;
+        for (DepositTransaction transaction : expiredDeposits) {
+            Optional<DepositDispute> disputeOpt = disputeRepository.findByTransactionId(transaction.getId());
+            if (disputeOpt.isPresent()) {
+                log.info("Skipping auto-release for deposit {} due to existing dispute", transaction.getId());
+                continue;
+            }
+            
+            transaction.setStatus(DepositStatus.RELEASED);
+            transaction.setReleasedAt(now);
+            depositRepository.save(transaction);
+            
+            logEvent(transaction, "AUTO_RELEASED", null, "Hệ thống tự động giải ngân tiền đặt cọc sau thời hạn release deadline.");
+            
+            // Generate and save contract PDF
+            try {
+                rentalContractService.generateAndSaveContract(transaction);
+            } catch (Exception e) {
+                log.error("Failed to generate contract on auto release for transaction {}", transaction.getId(), e);
+            }
+            
+            try {
+                notificationService.createAndSendNotification(
+                        transaction.getLandlord(),
+                        "Tự động giải ngân đặt cọc",
+                        "Hệ thống tự động giải ngân cọc cho tin đăng \"" + transaction.getListing().getTitle() + "\" do quá thời hạn chờ.",
+                        com.rentspace.domain.notification.enums.NotificationType.DEPOSIT
+                );
+            } catch (Exception e) {
+                log.error("Failed to send auto-release notification for transaction {}", transaction.getId(), e);
+            }
+            processedCount++;
+        }
+        
+        log.info("Completed auto-release cron job. Processed {} deposits.", processedCount);
+    }
+
+    public List<DisputeResponse> getAllDisputes() {
+        return disputeRepository.findAll().stream()
+                .map(depositMapper::toDisputeResponse)
+                .collect(Collectors.toList());
+    }
+
+    public DisputeResponse getDisputeByTransactionId(Long transactionId, String email) {
+        User currentUser = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("Người dùng không tồn tại"));
+
+        DepositDispute dispute = disputeRepository.findByTransactionId(transactionId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy khiếu nại cho giao dịch này"));
+
+        DepositTransaction transaction = dispute.getTransaction();
+        if (!transaction.getTenant().getId().equals(currentUser.getId()) &&
+            !transaction.getLandlord().getId().equals(currentUser.getId()) &&
+            currentUser.getRole() != Role.ADMIN) {
+            throw new BusinessException("Bạn không có quyền truy cập khiếu nại này");
+        }
+
+        return depositMapper.toDisputeResponse(dispute);
+    }
+
+    public LandlordDepositSummary getLandlordSummary(String landlordEmail) {
+        User landlord = userRepository.findByEmail(landlordEmail)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy chủ nhà với email: " + landlordEmail));
+
+        List<DepositTransaction> transactions = depositRepository.findByLandlordId(landlord.getId());
+
+        long completedCount = 0;
+        long totalNetAmount = 0;
+        long weeklyNetAmount = 0;
+        long monthlyNetAmount = 0;
+
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime oneWeekAgo = now.minusDays(7);
+        LocalDateTime oneMonthAgo = now.minusDays(30);
+
+        for (DepositTransaction tx : transactions) {
+            if (tx.getStatus() == DepositStatus.RELEASED) {
+                completedCount++;
+                long net = tx.getNetAmount() != null ? tx.getNetAmount() : 0L;
+                totalNetAmount += net;
+
+                if (tx.getReleasedAt() != null) {
+                    if (tx.getReleasedAt().isAfter(oneWeekAgo)) {
+                        weeklyNetAmount += net;
+                    }
+                    if (tx.getReleasedAt().isAfter(oneMonthAgo)) {
+                        monthlyNetAmount += net;
+                    }
+                }
+            }
+        }
+
+        return LandlordDepositSummary.builder()
+                .completedCount(completedCount)
+                .totalNetAmount(totalNetAmount)
+                .weeklyNetAmount(weeklyNetAmount)
+                .monthlyNetAmount(monthlyNetAmount)
+                .build();
+    }
+
     private void logEvent(DepositTransaction transaction, String eventType, User actor, String description) {
         DepositTransactionEvent event = DepositTransactionEvent.builder()
                 .transaction(transaction)
@@ -289,3 +570,5 @@ public class DepositService {
         eventRepository.save(event);
     }
 }
+
+
