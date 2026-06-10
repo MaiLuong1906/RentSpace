@@ -7,6 +7,8 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import com.rentspace.domain.user.enums.KycStatus;
 import com.rentspace.domain.user.enums.Role;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import java.time.LocalDateTime;
 
 
@@ -65,8 +67,9 @@ public class User {
     @Column(name = "ekyc_session_id")
     private String ekycSessionId;
 
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "ekyc_result", columnDefinition = "jsonb")
-    private String ekycResult; // Hoặc dùng Map<String, Object> với JdbcTypeCode
+    private String ekycResult; 
 
     @Column(name = "ekyc_confidence")
     private java.math.BigDecimal ekycConfidence;

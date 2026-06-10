@@ -1,7 +1,7 @@
 -- ============================================================
 -- V15: POSTS — Bài đăng cộng đồng
 -- ============================================================
-CREATE TABLE IF NOT EXISTS posts (
+CREATE TABLE posts (
     id              BIGSERIAL PRIMARY KEY,
     author_id       BIGINT NOT NULL REFERENCES users(id),
     type            VARCHAR(30) NOT NULL
@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS posts (
                         'QUESTION'      -- Hỏi đáp
                     )),
     content         TEXT NOT NULL,
+    image_urls      TEXT[],
     related_listing BIGINT REFERENCES listings(id),
     district        VARCHAR(100),
     like_count      INTEGER DEFAULT 0,
@@ -22,19 +23,14 @@ CREATE TABLE IF NOT EXISTS posts (
     updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE TABLE IF NOT EXISTS post_images (
-    post_id     BIGINT NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
-    image_url   TEXT NOT NULL
-);
-
-CREATE TABLE IF NOT EXISTS post_likes (
+CREATE TABLE post_likes (
     post_id     BIGINT REFERENCES posts(id) ON DELETE CASCADE,
     user_id     BIGINT REFERENCES users(id) ON DELETE CASCADE,
     created_at  TIMESTAMPTZ DEFAULT NOW(),
     PRIMARY KEY (post_id, user_id)
 );
 
-CREATE TABLE IF NOT EXISTS post_comments (
+CREATE TABLE post_comments (
     id          BIGSERIAL PRIMARY KEY,
     post_id     BIGINT NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
     author_id   BIGINT NOT NULL REFERENCES users(id),
@@ -43,7 +39,7 @@ CREATE TABLE IF NOT EXISTS post_comments (
     created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE TABLE IF NOT EXISTS post_reports (
+CREATE TABLE post_reports (
     id          BIGSERIAL PRIMARY KEY,
     post_id     BIGINT NOT NULL REFERENCES posts(id),
     reporter_id BIGINT NOT NULL REFERENCES users(id),
@@ -52,5 +48,5 @@ CREATE TABLE IF NOT EXISTS post_reports (
     UNIQUE (post_id, reporter_id)
 );
 
-CREATE INDEX IF NOT EXISTS idx_posts_author ON posts(author_id, created_at DESC);
-CREATE INDEX IF NOT EXISTS idx_posts_type ON posts(type);
+CREATE INDEX idx_posts_author ON posts(author_id, created_at DESC);
+CREATE INDEX idx_posts_type ON posts(type);
