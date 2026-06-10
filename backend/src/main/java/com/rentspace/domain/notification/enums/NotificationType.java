@@ -4,5 +4,8 @@ public enum NotificationType {
     SYSTEM,
     CHAT,
     KYC,
-    LISTING
+    LISTING,
+    DEPOSIT,
+    PAYMENT,
+    ROOMMATE
 }

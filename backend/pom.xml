@@ -23,6 +23,7 @@
         <springdoc.version>2.6.0</springdoc.version>
         <mapstruct.version>1.5.5.Final</mapstruct.version>
         <aws-sdk.version>2.25.40</aws-sdk.version>
+        <openpdf.version>2.0.2</openpdf.version>
     </properties>
 
     <dependencyManagement>
@@ -143,6 +144,13 @@
             <groupId>org.springdoc</groupId>
             <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
             <version>${springdoc.version}</version>
+        </dependency>
+
+        <!-- ===== PDF Generation — OpenPDF ===== -->
+        <dependency>
+            <groupId>com.github.librepdf</groupId>
+            <artifactId>openpdf</artifactId>
+            <version>${openpdf.version}</version>
         </dependency>
 
         <!-- ===== MapStruct — DTO Mapping ===== -->

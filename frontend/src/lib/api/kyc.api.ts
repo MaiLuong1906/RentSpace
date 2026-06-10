@@ -71,4 +71,20 @@ export const kycApi = {
     );
     return response.data;
   },
+
+  /**
+   * eKYC: Khởi tạo session eKYC
+   */
+  initEkyc: async () => {
+    const response = await apiClient.post<ApiResponse<{ sessionId: string; sdkToken: string }>>("/kyc/ekyc/init");
+    return response.data;
+  },
+
+  /**
+   * eKYC: Hoàn thành eKYC (gửi kết quả từ SDK về backend)
+   */
+  completeEkyc: async (data: any) => {
+    const response = await apiClient.post<ApiResponse<any>>("/kyc/ekyc/complete", data);
+    return response.data;
+  },
 };

@@ -61,6 +61,23 @@ public class User {
     @Column(name = "google_id")
     private String googleId;
 
+    // ===== eKYC (Phase 2) =====
+    @Column(name = "ekyc_session_id")
+    private String ekycSessionId;
+
+    @Column(name = "ekyc_result", columnDefinition = "jsonb")
+    private String ekycResult; // Hoặc dùng Map<String, Object> với JdbcTypeCode
+
+    @Column(name = "ekyc_confidence")
+    private java.math.BigDecimal ekycConfidence;
+
+    @Column(name = "ekyc_verified_at")
+    private LocalDateTime ekycVerifiedAt;
+
+    @Column(name = "kyc_review_mode")
+    @Builder.Default
+    private String kycReviewMode = "MANUAL"; // 'AUTO' hoặc 'MANUAL'
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;

@@ -32,6 +32,7 @@ public class SecurityConfig {
     private static final String[] PUBLIC_ENDPOINTS = {
             "/api/v1/auth/**",
             "/api/v1/users/{userId}",       // Public - xem hồ sơ công khai
+            "/api/v1/deposits/webhook/vnpay", // VNPay IPN callback (Public)
             "/uploads/**",                  // Static files (ảnh upload local)
             "/swagger-ui/**",
             "/swagger-ui.html",

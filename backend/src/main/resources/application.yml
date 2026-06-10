@@ -102,3 +102,10 @@ aws:
   credentials:
     access-key: ${AWS_ACCESS_KEY:none}
     secret-key: ${AWS_SECRET_KEY:none}
+
+# ===== VNPay =====
+vnpay:
+  tmn-code: ${VNPAY_TMN_CODE:none}
+  hash-secret: ${VNPAY_HASH_SECRET:none}
+  pay-url: ${VNPAY_PAY_URL:https://sandbox.vnpayment.vn/paymentv2/vpcpay.html}
+  return-url: ${VNPAY_RETURN_URL:http://localhost:3000/app/payment/result}

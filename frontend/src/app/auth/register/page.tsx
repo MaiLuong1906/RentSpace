@@ -276,13 +276,13 @@ export default function RegisterPage() {
               />
               <span className="ml-2 text-xs text-gray-500 leading-normal">
                 Tôi đồng ý với{" "}
-                <a href="#" className="text-blue-600 font-semibold hover:underline">
+                <Link href="/terms" target="_blank" className="text-blue-600 font-semibold hover:underline">
                   Điều khoản dịch vụ
-                </a>{" "}
+                </Link>{" "}
                 và{" "}
-                <a href="#" className="text-blue-600 font-semibold hover:underline">
+                <Link href="/privacy" target="_blank" className="text-blue-600 font-semibold hover:underline">
                   Chính sách bảo mật
-                </a>{" "}
+                </Link>{" "}
                 của RentSpace.
               </span>
             </label>
