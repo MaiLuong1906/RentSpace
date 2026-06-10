@@ -524,33 +524,15 @@ public class DepositService {
         User landlord = userRepository.findByEmail(landlordEmail)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy chủ nhà với email: " + landlordEmail));
 
-        List<DepositTransaction> transactions = depositRepository.findByLandlordId(landlord.getId());
-
-        long completedCount = 0;
-        long totalNetAmount = 0;
-        long weeklyNetAmount = 0;
-        long monthlyNetAmount = 0;
-
+        Long landlordId = landlord.getId();
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime oneWeekAgo = now.minusDays(7);
         LocalDateTime oneMonthAgo = now.minusDays(30);
 
-        for (DepositTransaction tx : transactions) {
-            if (tx.getStatus() == DepositStatus.RELEASED) {
-                completedCount++;
-                long net = tx.getNetAmount() != null ? tx.getNetAmount() : 0L;
-                totalNetAmount += net;
-
-                if (tx.getReleasedAt() != null) {
-                    if (tx.getReleasedAt().isAfter(oneWeekAgo)) {
-                        weeklyNetAmount += net;
-                    }
-                    if (tx.getReleasedAt().isAfter(oneMonthAgo)) {
-                        monthlyNetAmount += net;
-                    }
-                }
-            }
-        }
+        long completedCount = depositRepository.countCompletedDepositsByLandlordId(landlordId);
+        long totalNetAmount = depositRepository.sumTotalNetAmountByLandlordId(landlordId);
+        long weeklyNetAmount = depositRepository.sumNetAmountByLandlordIdAndReleasedAtAfter(landlordId, oneWeekAgo);
+        long monthlyNetAmount = depositRepository.sumNetAmountByLandlordIdAndReleasedAtAfter(landlordId, oneMonthAgo);
 
         return LandlordDepositSummary.builder()
                 .completedCount(completedCount)

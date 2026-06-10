@@ -25,6 +25,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -406,29 +407,19 @@ class DepositServiceTest {
     void getLandlordSummary_HappyPath_ShouldCalculateCorrectStats() {
         // Given
         java.time.LocalDateTime now = java.time.LocalDateTime.now();
-        
-        DepositTransaction releasedTx1 = DepositTransaction.builder()
-                .id(11L)
-                .status(DepositStatus.RELEASED)
-                .netAmount(3000000L)
-                .releasedAt(now.minusDays(2))
-                .build();
-                
-        DepositTransaction releasedTx2 = DepositTransaction.builder()
-                .id(12L)
-                .status(DepositStatus.RELEASED)
-                .netAmount(2000000L)
-                .releasedAt(now.minusDays(10))
-                .build();
-
-        DepositTransaction pendingTx = DepositTransaction.builder()
-                .id(13L)
-                .status(DepositStatus.PAID)
-                .netAmount(4000000L)
-                .build();
 
         when(userRepository.findByEmail("landlord@example.com")).thenReturn(Optional.of(landlord));
-        when(depositRepository.findByLandlordId(landlord.getId())).thenReturn(java.util.List.of(releasedTx1, releasedTx2, pendingTx));
+        when(depositRepository.countCompletedDepositsByLandlordId(landlord.getId())).thenReturn(2L);
+        when(depositRepository.sumTotalNetAmountByLandlordId(landlord.getId())).thenReturn(5000000L);
+        when(depositRepository.sumNetAmountByLandlordIdAndReleasedAtAfter(eq(landlord.getId()), any(java.time.LocalDateTime.class)))
+                .thenAnswer(invocation -> {
+                    java.time.LocalDateTime dateParam = invocation.getArgument(1);
+                    if (dateParam.isAfter(now.minusDays(8)) && dateParam.isBefore(now.minusDays(6))) {
+                        return 3000000L;
+                    } else {
+                        return 5000000L;
+                    }
+                });
 
         // When
         LandlordDepositSummary summary = depositService.getLandlordSummary("landlord@example.com");

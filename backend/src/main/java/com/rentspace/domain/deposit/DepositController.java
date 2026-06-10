@@ -124,7 +124,7 @@ public class DepositController {
         return ResponseEntity.ok(ApiResponse.success("Xác nhận nhận phòng thành công, tiền đặt cọc đã được giải ngân", response));
     }
 
-    @PostMapping("/{id}/dispute")
+    @PatchMapping("/{id}/dispute")
     @Operation(summary = "Yêu cầu khiếu nại giao dịch đặt cọc")
     @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<ApiResponse<DepositResponse>> openDispute(
