@@ -97,7 +97,7 @@ class NotificationServiceImplTest {
                 .thenReturn(page);
 
         // When
-        List<NotificationResponse> results = notificationService.getMyNotifications("user@rentspace.com");
+        List<com.rentspace.domain.notification.dto.NotificationResponse> results = notificationService.getMyNotifications("user@rentspace.com");
 
         // Then
         assertNotNull(results);

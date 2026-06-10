@@ -52,7 +52,7 @@ class KycServiceTest {
         when(storageService.getPresignedUrl("kyc/cccd-123.jpg")).thenReturn("http://presigned-url-mock.com");
 
         // When
-        KycStatusResponse response = kycService.getKycStatus("user@example.com");
+        com.rentspace.domain.kyc.dto.KycStatusResponse response = kycService.getKycStatus("user@example.com");
 
         // Then
         assertNotNull(response);
@@ -68,7 +68,7 @@ class KycServiceTest {
         when(userRepository.findByEmail("user@example.com")).thenReturn(Optional.of(user));
 
         // When
-        KycStatusResponse response = kycService.getKycStatus("user@example.com");
+        com.rentspace.domain.kyc.dto.KycStatusResponse response = kycService.getKycStatus("user@example.com");
 
         // Then
         assertNotNull(response);
@@ -84,7 +84,7 @@ class KycServiceTest {
         when(storageService.getPresignedUrl("kyc/cccd-123.jpg")).thenReturn("http://presigned-url-mock.com");
 
         // When
-        List<KycReviewItem> list = kycService.getPendingKycList();
+        List<com.rentspace.domain.kyc.dto.KycReviewItem> list = kycService.getPendingKycList();
 
         // Then
         assertNotNull(list);
