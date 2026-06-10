@@ -32,11 +32,11 @@ class KycServiceTest {
     @InjectMocks
     private KycService kycService;
 
-    private User user;
+    private com.rentspace.domain.user.User user;
 
     @BeforeEach
     void setUp() {
-        user = User.builder()
+        user = com.rentspace.domain.user.User.builder()
                 .id(1L)
                 .email("user@example.com")
                 .fullName("Nguyen Van A")
@@ -52,7 +52,7 @@ class KycServiceTest {
         when(storageService.getPresignedUrl("kyc/cccd-123.jpg")).thenReturn("http://presigned-url-mock.com");
 
         // When
-        KycStatusResponse response = kycService.getKycStatus("user@example.com");
+        com.rentspace.domain.kyc.dto.KycStatusResponse response = kycService.getKycStatus("user@example.com");
 
         // Then
         assertNotNull(response);
@@ -68,7 +68,7 @@ class KycServiceTest {
         when(userRepository.findByEmail("user@example.com")).thenReturn(Optional.of(user));
 
         // When
-        KycStatusResponse response = kycService.getKycStatus("user@example.com");
+        com.rentspace.domain.kyc.dto.KycStatusResponse response = kycService.getKycStatus("user@example.com");
 
         // Then
         assertNotNull(response);
@@ -84,12 +84,12 @@ class KycServiceTest {
         when(storageService.getPresignedUrl("kyc/cccd-123.jpg")).thenReturn("http://presigned-url-mock.com");
 
         // When
-        List<KycReviewItem> list = kycService.getPendingKycList();
+        List<com.rentspace.domain.kyc.dto.KycReviewItem> list = kycService.getPendingKycList();
 
         // Then
         assertNotNull(list);
         assertEquals(1, list.size());
-        KycReviewItem item = list.get(0);
+        com.rentspace.domain.kyc.dto.KycReviewItem item = list.get(0);
         assertEquals("http://presigned-url-mock.com", item.getCccdImageUrl());
         verify(storageService, times(1)).getPresignedUrl("kyc/cccd-123.jpg");
     }

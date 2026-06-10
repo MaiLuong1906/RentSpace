@@ -41,12 +41,12 @@ class NotificationServiceImplTest {
     @InjectMocks
     private NotificationServiceImpl notificationService;
 
-    private User user;
+    private com.rentspace.domain.user.User user;
     private Notification notification;
 
     @BeforeEach
     void setUp() {
-        user = User.builder()
+        user = com.rentspace.domain.user.User.builder()
                 .id(1L)
                 .email("user@rentspace.com")
                 .fullName("Test User")
@@ -69,7 +69,7 @@ class NotificationServiceImplTest {
         when(notificationRepository.save(any(Notification.class))).thenReturn(notification);
 
         // When
-        NotificationResponse response = notificationService.createAndSendNotification(
+        com.rentspace.domain.notification.dto.NotificationResponse response = notificationService.createAndSendNotification(
                 user, "Test Alert", "Alert content detail", NotificationType.KYC
         );
 
@@ -82,7 +82,7 @@ class NotificationServiceImplTest {
 
         // Verify WebSocket message is sent to target user
         verify(messagingTemplate, times(1)).convertAndSendToUser(
-                eq("1"), eq("/queue/notifications"), any(NotificationResponse.class)
+                eq("1"), eq("/queue/notifications"), any(com.rentspace.domain.notification.dto.NotificationResponse.class)
         );
         verify(notificationRepository, times(1)).save(any(Notification.class));
     }
@@ -97,7 +97,7 @@ class NotificationServiceImplTest {
                 .thenReturn(page);
 
         // When
-        List<NotificationResponse> results = notificationService.getMyNotifications("user@rentspace.com");
+        List<com.rentspace.domain.notification.dto.NotificationResponse> results = notificationService.getMyNotifications("user@rentspace.com");
 
         // Then
         assertNotNull(results);
@@ -123,7 +123,7 @@ class NotificationServiceImplTest {
     @Test
     void markAsRead_WhenNotOwner_ShouldThrowAccessDeniedException() {
         // Given
-        User hacker = User.builder().id(99L).email("hacker@rentspace.com").build();
+        com.rentspace.domain.user.User hacker = com.rentspace.domain.user.User.builder().id(99L).email("hacker@rentspace.com").build();
         when(userRepository.findByEmail("hacker@rentspace.com")).thenReturn(Optional.of(hacker));
         when(notificationRepository.findById(10L)).thenReturn(Optional.of(notification));
 

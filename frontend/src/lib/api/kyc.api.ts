@@ -6,6 +6,7 @@ import {
   KycListApiResponse,
 } from "@/types/kyc.types";
 import { ApiResponse } from "@/types/api.types";
+import { EkycInitResponse } from "@/types/phase2.types";
 
 export const kycApi = {
   /**
@@ -69,6 +70,22 @@ export const kycApi = {
         params: { reason: reason || "Không đáp ứng yêu cầu" },
       }
     );
+    return response.data;
+  },
+
+  /**
+   * eKYC: Khởi tạo session eKYC
+   */
+  initEkyc: async () => {
+    const response = await apiClient.post<ApiResponse<EkycInitResponse>>("/kyc/ekyc/init");
+    return response.data;
+  },
+
+  /**
+   * eKYC: Hoàn thành eKYC (gửi kết quả từ SDK về backend)
+   */
+  completeEkyc: async (data: unknown) => {
+    const response = await apiClient.post<ApiResponse<{ status: string; userId: number }>>("/kyc/ekyc/complete", data);
     return response.data;
   },
 };

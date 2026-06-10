@@ -51,12 +51,27 @@ trigger: always_on
      ↓
 [Viết code] → Tuân thủ language-protocol.md (comment tiếng Việt, code tiếng Anh)
      ↓
+[Kiểm tra] → LUÔN LUÔN chạy Validation nội bộ (Lint & Tests) trước khi commit
+     ↓
 [Hoàn thiện] → Chạy reviewer.md checklist → Kích hoạt agent chuyên biệt
      ↓
 [Commit] → Tuân thủ Conventional Commits (feat/fix/chore...)
      ↓
 [Push] → CI/CD pipeline tự động chạy (.github/workflows/ci-cd.yml)
 ```
+
+### 🔍 Bước Kiểm Tra Bắt Buộc (Mandatory Pre-push Validation)
+Trước khi push code, AI Agent và Developer **PHẢI** thực hiện:
+1. **Backend**: `cd backend && ./mvnw clean compile test-compile` (Đảm bảo không lỗi compilation/tests).
+2. **Frontend**: `cd frontend && npm run lint` (Đảm bảo không lỗi ESLint/TypeScript).
+3. **Tuyệt đối không push** nếu còn lỗi compilation hoặc linting (errors).
+
+### 🛠️ Lưu Ý Kỹ Thuật Quan Trọng (Critical Technical Notes)
+- **Database Testing**: LUÔN LUÔN dùng `@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)` khi sử dụng `@DataJpaTest` để tránh lỗi do Spring cố gắng tìm DB nhúng (H2). Dự án sử dụng PostgreSQL cho cả testing.
+- **Ambiguity Fix**: Tránh nhầm lẫn giữa `com.rentspace.domain.user.User` và class `User` của thư viện khác (như Spring Security). Trong các file Test hoặc Logic phức tạp, LUÔN LUÔN dùng **Fully Qualified Name** (tên đầy đủ package) để tránh lỗi biên dịch trên môi trường CI.
+- **JSONB Mapping**: Khi mapping cột kiểu `jsonb` từ Postgres vào Java Entity, LUÔN LUÔN dùng `@JdbcTypeCode(SqlTypes.JSON)` để tránh lỗi cast dữ liệu.
+- **Flyway Rules**: Tuyệt đối **KHÔNG chỉnh sửa nội dung** các file migration đã push (merged). Nếu cần thay đổi schema, hãy tạo file migration mới (VD: `V20`).
+- **Frontend Types**: Tuyệt đối **KHÔNG dùng `any`**. Luôn định nghĩa Interface/Type trong thư mục `src/types`. Nếu là Entity mới, hãy cập nhật vào `phase2.types.ts`.
 
 ---
 

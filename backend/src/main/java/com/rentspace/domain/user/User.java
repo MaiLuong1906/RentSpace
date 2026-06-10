@@ -7,6 +7,8 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import com.rentspace.domain.user.enums.KycStatus;
 import com.rentspace.domain.user.enums.Role;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import java.time.LocalDateTime;
 
 
@@ -60,6 +62,24 @@ public class User {
 
     @Column(name = "google_id")
     private String googleId;
+
+    // ===== eKYC (Phase 2) =====
+    @Column(name = "ekyc_session_id")
+    private String ekycSessionId;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "ekyc_result", columnDefinition = "jsonb")
+    private String ekycResult; 
+
+    @Column(name = "ekyc_confidence")
+    private java.math.BigDecimal ekycConfidence;
+
+    @Column(name = "ekyc_verified_at")
+    private LocalDateTime ekycVerifiedAt;
+
+    @Column(name = "kyc_review_mode")
+    @Builder.Default
+    private String kycReviewMode = "MANUAL"; // 'AUTO' hoặc 'MANUAL'
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
