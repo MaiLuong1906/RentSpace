@@ -10,11 +10,15 @@ CREATE TABLE IF NOT EXISTS roommate_profiles (
     budget_max      BIGINT,
     preferred_area  VARCHAR(255),
     move_in_date    DATE,
-    lifestyle_tags  TEXT[],
     bio             TEXT,
     is_active       BOOLEAN DEFAULT TRUE,
     created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS roommate_lifestyle_tags (
+    profile_id  BIGINT NOT NULL REFERENCES roommate_profiles(id) ON DELETE CASCADE,
+    tag         VARCHAR(100) NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS roommate_matches (

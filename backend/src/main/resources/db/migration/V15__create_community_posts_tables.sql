@@ -12,7 +12,6 @@ CREATE TABLE IF NOT EXISTS posts (
                         'QUESTION'      -- Hỏi đáp
                     )),
     content         TEXT NOT NULL,
-    image_urls      TEXT[],
     related_listing BIGINT REFERENCES listings(id),
     district        VARCHAR(100),
     like_count      INTEGER DEFAULT 0,
@@ -21,6 +20,11 @@ CREATE TABLE IF NOT EXISTS posts (
     is_hidden       BOOLEAN DEFAULT FALSE,
     created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS post_images (
+    post_id     BIGINT NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
+    image_url   TEXT NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS post_likes (
