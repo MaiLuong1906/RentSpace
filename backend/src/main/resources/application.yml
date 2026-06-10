@@ -21,12 +21,12 @@ spring:
   # ===== JPA / Hibernate =====
   jpa:
     hibernate:
-      ddl-auto: validate  # Flyway quản lý schema, không để Hibernate tự tạo
+      ddl-auto: validate # Flyway quản lý schema, không để Hibernate tự tạo
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
-    show-sql: false  # Bật trong dev profile
+    show-sql: false # Bật trong dev profile
 
   # ===== Flyway Migration =====
   flyway:
@@ -89,8 +89,8 @@ management:
 app:
   jwt:
     secret: ${JWT_SECRET:VmVyeVNlY3JldEtleUZvclJlbnRTcGFjZUFwcGxpY2F0aW9uMjAyNjEyMzQ1Njc4OTA=}
-    expiration-ms: 900000          # 15 phút
-    refresh-expiration-ms: 604800000  # 7 ngày
+    expiration-ms: 900000 # 15 phút
+    refresh-expiration-ms: 604800000 # 7 ngày
   frontend-url: ${FRONTEND_URL:http://localhost:3000}
 
 # ===== AWS S3 =====

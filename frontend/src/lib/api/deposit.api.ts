@@ -4,11 +4,12 @@ import { DepositTransaction } from "@/types/phase2.types";
 
 export const depositApi = {
   // Tạo giao dịch đặt cọc
-  createDeposit: async (listingId: number, amount: number, moveInDate: string) => {
+  createDeposit: async (listingId: number, amount: number, moveInDate: string, notes?: string) => {
     const response = await apiClient.post<ApiResponse<DepositTransaction>>("/deposits", {
       listingId,
       amount,
       moveInDate,
+      notes,
     });
     return response.data;
   },

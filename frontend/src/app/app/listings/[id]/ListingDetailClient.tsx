@@ -17,6 +17,7 @@ import {
   PawPrint,
   Loader2,
   Flag,
+  ShieldCheck,
 } from "lucide-react";
 import { useListing } from "@/hooks/useListings";
 import { ReviewSection, ReportModal } from "@/components/review";
@@ -25,6 +26,8 @@ import { useChatStore } from "@/store/chatStore";
 import { useChat } from "@/hooks/useChat";
 import { toast } from "sonner";
 import { ListingDetailSkeleton } from "@/components/listing";
+import { useSession } from "next-auth/react";
+import { depositApi } from "@/lib/api/deposit.api";
 
 interface ListingDetailClientProps {
   listingId: string;
@@ -54,6 +57,9 @@ export function ListingDetailClient({ listingId }: ListingDetailClientProps) {
   const { data: apiResponse, isLoading, isError } = useListing(listingId);
   const listing = apiResponse?.data;
 
+  const { data: session } = useSession();
+  const isLandlord = session?.user?.id && Number(session.user.id) === Number(listing?.landlordId);
+
   const [selectedImage, setSelectedImage] = useState(0);
   const [showContactModal, setShowContactModal] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
@@ -61,6 +67,65 @@ export function ListingDetailClient({ listingId }: ListingDetailClientProps) {
   const { sendMessage } = useChat();
   const [contactMessage, setContactMessage] = useState("");
   const [isSending, setIsSending] = useState(false);
+
+  // Deposit modal state
+  const [showDepositModal, setShowDepositModal] = useState(false);
+  const [depositAmount, setDepositAmount] = useState<number>(0);
+  const [moveInDate, setMoveInDate] = useState("");
+  const [depositNotes, setDepositNotes] = useState("");
+  const [isCreatingDeposit, setIsCreatingDeposit] = useState(false);
+
+  const handleDepositClick = () => {
+    if (!session) {
+      toast.warning("Vui lòng đăng nhập tài khoản Người thuê để thực hiện đặt cọc.");
+      router.push(`/auth/login?callbackUrl=${encodeURIComponent(window.location.pathname)}`);
+      return;
+    }
+    if (session.user.role !== "TENANT") {
+      toast.error("Chỉ tài khoản Người thuê (Tenant) mới có thể thực hiện đặt cọc.");
+      return;
+    }
+    if (listing) {
+      setDepositAmount(listing.pricePerMonth);
+    }
+    setShowDepositModal(true);
+  };
+
+  const handleDepositSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!listing) return;
+    if (!moveInDate) {
+      toast.error("Vui lòng chọn ngày dự kiến nhận phòng.");
+      return;
+    }
+    if (depositAmount <= 0) {
+      toast.error("Số tiền đặt cọc phải lớn hơn 0đ.");
+      return;
+    }
+
+    setIsCreatingDeposit(true);
+    try {
+      const response = await depositApi.createDeposit(
+        listing.id,
+        depositAmount,
+        moveInDate,
+        depositNotes.trim()
+      );
+      if (response.success && response.data) {
+        toast.success("Tạo yêu cầu đặt cọc thành công!");
+        router.push(`/app/checkout/${response.data.id}`);
+      } else {
+        toast.error(response.message || "Tạo yêu cầu đặt cọc thất bại.");
+      }
+    } catch (err: unknown) {
+      console.error("Lỗi khi tạo đặt cọc:", err);
+      const apiError = err as { response?: { data?: { message?: string } } };
+      toast.error(apiError.response?.data?.message || "Không thể tạo yêu cầu đặt cọc. Vui lòng thử lại.");
+    } finally {
+      setIsCreatingDeposit(false);
+      setShowDepositModal(false);
+    }
+  };
 
   const handleContactSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -266,6 +331,16 @@ export function ListingDetailClient({ listingId }: ListingDetailClientProps) {
 
               {/* CTA Buttons */}
               <div className="space-y-3">
+                {listing.status === "ACTIVE" && !isLandlord && (
+                  <button
+                    onClick={handleDepositClick}
+                    className="w-full flex items-center justify-center gap-2 bg-emerald-600 text-white py-3 rounded-lg font-semibold hover:bg-emerald-700 transition-all cursor-pointer shadow-md shadow-emerald-100 hover:shadow-lg"
+                  >
+                    <ShieldCheck className="h-5 w-5" />
+                    Đặt cọc an toàn (Escrow)
+                  </button>
+                )}
+
                 <button
                   onClick={() => setShowContactModal(true)}
                   className="w-full flex items-center justify-center gap-2 bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors cursor-pointer"
@@ -356,6 +431,128 @@ export function ListingDetailClient({ listingId }: ListingDetailClientProps) {
           listingTitle={listing.title}
           onClose={() => setShowReportModal(false)}
         />
+      )}
+
+      {/* Deposit Modal */}
+      {showDepositModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden border border-gray-150 transform transition-all scale-100">
+            {/* Header */}
+            <div className="bg-emerald-50 px-6 py-4 border-b border-emerald-100 flex items-center gap-3">
+              <div className="p-2 bg-emerald-100 rounded-lg text-emerald-700">
+                <ShieldCheck className="h-6 w-6" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-gray-900">Đặt cọc giữ chỗ an toàn</h3>
+                <p className="text-xs text-emerald-800 font-medium">Tiền cọc của bạn được giữ an toàn bởi RentSpace (Escrow)</p>
+              </div>
+            </div>
+
+            <form onSubmit={handleDepositSubmit} className="p-6 space-y-4">
+              {/* Tin đăng info summary */}
+              <div className="bg-gray-50 rounded-xl p-3 border border-gray-100 flex gap-3">
+                {imageUrls[0] && (
+                  <img src={imageUrls[0]} className="w-16 h-16 object-cover rounded-lg" alt="" />
+                )}
+                <div>
+                  <h4 className="text-sm font-bold text-gray-900 line-clamp-1">{listing.title}</h4>
+                  <p className="text-xs text-gray-500 line-clamp-1">{listing.address}</p>
+                  <p className="text-sm font-bold text-blue-600 mt-1">{formatPrice(listing.pricePerMonth)}/tháng</p>
+                </div>
+              </div>
+
+              {/* Amount input */}
+              <div>
+                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">
+                  Số tiền đặt cọc (VND)
+                </label>
+                <div className="relative rounded-lg shadow-sm">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <span className="text-gray-500 text-sm">₫</span>
+                  </div>
+                  <input
+                    type="number"
+                    value={depositAmount}
+                    onChange={(e) => setDepositAmount(Number(e.target.value))}
+                    className="w-full pl-8 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm font-bold text-gray-800"
+                    placeholder="Nhập số tiền đặt cọc"
+                    required
+                  />
+                </div>
+              </div>
+
+              {/* Payment Summary Box */}
+              <div className="bg-emerald-50/40 rounded-xl p-4 border border-emerald-100/50 space-y-2 text-sm">
+                <div className="flex justify-between text-gray-600">
+                  <span>Số tiền cọc:</span>
+                  <span className="font-semibold">{formatPrice(depositAmount)}</span>
+                </div>
+                <div className="flex justify-between text-gray-600 border-b border-dashed border-gray-200 pb-2">
+                  <span className="flex items-center gap-1">
+                    Phí nền tảng (2%):
+                    <span className="text-[10px] text-gray-400 font-medium">(Tối đa 100k)</span>
+                  </span>
+                  <span className="font-semibold text-gray-700">
+                    -{formatPrice(Math.min(depositAmount * 0.02, 100000))}
+                  </span>
+                </div>
+                <div className="flex justify-between text-emerald-800 font-bold pt-1">
+                  <span>Chủ trọ nhận:</span>
+                  <span>{formatPrice(depositAmount - Math.min(depositAmount * 0.02, 100000))}</span>
+                </div>
+              </div>
+
+              {/* Move-in Date */}
+              <div>
+                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">
+                  Ngày nhận phòng dự kiến
+                </label>
+                <input
+                  type="date"
+                  value={moveInDate}
+                  onChange={(e) => setMoveInDate(e.target.value)}
+                  min={new Date().toISOString().split("T")[0]}
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm text-gray-850"
+                  required
+                />
+              </div>
+
+              {/* Notes */}
+              <div>
+                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">
+                  Ghi chú gửi chủ trọ
+                </label>
+                <textarea
+                  rows={2}
+                  value={depositNotes}
+                  onChange={(e) => setDepositNotes(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm text-gray-850"
+                  placeholder="Gửi lời chào hoặc yêu cầu của bạn..."
+                />
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowDepositModal(false)}
+                  className="flex-1 px-4 py-2.5 border border-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-50 transition-colors"
+                  disabled={isCreatingDeposit}
+                >
+                  Hủy
+                </button>
+                <button
+                  type="submit"
+                  disabled={isCreatingDeposit}
+                  className="flex-1 px-4 py-2.5 bg-emerald-600 text-white rounded-lg font-semibold hover:bg-emerald-700 disabled:bg-gray-300 flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-emerald-100 transition-colors"
+                >
+                  {isCreatingDeposit && <Loader2 className="h-4 w-4 animate-spin" />}
+                  <span>{isCreatingDeposit ? "Đang xử lý..." : "Xác nhận đặt cọc"}</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
     </div>
   );
