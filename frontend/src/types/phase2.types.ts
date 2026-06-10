@@ -18,6 +18,7 @@ export interface DepositTransaction {
   notes?: string;
   createdAt: string;
   updatedAt: string;
+  contractUrl?: string;
 }
 
 export interface Post {
@@ -77,4 +78,20 @@ export interface RoommateMatch {
 export interface EkycInitResponse {
   sessionId: string;
   sdkToken: string;
+}
+
+export interface DisputeResponse {
+  id: number;
+  transactionId: number;
+  openedById: number;
+  openedByName?: string;
+  reason: 'ROOM_NOT_AS_DESCRIBED' | 'LANDLORD_NO_SHOW' | 'TENANT_NO_SHOW' | 'OTHER';
+  description: string;
+  evidenceUrls: string[];
+  status: 'OPEN' | 'UNDER_REVIEW' | 'RESOLVED_TENANT' | 'RESOLVED_LANDLORD' | 'RESOLVED_PLATFORM';
+  resolutionNote?: string;
+  resolvedById?: number;
+  resolvedByName?: string;
+  resolvedAt?: string;
+  createdAt: string;
 }

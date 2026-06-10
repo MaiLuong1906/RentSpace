@@ -342,13 +342,21 @@ export default function DepositsPage() {
 
                   {/* Default / other states action */}
                   {item.status === "RELEASED" && (
-                    <button
-                      onClick={() => toast.info("Hợp đồng điện tử (Sprint 2) đang được tích hợp.")}
-                      className="w-full border border-gray-300 text-gray-650 py-2 rounded-xl text-xs font-bold hover:bg-gray-50 transition-colors cursor-pointer flex items-center justify-center gap-1"
+                    <a
+                      href={item.contractUrl || "#"}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => {
+                        if (!item.contractUrl) {
+                          e.preventDefault();
+                          toast.error("Không tìm thấy hợp đồng của giao dịch này.");
+                        }
+                      }}
+                      className="w-full border border-gray-350 text-gray-750 py-2 rounded-xl text-xs font-bold hover:bg-gray-100 transition-colors cursor-pointer flex items-center justify-center gap-1.5"
                     >
                       <FileText className="h-3.5 w-3.5" />
-                      <span>Xem hợp đồng thuê</span>
-                    </button>
+                      <span>Xem hợp đồng thuê PDF</span>
+                    </a>
                   )}
                 </div>
               </div>

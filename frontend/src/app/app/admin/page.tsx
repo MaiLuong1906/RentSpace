@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
-import { Users, Home, Shield, Flag, Clock, UserCheck, ShieldAlert } from "lucide-react";
+import { Users, Home, Shield, Flag, Clock, UserCheck, ShieldAlert, AlertTriangle } from "lucide-react";
 import { userApi } from "@/lib/api/user.api";
 import { listingApi } from "@/lib/api/listing.api";
 import { kycApi } from "@/lib/api/kyc.api";
@@ -158,7 +158,7 @@ export default function AdminDashboard() {
         </div>
 
         {/* Quick Actions */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 mb-8">
           <Link
             href="/app/admin/kyc"
             className="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-shadow flex flex-col justify-between"
@@ -231,6 +231,24 @@ export default function AdminDashboard() {
               </div>
             </div>
             <div className="text-sm text-red-600 font-semibold mt-2">
+              Xem tất cả →
+            </div>
+          </Link>
+
+          <Link
+            href="/app/admin/disputes"
+            className="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-shadow flex flex-col justify-between"
+          >
+            <div className="flex items-center gap-4 mb-4">
+              <div className="p-3 bg-amber-100 rounded-lg flex-shrink-0">
+                <AlertTriangle className="h-8 w-8 text-amber-600" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold">Tranh chấp</h3>
+                <p className="text-xs text-gray-600">Giải quyết tranh chấp cọc</p>
+              </div>
+            </div>
+            <div className="text-sm text-amber-600 font-semibold mt-2">
               Xem tất cả →
             </div>
           </Link>
