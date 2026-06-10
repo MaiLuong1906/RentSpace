@@ -51,12 +51,20 @@ trigger: always_on
      ↓
 [Viết code] → Tuân thủ language-protocol.md (comment tiếng Việt, code tiếng Anh)
      ↓
+[Kiểm tra] → LUÔN LUÔN chạy Validation nội bộ (Lint & Tests) trước khi commit
+     ↓
 [Hoàn thiện] → Chạy reviewer.md checklist → Kích hoạt agent chuyên biệt
      ↓
 [Commit] → Tuân thủ Conventional Commits (feat/fix/chore...)
      ↓
 [Push] → CI/CD pipeline tự động chạy (.github/workflows/ci-cd.yml)
 ```
+
+### 🔍 Bước Kiểm Tra Bắt Buộc (Mandatory Pre-push Validation)
+Trước khi push code, AI Agent và Developer **PHẢI** thực hiện:
+1. **Backend**: `cd backend && ./mvnw clean compile test-compile` (Đảm bảo không lỗi compilation/tests).
+2. **Frontend**: `cd frontend && npm run lint` (Đảm bảo không lỗi ESLint/TypeScript).
+3. **Tuyệt đối không push** nếu còn lỗi compilation hoặc linting (errors).
 
 ---
 
