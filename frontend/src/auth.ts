@@ -3,6 +3,7 @@ import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
+  secret: process.env.NEXTAUTH_SECRET || process.env.AUTH_SECRET || "change_me_to_a_strong_secret",
   providers: [
     Google({
       clientId: process.env.GOOGLE_CLIENT_ID,

@@ -80,4 +80,54 @@ public class EmailService {
             log.warn("Không thể gửi email kết quả KYC thực tế do chưa cấu hình SMTP. (Bỏ qua lỗi này ở môi trường dev)");
         }
     }
+
+    @Async
+    public void sendDepositCreatedEmail(String toEmail, String fullName, String listingTitle, Long amount) {
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setFrom(fromEmail);
+        message.setTo(toEmail);
+        message.setSubject("[RentSpace] Yêu cầu đặt cọc mới");
+        message.setText(String.format(
+                "Xin chào %s,\n\nYêu cầu đặt cọc cho phòng \"%s\" đã được tạo thành công trên RentSpace.\n\nSố tiền đặt cọc: %,d VND.\n\nVui lòng hoàn tất thanh toán trong vòng 15 phút để đảm bảo giao dịch.\n\nTrân trọng,\nĐội ngũ RentSpace",
+                fullName,
+                listingTitle,
+                amount
+        ));
+        try {
+            mailSender.send(message);
+            log.info("Đã gửi email yêu cầu đặt cọc thành công đến: {}", toEmail);
+        } catch (Exception e) {
+            log.warn("Không thể gửi email yêu cầu đặt cọc thực tế do chưa cấu hình SMTP. (Bỏ qua lỗi này ở môi trường dev)");
+        }
+    }
+
+    @Async
+    public void sendDepositPaidEmail(String toEmail, String fullName, String listingTitle, Long amount, boolean isLandlord) {
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setFrom(fromEmail);
+        message.setTo(toEmail);
+        if (isLandlord) {
+            message.setSubject("[RentSpace] Đã nhận tiền đặt cọc giữ chỗ");
+            message.setText(String.format(
+                    "Xin chào %s,\n\nNgười thuê đã hoàn tất thanh toán đặt cọc cho phòng \"%s\" của bạn với số tiền %,d VND.\n\nTiền cọc hiện đang được giữ an toàn trên nền tảng RentSpace (Escrow) cho đến khi người thuê nhận phòng.\n\nTrân trọng,\nĐội ngũ RentSpace",
+                    fullName,
+                    listingTitle,
+                    amount
+            ));
+        } else {
+            message.setSubject("[RentSpace] Thanh toán đặt cọc thành công");
+            message.setText(String.format(
+                    "Xin chào %s,\n\nBạn đã thanh toán đặt cọc thành công cho phòng \"%s\" với số tiền %,d VND.\n\nTiền cọc đang được giữ an toàn trên hệ thống (Escrow). Trạng thái hiện tại: ESCROW_HOLDING (PAID).\n\nTrân trọng,\nĐội ngũ RentSpace",
+                    fullName,
+                    listingTitle,
+                    amount
+            ));
+        }
+        try {
+            mailSender.send(message);
+            log.info("Đã gửi email xác nhận thanh toán đặt cọc thành công đến: {}", toEmail);
+        } catch (Exception e) {
+            log.warn("Không thể gửi email xác nhận thanh toán đặt cọc thực tế do chưa cấu hình SMTP. (Bỏ qua lỗi này ở môi trường dev)");
+        }
+    }
 }
