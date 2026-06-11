@@ -82,6 +82,24 @@ public class EmailService {
     }
 
     @Async
+    public void sendKycPendingEmail(String toEmail, String fullName) {
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setFrom(fromEmail);
+        message.setTo(toEmail);
+        message.setSubject("[RentSpace] Hồ sơ eKYC của bạn đang được xem xét");
+        message.setText(String.format(
+                "Xin chào %s,\n\nHệ thống eKYC nhận thấy thông tin hình ảnh của bạn cần được đối chiếu thêm. Hồ sơ đã được chuyển sang chế độ duyệt thủ công bởi Ban quản trị.\n\nKết quả phê duyệt sẽ được cập nhật trong vòng 1-2 ngày làm việc.\n\nTrân trọng,\nĐội ngũ RentSpace",
+                fullName
+        ));
+        try {
+            mailSender.send(message);
+            log.info("Đã gửi email chờ duyệt KYC đến: {}", toEmail);
+        } catch (Exception e) {
+            log.warn("Không thể gửi email chờ duyệt KYC thực tế do chưa cấu hình SMTP. (Bỏ qua lỗi này ở môi trường dev)");
+        }
+    }
+
+    @Async
     public void sendDepositCreatedEmail(String toEmail, String fullName, String listingTitle, Long amount) {
         SimpleMailMessage message = new SimpleMailMessage();
         message.setFrom(fromEmail);
