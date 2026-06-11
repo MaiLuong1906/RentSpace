@@ -49,14 +49,22 @@ public class SecurityConfig {
             "/api/v1/listings/*/reviews"    // GET - xem reviews của listing
     };
 
+    // Các endpoint GET của posts public
+    private static final String[] PUBLIC_POST_GET_ENDPOINTS = {
+            "/api/v1/posts",
+            "/api/v1/posts/*",
+            "/api/v1/posts/*/comments"
+    };
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(PUBLIC_ENDPOINTS).permitAll()
-                        // GET listings public, nhưng POST/PUT/PATCH/DELETE phải authenticate
+                        // GET listings/posts public, nhưng POST/PUT/PATCH/DELETE phải authenticate
                         .requestMatchers(org.springframework.http.HttpMethod.GET, PUBLIC_LISTING_GET_ENDPOINTS).permitAll()
+                        .requestMatchers(org.springframework.http.HttpMethod.GET, PUBLIC_POST_GET_ENDPOINTS).permitAll()
                         // Admin routes (dùng @PreAuthorize bổ sung tại controller)
                         .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/v1/kyc/admin/**").hasRole("ADMIN")

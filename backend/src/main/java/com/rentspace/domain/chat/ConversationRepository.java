@@ -16,6 +16,9 @@ public interface ConversationRepository extends JpaRepository<Conversation, Long
 
     Optional<Conversation> findByTenantIdAndLandlordId(Long tenantId, Long landlordId);
 
+    @Query("SELECT c FROM Conversation c WHERE (c.tenant.id = :tenantId AND c.landlord.id = :landlordId) OR (c.tenant.id = :landlordId AND c.landlord.id = :tenantId)")
+    Optional<Conversation> findConversationBetween(@Param("tenantId") Long tenantId, @Param("landlordId") Long landlordId);
+
     /**
      * Lấy danh sách cuộc hội thoại với lastMessage và unreadCount trong một query duy nhất.
      * Dùng native SQL với correlated subquery để tránh N+1 problem.

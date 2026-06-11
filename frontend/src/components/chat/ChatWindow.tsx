@@ -1,13 +1,15 @@
 "use client";
 
 import { useEffect, useRef, useState, useMemo } from "react";
-import { MoreVertical, Loader2 } from "lucide-react";
+import { User } from "lucide-react";
 import { toast } from "sonner";
 import { MessageBubble } from "./MessageBubble";
 import { ChatInput } from "./ChatInput";
 import { useChat } from "@/hooks/useChat";
 import { useChatStore } from "@/store/chatStore";
 import { chatApi } from "@/lib/api/chat";
+import Link from "next/link";
+import Image from "next/image";
 
 interface ChatWindowProps {
   activeConversationId: number;
@@ -111,25 +113,32 @@ export function ChatWindow({ activeConversationId, sessionUserId }: ChatWindowPr
       {/* Chat Header */}
       <div className="p-4 border-b border-gray-200 flex items-center justify-between bg-white flex-shrink-0">
         <div className="flex items-center gap-3">
-          <div className="relative">
-            <img
-              src={
-                selectedConv.otherParticipantAvatar ||
-                `https://api.dicebear.com/7.x/adventurer/svg?seed=${selectedConv.otherParticipantName}`
-              }
-              alt={selectedConv.otherParticipantName}
-              className="w-10 h-10 rounded-full object-cover"
-            />
-            <span
-              className={`absolute bottom-0 right-0 block h-2.5 w-2.5 rounded-full border-2 border-white shadow-sm ${
-                selectedConv.isOnline ? "bg-green-500" : "bg-gray-300"
-              }`}
-            />
-          </div>
+          <Link href={`/app/profile/${selectedConv.otherParticipantId}`} className="hover:opacity-90 transition flex-shrink-0">
+            <div className="relative">
+              <Image
+                src={
+                  selectedConv.otherParticipantAvatar ||
+                  `https://api.dicebear.com/7.x/adventurer/svg?seed=${selectedConv.otherParticipantName}`
+                }
+                alt={selectedConv.otherParticipantName}
+                width={40}
+                height={40}
+                className="w-10 h-10 rounded-full object-cover"
+                unoptimized
+              />
+              <span
+                className={`absolute bottom-0 right-0 block h-2.5 w-2.5 rounded-full border-2 border-white shadow-sm ${
+                  selectedConv.isOnline ? "bg-green-500" : "bg-gray-300"
+                }`}
+              />
+            </div>
+          </Link>
           <div>
-            <h2 className="font-semibold text-gray-950 text-sm">
-              {selectedConv.otherParticipantName}
-            </h2>
+            <Link href={`/app/profile/${selectedConv.otherParticipantId}`} className="hover:text-indigo-600 transition">
+              <h2 className="font-semibold text-gray-950 text-sm">
+                {selectedConv.otherParticipantName}
+              </h2>
+            </Link>
             <p className="text-[11px] flex items-center gap-1.5 mt-0.5">
               <span className={`inline-block w-1.5 h-1.5 rounded-full ${
                 selectedConv.isOnline ? "bg-green-500 animate-pulse" : "bg-gray-400"
@@ -141,9 +150,13 @@ export function ChatWindow({ activeConversationId, sessionUserId }: ChatWindowPr
           </div>
         </div>
 
-        <button className="p-2 hover:bg-gray-100 rounded-lg">
-          <MoreVertical className="h-5 w-5 text-gray-500" />
-        </button>
+        <Link 
+          href={`/app/profile/${selectedConv.otherParticipantId}`}
+          className="p-2 hover:bg-gray-100 rounded-lg text-gray-500 hover:text-indigo-600 transition"
+          title="Xem trang cá nhân"
+        >
+          <User className="h-5 w-5" />
+        </Link>
       </div>
 
       {/* Messages List */}

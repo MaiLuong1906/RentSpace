@@ -1,6 +1,7 @@
 package com.rentspace.domain.user;
 
 import com.rentspace.domain.user.enums.KycStatus;
+import com.rentspace.domain.user.enums.Role;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -19,4 +20,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByGoogleId(String googleId);
 
     List<User> findByKycStatus(KycStatus kycStatus);
+
+    List<User> findByRole(Role role);
 }

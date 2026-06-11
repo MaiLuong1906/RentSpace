@@ -83,7 +83,7 @@ class ChatServiceImplTest {
     @Test
     void getOrCreateConversation_WhenExists_ShouldReturnExisting() {
         // Given
-        when(conversationRepository.findByTenantIdAndLandlordId(1L, 2L))
+        when(conversationRepository.findConversationBetween(1L, 2L))
                 .thenReturn(Optional.of(conversation));
 
         // When
@@ -98,7 +98,7 @@ class ChatServiceImplTest {
     @Test
     void getOrCreateConversation_WhenNotExists_ShouldCreateAndSave() {
         // Given
-        when(conversationRepository.findByTenantIdAndLandlordId(1L, 2L))
+        when(conversationRepository.findConversationBetween(1L, 2L))
                 .thenReturn(Optional.empty());
         when(userRepository.findById(1L)).thenReturn(Optional.of(tenant));
         when(userRepository.findById(2L)).thenReturn(Optional.of(landlord));
@@ -115,7 +115,7 @@ class ChatServiceImplTest {
     @Test
     void getOrCreateConversation_WithSameId_ShouldThrowException() {
         // When & Then
-        assertThrows(IllegalArgumentException.class, () ->
+        assertThrows(com.rentspace.common.exception.BusinessException.class, () ->
                 chatService.getOrCreateConversation(1L, 1L)
         );
     }

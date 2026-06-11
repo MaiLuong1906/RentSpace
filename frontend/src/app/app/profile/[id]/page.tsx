@@ -181,7 +181,7 @@ export default function PublicProfilePage({ params }: { params: Promise<{ id: st
             {/* Quick Actions */}
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <Link
-                href={`/app/chat?userId=${profile.id}`}
+                href={`/app/messages?userId=${profile.id}`}
                 className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition-all shadow-md hover:shadow-lg active:scale-95"
               >
                 <MessageSquare className="h-5 w-5" />
