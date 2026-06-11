@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useMemo } from "react";
-import { User, Loader2 } from "lucide-react";
+import { User } from "lucide-react";
 import { toast } from "sonner";
 import { MessageBubble } from "./MessageBubble";
 import { ChatInput } from "./ChatInput";
@@ -9,6 +9,7 @@ import { useChat } from "@/hooks/useChat";
 import { useChatStore } from "@/store/chatStore";
 import { chatApi } from "@/lib/api/chat";
 import Link from "next/link";
+import Image from "next/image";
 
 interface ChatWindowProps {
   activeConversationId: number;
@@ -114,13 +115,16 @@ export function ChatWindow({ activeConversationId, sessionUserId }: ChatWindowPr
         <div className="flex items-center gap-3">
           <Link href={`/app/profile/${selectedConv.otherParticipantId}`} className="hover:opacity-90 transition flex-shrink-0">
             <div className="relative">
-              <img
+              <Image
                 src={
                   selectedConv.otherParticipantAvatar ||
                   `https://api.dicebear.com/7.x/adventurer/svg?seed=${selectedConv.otherParticipantName}`
                 }
                 alt={selectedConv.otherParticipantName}
+                width={40}
+                height={40}
                 className="w-10 h-10 rounded-full object-cover"
+                unoptimized
               />
               <span
                 className={`absolute bottom-0 right-0 block h-2.5 w-2.5 rounded-full border-2 border-white shadow-sm ${
