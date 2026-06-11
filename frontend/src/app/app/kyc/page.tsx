@@ -70,7 +70,7 @@ export default function KYCPage() {
         const { status, cccdImageUrl: imgUrl, reviewMode, confidence } = res.data;
         setCccdImageUrl(imgUrl);
         setKycReviewMode(reviewMode || null);
-        setEkycConfidence(confidence ? parseFloat(confidence) : null);
+        setEkycConfidence(confidence ? parseFloat(confidence.toString()) : null);
 
         // Ánh xạ trạng thái từ Backend sang Frontend UI
         if (status === "VERIFIED") {
