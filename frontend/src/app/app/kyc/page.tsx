@@ -48,8 +48,6 @@ export default function KYCPage() {
     isEkycModalOpen,
     ekycStep,
     stream,
-    capturedFront,
-    capturedBack,
     ekycSessionId,
     simulationMode,
     setSimulationMode,
