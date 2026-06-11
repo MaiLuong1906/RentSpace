@@ -1,5 +1,4 @@
 "use client";
-
 import { useState, useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
 import { 
@@ -12,21 +11,20 @@ import {
   RefreshCw, 
   Camera, 
   Scan, 
-  UserCheck, 
-  AlertCircle, 
   ArrowRight, 
   Check, 
-  Eye, 
   Sparkles 
 } from "lucide-react";
 import { kycApi } from "@/lib/api/kyc.api";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
+import Image from "next/image";
+import { useEkyc } from "./hooks/useEkyc";
+
 
 export default function KYCPage() {
   const { data: session, status: authStatus } = useSession();
   const fetchedRef = useRef(false);
-  const videoRef = useRef<HTMLVideoElement | null>(null);
   
   // Trạng thái KYC của người dùng
   const [kycStatus, setKycStatus] = useState<"not_submitted" | "pending" | "approved" | "rejected">("not_submitted");
@@ -44,17 +42,27 @@ export default function KYCPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [consentChecked, setConsentChecked] = useState(false);
 
-  // Trạng thái eKYC Modal & Webcam Flow
-  const [isEkycModalOpen, setIsEkycModalOpen] = useState(false);
-  const [ekycStep, setEkycStep] = useState<1 | 2 | 3 | 4 | 5>(1); // 1: Front, 2: Back, 3: Selfie, 4: Processing, 5: Done
-  const [stream, setStream] = useState<MediaStream | null>(null);
-  const [capturedFront, setCapturedFront] = useState<string | null>(null);
-  const [capturedBack, setCapturedBack] = useState<string | null>(null);
-  const [capturedSelfie, setCapturedSelfie] = useState<string | null>(null);
-  const [ekycSessionId, setEkycSessionId] = useState<string | null>(null);
-  
-  // Dev simulation tool (localhost only)
-  const [simulationMode, setSimulationMode] = useState<"SUCCESS" | "NEED_REVIEW" | "FAIL">("SUCCESS");
+  // Tải trạng thái eKYC và các phương thức xử lý từ custom hook useEkyc
+  const {
+    videoRef,
+    isEkycModalOpen,
+    ekycStep,
+    stream,
+    capturedFront,
+    capturedBack,
+    ekycSessionId,
+    simulationMode,
+    setSimulationMode,
+    loading: ekycLoading,
+    handleStartEkyc,
+    handleEkycNextStep,
+    closeEkycModal
+  } = useEkyc({
+    onComplete: async () => {
+      await fetchKycStatus();
+    }
+  });
+
   const isLocalhost = typeof window !== "undefined" && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1");
 
   // Tải trạng thái KYC hiện tại của người dùng từ Backend
@@ -111,147 +119,6 @@ export default function KYCPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session, authStatus]);
 
-  // Khởi động Camera stream
-  const startCamera = async () => {
-    try {
-      stopCamera();
-      const mediaStream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "user", width: { ideal: 640 }, height: { ideal: 480 } },
-        audio: false
-      });
-      setStream(mediaStream);
-      if (videoRef.current) {
-        videoRef.current.srcObject = mediaStream;
-      }
-    } catch (err) {
-      console.warn("Không thể mở webcam thực. Sử dụng webcam giả lập.", err);
-      toast.info("Không tìm thấy camera. Hệ thống chuyển sang chế độ camera giả lập.");
-    }
-  };
-
-  // Tắt camera stream
-  const stopCamera = () => {
-    if (stream) {
-      stream.getTracks().forEach(track => track.stop());
-      setStream(null);
-    }
-  };
-
-  // Chụp ảnh từ video stream hoặc trả về ảnh mock nếu camera bị lỗi
-  const capturePhoto = () => {
-    if (stream && videoRef.current) {
-      try {
-        const video = videoRef.current;
-        const canvas = document.createElement("canvas");
-        canvas.width = video.videoWidth || 640;
-        canvas.height = video.videoHeight || 480;
-        const ctx = canvas.getContext("2d");
-        if (ctx) {
-          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-          return canvas.toDataURL("image/jpeg");
-        }
-      } catch (err) {
-        console.error("Lỗi chụp ảnh từ camera:", err);
-      }
-    }
-    // Fallback: Mock base64 image representation
-    return "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEASABIAAD/2wBDAP//////////////////////////////////////////////////////////////////////////////////////wgALCAABAAEBAREA/8QAFBABAAAAAAAAAAAAAAAAAAAAAP/aAAgBAQABPxA=";
-  };
-
-  // Khởi chạy tiến trình eKYC
-  const handleStartEkyc = async () => {
-    if (!consentChecked) {
-      toast.error("Bạn phải đồng ý với chính sách bảo mật trước khi tiếp tục.");
-      return;
-    }
-    try {
-      setLoading(true);
-      const res = await kycApi.initEkyc();
-      if (res.success && res.data) {
-        setEkycSessionId(res.data.sessionId);
-        setEkycStep(1);
-        setIsEkycModalOpen(true);
-        // Bật camera
-        setTimeout(() => {
-          startCamera();
-        }, 300);
-      } else {
-        toast.error(res.message || "Không thể khởi tạo phiên eKYC.");
-      }
-    } catch (err) {
-      console.error("Lỗi khởi tạo eKYC:", err);
-      toast.error("Lỗi kết nối khi khởi tạo phiên eKYC.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Đi tới bước tiếp theo trong eKYC
-  const handleEkycNextStep = () => {
-    const photo = capturePhoto();
-    if (ekycStep === 1) {
-      setCapturedFront(photo);
-      setEkycStep(2);
-      toast.success("Đã quét mặt trước thẻ căn cước!");
-    } else if (ekycStep === 2) {
-      setCapturedBack(photo);
-      setEkycStep(3);
-      toast.success("Đã quét mặt sau thẻ căn cước!");
-    } else if (ekycStep === 3) {
-      setCapturedSelfie(photo);
-      setEkycStep(4);
-      stopCamera();
-      // Bắt đầu gửi dữ liệu hoàn tất eKYC
-      submitEkycData(photo);
-    }
-  };
-
-  // Gửi kết quả eKYC về Backend
-  const submitEkycData = async (selfiePhoto: string) => {
-    if (!ekycSessionId) return;
-    try {
-      const payload = {
-        sessionId: ekycSessionId,
-        cccdFrontImage: capturedFront || "data:image/jpeg;base64,mock_front",
-        cccdBackImage: capturedBack || "data:image/jpeg;base64,mock_back",
-        faceImage: selfiePhoto,
-        simulationMode: simulationMode,
-        ocrData: {
-          idNumber: "037195009876",
-          fullName: "NGUYỄN VĂN A",
-          dateOfBirth: "20/09/1995",
-          gender: "Nam",
-          hometown: "TP. Hồ Chí Minh"
-        }
-      };
-
-      const res = await kycApi.completeEkyc(payload);
-      if (res.success) {
-        toast.success("Hoàn tất đối soát eKYC thành công!");
-        setEkycStep(5);
-        await fetchKycStatus();
-      } else {
-        toast.error(res.message || "Xác thực eKYC không thành công.");
-        setEkycStep(5);
-        await fetchKycStatus();
-      }
-    } catch (err) {
-      console.error("Lỗi hoàn tất eKYC:", err);
-      toast.error("Đã xảy ra lỗi trong quá trình đối soát eKYC.");
-      setEkycStep(5);
-      await fetchKycStatus();
-    }
-  };
-
-  // Đóng modal eKYC
-  const closeEkycModal = () => {
-    stopCamera();
-    setIsEkycModalOpen(false);
-    setCapturedFront(null);
-    setCapturedBack(null);
-    setCapturedSelfie(null);
-  };
-
   // Nộp hồ sơ thủ công (Truyền thống)
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -299,8 +166,7 @@ export default function KYCPage() {
       setIsSubmitting(false);
     }
   };
-
-  // Render trạng thái KYC của người dùng
+   // Render trạng thái KYC của người dùng
   const renderStatus = () => {
     switch (kycStatus) {
       case "approved":
@@ -327,7 +193,7 @@ export default function KYCPage() {
             {cccdImageUrl && (
               <div className="max-w-xs mx-auto border border-gray-150 rounded-2xl overflow-hidden shadow-inner bg-gray-50">
                 <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider py-2 bg-gray-100/50">Ảnh CCCD xác minh</p>
-                <img src={cccdImageUrl} alt="CCCD" className="w-full h-44 object-cover" />
+                <Image src={cccdImageUrl} alt="CCCD" className="w-full h-44 object-cover" width={320} height={176} unoptimized />
               </div>
             )}
           </motion.div>
@@ -356,7 +222,7 @@ export default function KYCPage() {
             {cccdImageUrl && (
               <div className="max-w-xs mx-auto border border-gray-150 rounded-2xl overflow-hidden shadow-sm bg-gray-50">
                 <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider py-2 bg-gray-100/50">Tài liệu đã tải lên</p>
-                <img src={cccdImageUrl} alt="CCCD Pending" className="w-full h-44 object-cover opacity-80" />
+                <Image src={cccdImageUrl} alt="CCCD Pending" className="w-full h-44 object-cover opacity-80" width={320} height={176} unoptimized />
               </div>
             )}
           </motion.div>
@@ -551,8 +417,8 @@ export default function KYCPage() {
                   </div>
 
                   <button
-                    onClick={handleStartEkyc}
-                    disabled={!consentChecked || loading}
+                    onClick={() => handleStartEkyc(consentChecked)}
+                    disabled={!consentChecked || loading || ekycLoading}
                     className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3.5 rounded-2xl font-extrabold shadow-lg shadow-blue-500/20 hover:shadow-xl hover:scale-[1.01] active:scale-[0.99] disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed transition-all text-sm flex items-center justify-center gap-2"
                   >
                     <Camera className="h-4.5 w-4.5" />
@@ -574,10 +440,13 @@ export default function KYCPage() {
                         <div className="border-3 border-dashed border-gray-200 hover:border-blue-500 rounded-2xl p-6 text-center transition-all bg-gray-50/50 hover:bg-white relative min-h-[220px] flex flex-col items-center justify-center">
                           {filePreview ? (
                             <div className="w-full flex flex-col items-center">
-                              <img
+                              <Image
                                 src={filePreview}
                                 alt="Xem trước ảnh CCCD"
                                 className="w-full max-h-48 object-contain rounded-xl border border-gray-100 shadow-sm"
+                                width={400}
+                                height={192}
+                                unoptimized
                               />
                               <div className="mt-3 inline-flex items-center gap-1.5 px-3 py-1 bg-blue-50 border border-blue-100 text-blue-700 rounded-full text-xs font-bold">
                                 <FileImage className="h-3.5 w-3.5" />

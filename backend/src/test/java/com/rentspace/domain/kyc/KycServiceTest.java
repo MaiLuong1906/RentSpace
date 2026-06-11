@@ -47,6 +47,9 @@ class KycServiceTest {
     @Mock
     private VnptEkycService vnptEkycService;
 
+    @Mock
+    private KycMapper kycMapper;
+
     @Spy
     private ObjectMapper objectMapper = new ObjectMapper();
 
@@ -101,8 +104,15 @@ class KycServiceTest {
     @Test
     void getPendingKycList_ShouldReturnPresignedUrls() {
         // Given
+        KycReviewItem mockItem = KycReviewItem.builder()
+                .userId(1L)
+                .email("user@example.com")
+                .fullName("Nguyen Van A")
+                .kycStatus("PENDING")
+                .cccdImageUrl("http://presigned-url-mock.com")
+                .build();
         when(userRepository.findByKycStatus(KycStatus.PENDING)).thenReturn(List.of(user));
-        when(storageService.getPresignedUrl("kyc/cccd-123.jpg")).thenReturn("http://presigned-url-mock.com");
+        when(kycMapper.toReviewItem(user)).thenReturn(mockItem);
 
         // When
         List<com.rentspace.domain.kyc.dto.KycReviewItem> list = kycService.getPendingKycList();
@@ -112,8 +122,10 @@ class KycServiceTest {
         assertEquals(1, list.size());
         com.rentspace.domain.kyc.dto.KycReviewItem item = list.get(0);
         assertEquals("http://presigned-url-mock.com", item.getCccdImageUrl());
-        verify(storageService, times(1)).getPresignedUrl("kyc/cccd-123.jpg");
+        verify(kycMapper, times(1)).toReviewItem(user);
     }
+
+
 
     @Test
     void initEkyc_WhenUserNotVerified_ShouldSetSessionIdAndReturnResponse() {

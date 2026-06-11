@@ -38,6 +38,7 @@ public class KycService {
     private final NotificationService notificationService;
     private final VnptEkycService vnptEkycService;
     private final ObjectMapper objectMapper;
+    private final KycMapper kycMapper;
 
     // ===== USER: Nộp hồ sơ KYC =====
     @Transactional
@@ -238,7 +239,7 @@ public class KycService {
     public List<KycReviewItem> getPendingKycList() {
         return userRepository.findByKycStatus(KycStatus.PENDING)
                 .stream()
-                .map(this::toReviewItem)
+                .map(kycMapper::toReviewItem)
                 .collect(Collectors.toList());
     }
 
@@ -246,7 +247,7 @@ public class KycService {
     public List<KycReviewItem> getKycListByStatus(KycStatus status) {
         return userRepository.findByKycStatus(status)
                 .stream()
-                .map(this::toReviewItem)
+                .map(kycMapper::toReviewItem)
                 .collect(Collectors.toList());
     }
 
@@ -292,17 +293,5 @@ public class KycService {
                 "Hồ sơ xác thực thông tin tài khoản (KYC) của bạn đã bị từ chối. Lý do: " + reason,
                 NotificationType.KYC
         );
-    }
-
-    // ===== Private mapper =====
-    private KycReviewItem toReviewItem(User user) {
-        return KycReviewItem.builder()
-                .userId(user.getId())
-                .email(user.getEmail())
-                .fullName(user.getFullName())
-                .kycStatus(user.getKycStatus().name())
-                .cccdImageUrl(user.getCccdImageUrl() != null ? storageService.getPresignedUrl(user.getCccdImageUrl()) : null)
-                .submittedAt(user.getUpdatedAt())
-                .build();
     }
 }
