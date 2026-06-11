@@ -10,7 +10,9 @@ import com.rentspace.domain.post.dto.PostCreateRequest;
 import com.rentspace.domain.post.dto.PostResponse;
 import com.rentspace.domain.post.enums.PostType;
 import com.rentspace.domain.user.User;
+import com.rentspace.domain.user.UserRepository;
 import com.rentspace.domain.user.enums.KycStatus;
+import com.rentspace.domain.user.enums.Role;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -48,6 +50,12 @@ class PostServiceTest {
 
     @Mock
     private ListingRepository listingRepository;
+
+    @Mock
+    private UserRepository userRepository;
+
+    @Mock
+    private com.rentspace.domain.notification.NotificationService notificationService;
 
     @Mock
     private PostMapper postMapper;
@@ -185,12 +193,21 @@ class PostServiceTest {
         post.setReportCount(2); // Đã có 2 report trước đó
         when(postRepository.findById(10L)).thenReturn(Optional.of(post));
         when(postReportRepository.existsByPostIdAndReporterId(10L, 1L)).thenReturn(false);
+        
+        User admin = User.builder()
+                .id(99L)
+                .email("admin@rentspace.com")
+                .fullName("System Admin")
+                .build();
+        when(userRepository.findByRole(Role.ADMIN)).thenReturn(List.of(admin));
 
         postService.reportPost(10L, "SPAM", user);
 
         assertEquals(3, post.getReportCount());
         assertTrue(post.getIsHidden()); // Đã tự động ẩn do >= 3 report
         verify(postReportRepository, times(1)).save(any());
+        verify(userRepository, times(1)).findByRole(Role.ADMIN);
+        verify(notificationService, times(1)).createAndSendNotification(eq(admin), any(), any(), any());
         verify(postRepository, times(1)).save(post);
     }
 }
