@@ -21,31 +21,38 @@ export interface DepositTransaction {
   contractUrl?: string;
 }
 
+export interface PostAuthor {
+  id: number;
+  name: string;
+  avatarUrl?: string;
+  kycStatus?: 'PENDING' | 'VERIFIED' | 'REJECTED';
+}
+
 export interface Post {
   id: number;
-  authorId: number;
-  authorName?: string;
-  authorAvatar?: string;
+  author: PostAuthor;
   type: 'ROOMMATE' | 'TIPS' | 'REVIEW' | 'QUESTION';
   content: string;
   imageUrls?: string[];
-  relatedListing?: number;
+  relatedListingId?: number;
   district?: string;
   likeCount: number;
   commentCount: number;
-  reportCount: number;
-  isHidden: boolean;
-  likedByMe?: boolean;
+  isLiked: boolean;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface CommentAuthor {
+  id: number;
+  name: string;
+  avatarUrl?: string;
 }
 
 export interface PostComment {
   id: number;
   postId: number;
-  authorId: number;
-  authorName?: string;
-  authorAvatar?: string;
+  author: CommentAuthor;
   content: string;
   createdAt: string;
 }
