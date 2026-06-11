@@ -5,6 +5,8 @@ export type KycStatus = "PENDING" | "SUBMITTED" | "VERIFIED" | "REJECTED";
 export interface KycStatusResponse {
   status: KycStatus;
   cccdImageUrl: string | null;
+  reviewMode?: "AUTO" | "MANUAL" | null;
+  confidence?: string | number | null;
 }
 
 export interface KycReviewItem {

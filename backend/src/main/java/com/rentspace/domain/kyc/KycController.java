@@ -3,6 +3,8 @@ package com.rentspace.domain.kyc;
 import com.rentspace.common.response.ApiResponse;
 import com.rentspace.domain.kyc.dto.KycReviewItem;
 import com.rentspace.domain.kyc.dto.KycStatusResponse;
+import com.rentspace.domain.kyc.dto.EkycInitResponse;
+import com.rentspace.domain.kyc.dto.EkycCompleteRequest;
 import com.rentspace.domain.user.enums.KycStatus;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -16,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.http.HttpStatus;
+import jakarta.validation.Valid;
 
 import java.util.List;
 
@@ -68,6 +71,41 @@ public class KycController {
         }
         KycStatusResponse response = kycService.getKycStatus(userDetails.getUsername());
         return ResponseEntity.ok(ApiResponse.success("Lấy trạng thái KYC thành công", response));
+    }
+
+    // ===== USER: Khởi tạo phiên eKYC =====
+    @PostMapping("/ekyc/init")
+    @Operation(summary = "Khởi tạo phiên eKYC")
+    @SecurityRequirement(name = "bearerAuth")
+    public ResponseEntity<ApiResponse<EkycInitResponse>> initEkyc(
+            @AuthenticationPrincipal UserDetails userDetails) {
+        if (userDetails == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Bạn cần đăng nhập");
+        }
+        try {
+            EkycInitResponse response = kycService.initEkyc(userDetails.getUsername());
+            return ResponseEntity.ok(ApiResponse.success("Khởi tạo phiên eKYC thành công", response));
+        } catch (IllegalStateException e) {
+            return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
+        }
+    }
+
+    // ===== USER: Hoàn tất phiên eKYC =====
+    @PostMapping("/ekyc/complete")
+    @Operation(summary = "Hoàn tất phiên eKYC")
+    @SecurityRequirement(name = "bearerAuth")
+    public ResponseEntity<ApiResponse<KycStatusResponse>> completeEkyc(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @Valid @RequestBody EkycCompleteRequest request) {
+        if (userDetails == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Bạn cần đăng nhập");
+        }
+        try {
+            KycStatusResponse response = kycService.completeEkyc(userDetails.getUsername(), request);
+            return ResponseEntity.ok(ApiResponse.success("Xác thực eKYC hoàn tất", response));
+        } catch (IllegalStateException | com.rentspace.common.exception.BusinessException e) {
+            return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
+        }
     }
 
     // ===== ADMIN: Lấy danh sách KYC đang chờ duyệt =====
