@@ -1,6 +1,7 @@
 package com.rentspace.domain.chat;
 
 import com.rentspace.common.exception.ResourceNotFoundException;
+import com.rentspace.common.exception.BusinessException;
 import org.springframework.security.access.AccessDeniedException;
 import com.rentspace.domain.chat.dto.ConversationResponse;
 import com.rentspace.domain.chat.dto.MessageResponse;
@@ -43,15 +44,16 @@ public class ChatServiceImpl implements ChatService {
     @Transactional
     public Conversation getOrCreateConversation(Long tenantId, Long landlordId) {
         if (tenantId.equals(landlordId)) {
-            throw new IllegalArgumentException("Không thể tạo cuộc hội thoại với chính mình");
+            throw new BusinessException("Không thể tạo cuộc hội thoại với chính mình");
         }
         
-        // Luôn quy ước tenantId là ID nhỏ hơn, landlordId là ID lớn hơn để giữ unique constraint
-        Long firstId = Math.min(tenantId, landlordId);
-        Long secondId = Math.max(tenantId, landlordId);
-
-        return conversationRepository.findByTenantIdAndLandlordId(firstId, secondId)
+        // Tìm kiếm cuộc hội thoại đã tồn tại ở cả 2 chiều
+        return conversationRepository.findConversationBetween(tenantId, landlordId)
                 .orElseGet(() -> {
+                    // Luôn quy ước tenantId là ID nhỏ hơn, landlordId là ID lớn hơn để giữ unique constraint trong DB
+                    Long firstId = Math.min(tenantId, landlordId);
+                    Long secondId = Math.max(tenantId, landlordId);
+
                     User tenant = userRepository.findById(firstId)
                             .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy người dùng: " + firstId));
                     User landlord = userRepository.findById(secondId)
