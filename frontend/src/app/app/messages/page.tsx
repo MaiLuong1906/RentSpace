@@ -1,14 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useSession } from "next-auth/react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useChatStore } from "@/store/chatStore";
 import { chatApi } from "@/lib/api/chat";
 import { ConversationList, ChatWindow } from "../../../components/chat";
 import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
 
-export default function MessagesPage() {
+function MessagesContent() {
   const { data: session } = useSession();
   const token = session?.accessToken;
   const sessionUserId = Number(session?.user?.id || 0);
@@ -105,5 +106,24 @@ export default function MessagesPage() {
         )}
       </div>
     </div>
+  );
+}
+
+function MessagesSkeleton() {
+  return (
+    <div className="h-[calc(100vh-4rem)] bg-gray-50 flex items-center justify-center">
+      <div className="flex flex-col items-center gap-2 text-gray-400">
+        <Loader2 className="animate-spin text-indigo-600" size={24} />
+        <span className="text-sm">Đang tải cuộc trò chuyện...</span>
+      </div>
+    </div>
+  );
+}
+
+export default function MessagesPage() {
+  return (
+    <Suspense fallback={<MessagesSkeleton />}>
+      <MessagesContent />
+    </Suspense>
   );
 }

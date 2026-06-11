@@ -43,7 +43,6 @@ export function PostCard({ post, currentUserId, onPostHidden }: PostCardProps) {
   const [likeCount, setLikeCount] = useState(post.likeCount);
   const [isLiking, setIsLiking] = useState(false);
   const [commentCount, setCommentCount] = useState(post.commentCount);
-  const [reportCount, setReportCount] = useState(post.reportCount);
 
   // Comments state
   const [showComments, setShowComments] = useState(false);
@@ -107,10 +106,8 @@ export function PostCard({ post, currentUserId, onPostHidden }: PostCardProps) {
         setShowReportModal(false);
         setReportReason("");
         
-        // Hỗ trợ cập nhật UI nếu bài viết bị auto-hide
-        const newReportCount = reportCount + 1;
-        setReportCount(newReportCount);
-        if (newReportCount >= 3 && onPostHidden) {
+        // Ẩn ngay lập tức bài viết khỏi bảng tin của người dùng báo cáo vi phạm
+        if (onPostHidden) {
           onPostHidden(post.id);
         }
       }
@@ -149,7 +146,9 @@ export function PostCard({ post, currentUserId, onPostHidden }: PostCardProps) {
                 {post.author.name}
               </Link>
               {post.author.kycStatus === "VERIFIED" && (
-                <ShieldCheck className="w-4 h-4 text-emerald-500 fill-emerald-50" title="Tài khoản đã xác thực KYC" />
+                <span title="Tài khoản đã xác thực KYC">
+                  <ShieldCheck className="w-4 h-4 text-emerald-500 fill-emerald-50" />
+                </span>
               )}
             </div>
             <span className="text-xs text-gray-400">{timeAgo}</span>
