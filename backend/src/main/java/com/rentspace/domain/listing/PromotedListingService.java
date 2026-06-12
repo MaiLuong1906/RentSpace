@@ -97,7 +97,7 @@ public class PromotedListingService {
         // Tìm bản ghi đang hoạt động
         List<PromotedListing> activePromotions = promotedListingRepository.findByListingIdAndIsActiveTrue(listingId);
         Optional<PromotedListing> currentActive = activePromotions.stream()
-                .filter(p -> p.getExpiresAt().isAfter(LocalDateTime.now()))
+                .filter(p -> p.getExpiresAt() != null && p.getExpiresAt().isAfter(LocalDateTime.now()))
                 .findFirst();
 
         if (currentActive.isPresent()) {

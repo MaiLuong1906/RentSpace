@@ -33,6 +33,11 @@ public class UserService {
         return mapToUserProfileResponse(user);
     }
 
+    public User getUserByEmail(String email) {
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy người dùng: " + email));
+    }
+
     // ===== PUT /api/v1/users/me =====
     @Transactional
     public UserProfileResponse updateProfile(String email, UpdateProfileRequest request) {

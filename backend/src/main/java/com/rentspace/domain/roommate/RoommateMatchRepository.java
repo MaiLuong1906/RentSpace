@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import org.springframework.data.repository.query.Param;
 import java.util.List;
 import java.util.Optional;
 
@@ -25,5 +26,9 @@ public interface RoommateMatchRepository extends JpaRepository<RoommateMatch, Lo
            "WHERE (m.profileA.id = :profileAId AND m.profileB.id = :profileBId) " +
            "OR (m.profileA.id = :profileBId AND m.profileB.id = :profileAId)")
     Optional<RoommateMatch> findMatchBetween(Long profileAId, Long profileBId);
+
+    @Query("SELECT m FROM RoommateMatch m WHERE m.profileA.id = :profileId OR m.profileB.id = :profileId")
+    List<RoommateMatch> findAllMatchesForProfile(@Param("profileId") Long profileId);
 }
+
 

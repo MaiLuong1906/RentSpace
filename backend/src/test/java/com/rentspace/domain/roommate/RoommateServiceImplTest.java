@@ -158,7 +158,7 @@ class RoommateServiceImplTest {
         when(profileRepository.findActiveProfilesForMatching(1L)).thenReturn(List.of(otherProfile));
         
         // No existing match in DB
-        when(matchRepository.findMatchBetween(10L, 20L)).thenReturn(Optional.empty());
+        when(matchRepository.findAllMatchesForProfile(10L)).thenReturn(Collections.emptyList());
         when(matchingEngine.calculateMatchScore(myProfile, otherProfile)).thenReturn(BigDecimal.valueOf(75.0));
 
         RoommateMatch match = RoommateMatch.builder()

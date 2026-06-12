@@ -13,6 +13,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import org.springframework.data.redis.core.StringRedisTemplate;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.concurrent.TimeUnit;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
@@ -29,23 +32,40 @@ public class LandlordAnalyticsService {
     private final ConversationRepository conversationRepository;
     private final DepositTransactionRepository depositTransactionRepository;
     private final UserRepository userRepository;
+    private final StringRedisTemplate redisTemplate;
+    private final ObjectMapper objectMapper;
+
+    private static final String CACHE_PREFIX = "landlord:analytics:";
+    private static final long CACHE_TTL_MINUTES = 15;
 
     public LandlordAnalyticsResponse getLandlordAnalytics(String email) {
+        // 1. Kiểm tra cache Redis trước
+        String cacheKey = CACHE_PREFIX + email;
+        String cachedData = redisTemplate.opsForValue().get(cacheKey);
+        if (cachedData != null) {
+            try {
+                log.info("Loaded landlord analytics from Redis cache for email: {}", email);
+                return objectMapper.readValue(cachedData, LandlordAnalyticsResponse.class);
+            } catch (Exception e) {
+                log.warn("Failed to deserialize landlord analytics cache for email: {}", email, e);
+            }
+        }
+
         User landlord = userRepository.findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy chủ trọ với email: " + email));
 
         LocalDateTime since = LocalDateTime.now().minusDays(30);
 
-        // 1. Thống kê tổng số views
+        // 2. Thống kê tổng số views
         long totalViews = listingViewRepository.countByListing_Landlord_IdAndViewedAtAfter(landlord.getId(), since);
 
-        // 2. Thống kê tổng số cuộc hội thoại mới
+        // 3. Thống kê tổng số cuộc hội thoại mới
         long totalMessages = conversationRepository.countByLandlordIdAndCreatedAtAfter(landlord.getId(), since);
 
-        // 3. Thống kê tổng số lượt đặt cọc thành công
+        // 4. Thống kê tổng số lượt đặt cọc thành công
         long totalDeposits = depositTransactionRepository.countByLandlordIdAndPaidAtAfter(landlord.getId(), since);
 
-        // 4. Lấy số lượt xem theo ngày (lấp đầy các ngày không có tương tác bằng giá trị 0)
+        // 5. Lấy số lượt xem theo ngày (lấp đầy các ngày không có tương tác bằng giá trị 0)
         List<Object[]> dailyViewsData = listingViewRepository.findDailyViewsForLandlord(landlord.getId(), since);
 
         Map<LocalDate, Long> dailyViewsMap = new LinkedHashMap<>();
@@ -76,11 +96,22 @@ public class LandlordAnalyticsService {
                 .map(e -> new DailyViewCount(e.getKey(), e.getValue()))
                 .toList();
 
-        return LandlordAnalyticsResponse.builder()
+        LandlordAnalyticsResponse response = LandlordAnalyticsResponse.builder()
                 .totalViews(totalViews)
                 .totalMessages(totalMessages)
                 .totalDeposits(totalDeposits)
                 .viewsOverTime(viewsOverTime)
                 .build();
+
+        // 6. Lưu kết quả vào Redis Cache
+        try {
+            String serialized = objectMapper.writeValueAsString(response);
+            redisTemplate.opsForValue().set(cacheKey, serialized, CACHE_TTL_MINUTES, TimeUnit.MINUTES);
+            log.info("Cached landlord analytics in Redis for email: {}", email);
+        } catch (Exception e) {
+            log.warn("Failed to serialize landlord analytics cache for email: {}", email, e);
+        }
+
+        return response;
     }
 }

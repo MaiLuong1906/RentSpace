@@ -335,7 +335,7 @@ public class ListingService {
         // Enrich with promotion status
         List<PromotedListing> activePromotions = promotedListingRepository.findByListingIdAndIsActiveTrue(response.getId());
         Optional<PromotedListing> currentActive = activePromotions.stream()
-                .filter(p -> p.getExpiresAt().isAfter(LocalDateTime.now()))
+                .filter(p -> p.getExpiresAt() != null && p.getExpiresAt().isAfter(LocalDateTime.now()))
                 .findFirst();
         if (currentActive.isPresent()) {
             response.setIsPromoted(true);
