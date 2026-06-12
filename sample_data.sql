@@ -2,6 +2,9 @@
 SET client_encoding = 'UTF8';
 
 -- 1. Xóa sạch dữ liệu cũ theo đúng thứ tự ràng buộc khóa ngoại
+TRUNCATE TABLE roommate_matches CASCADE;
+TRUNCATE TABLE roommate_lifestyle_tags CASCADE;
+TRUNCATE TABLE roommate_profiles CASCADE;
 TRUNCATE TABLE listing_images CASCADE;
 TRUNCATE TABLE reviews CASCADE;
 TRUNCATE TABLE reports CASCADE;
@@ -20,6 +23,8 @@ ALTER SEQUENCE messages_id_seq RESTART WITH 1;
 ALTER SEQUENCE reports_id_seq RESTART WITH 1;
 ALTER SEQUENCE notifications_id_seq RESTART WITH 1;
 ALTER SEQUENCE reviews_id_seq RESTART WITH 1;
+ALTER SEQUENCE roommate_profiles_id_seq RESTART WITH 1;
+ALTER SEQUENCE roommate_matches_id_seq RESTART WITH 1;
 
 -- ====================================================================
 -- 3. TẠO TÀI KHOẢN NGƯỜI DÙNG (Mật khẩu mặc định là: 123456)
@@ -35,10 +40,14 @@ INSERT INTO users (email, password, full_name, phone_number, role, kyc_status, i
 ('landlord3@rentspace.com', '$2a$12$hlBeNhhPHUOmbFYCWPSw2OmSRWiMXriiHUKMswuYod0XQu0mgMqYu', 'Lê Hoàng Nam (Homestay)', '0901000003', 'LANDLORD', 'PENDING', true, false),
 
 -- Tenants (Người thuê tìm phòng)
-('tenant1@rentspace.com', '$2a$12$hlBeNhhPHUOmbFYCWPSw2OmSRWiMXriiHUKMswuYod0XQu0mgMqYu', 'Phan Minh Tuấn (Sinh viên)', '0901000004', 'TENANT', 'PENDING', true, true),
+('tenant1@rentspace.com', '$2a$12$hlBeNhhPHUOmbFYCWPSw2OmSRWiMXriiHUKMswuYod0XQu0mgMqYu', 'Phan Minh Tuấn (Sinh viên)', '0901000004', 'TENANT', 'VERIFIED', true, true),
 ('tenant2@rentspace.com', '$2a$12$hlBeNhhPHUOmbFYCWPSw2OmSRWiMXriiHUKMswuYod0XQu0mgMqYu', 'Vũ Thị Hồng (Nhân viên VP)', '0901000005', 'TENANT', 'VERIFIED', true, true),
-('tenant3@rentspace.com', '$2a$12$hlBeNhhPHUOmbFYCWPSw2OmSRWiMXriiHUKMswuYod0XQu0mgMqYu', 'Đỗ Anh Dũng', '0901000006', 'TENANT', 'PENDING', true, false),
-('tenant4@rentspace.com', '$2a$12$hlBeNhhPHUOmbFYCWPSw2OmSRWiMXriiHUKMswuYod0XQu0mgMqYu', 'Bùi Lan Anh', '0901000007', 'TENANT', 'VERIFIED', true, true);
+('tenant3@rentspace.com', '$2a$12$hlBeNhhPHUOmbFYCWPSw2OmSRWiMXriiHUKMswuYod0XQu0mgMqYu', 'Đỗ Anh Dũng (KYC Pending)', '0901000006', 'TENANT', 'PENDING', true, false),
+('tenant4@rentspace.com', '$2a$12$hlBeNhhPHUOmbFYCWPSw2OmSRWiMXriiHUKMswuYod0XQu0mgMqYu', 'Bùi Lan Anh', '0901000007', 'TENANT', 'VERIFIED', true, true),
+('tenant5@rentspace.com', '$2a$12$hlBeNhhPHUOmbFYCWPSw2OmSRWiMXriiHUKMswuYod0XQu0mgMqYu', 'Nguyễn Minh Hoàng (Hà Nội)', '0901000008', 'TENANT', 'VERIFIED', true, true),
+('tenant6@rentspace.com', '$2a$12$hlBeNhhPHUOmbFYCWPSw2OmSRWiMXriiHUKMswuYod0XQu0mgMqYu', 'Lê Thảo Vy (TP. HCM)', '0901000009', 'TENANT', 'VERIFIED', true, true),
+('tenant7@rentspace.com', '$2a$12$hlBeNhhPHUOmbFYCWPSw2OmSRWiMXriiHUKMswuYod0XQu0mgMqYu', 'Phạm Quốc Anh (Hà Nội)', '0901000010', 'TENANT', 'VERIFIED', true, true),
+('tenant8@rentspace.com', '$2a$12$hlBeNhhPHUOmbFYCWPSw2OmSRWiMXriiHUKMswuYod0XQu0mgMqYu', 'Trần Thu Hà (TP. HCM)', '0901000011', 'TENANT', 'VERIFIED', true, true);
 
 
 -- ====================================================================
@@ -180,3 +189,76 @@ INSERT INTO notifications (user_id, title, content, type, is_read, created_at) V
 -- Thông báo hệ thống cho Admin
 ((SELECT id FROM users WHERE email = 'admin@rentspace.com'), 
  'Có tin đăng mới đang chờ duyệt', 'Chủ nhà Lê Hoàng Nam vừa gửi yêu cầu đăng duyệt tin mới tại Quận 3, TP.HCM.', 'SYSTEM', false, NOW() - INTERVAL '4 days');
+
+
+-- ====================================================================
+-- 10. TẠO HỒ SƠ TÌM BẠN Ở GHÉP (ROOMMATE PROFILES)
+-- ====================================================================
+INSERT INTO roommate_profiles (user_id, gender, occupation, budget_min, budget_max, preferred_area, move_in_date, bio, is_active, created_at, updated_at) VALUES
+-- tenant1 (Nam, Sinh viên, Cầu Giấy, Hà Nội)
+((SELECT id FROM users WHERE email = 'tenant1@rentspace.com'), 'Nam', 'Sinh viên', 1000000, 2500000, 'Cầu Giấy, Hà Nội', CURRENT_DATE + 5, 'Mình là Tuấn, sinh viên Bách Khoa, muốn tìm bạn nam ở ghép khu vực Cầu Giấy sạch sẽ, gọn gàng.', true, NOW(), NOW()),
+
+-- tenant2 (Nữ, VP, Quận 1, Hồ Chí Minh)
+((SELECT id FROM users WHERE email = 'tenant2@rentspace.com'), 'Nữ', 'Nhân viên văn phòng', 2500000, 4500000, 'Quận 1, Hồ Chí Minh', CURRENT_DATE + 10, 'Mình tên Hồng, đang làm văn phòng ở Quận 1, thích nuôi mèo, tìm bạn nữ hòa đồng, tôn trọng không gian riêng.', true, NOW(), NOW()),
+
+-- tenant3 (Nam, Đà Nẵng nhưng KYC PENDING -> Không match)
+((SELECT id FROM users WHERE email = 'tenant3@rentspace.com'), 'Nam', 'Tự do', 1500000, 3000000, 'Liên Chiểu, Đà Nẵng', CURRENT_DATE + 7, 'Mình là Dũng, tìm bạn ghép ở Đà Nẵng.', true, NOW(), NOW()),
+
+-- tenant4 (Nữ, VP, Quận 12, Hồ Chí Minh -> Cùng thành phố khác quận với tenant2)
+((SELECT id FROM users WHERE email = 'tenant4@rentspace.com'), 'Nữ', 'Nhân viên văn phòng', 3000000, 5000000, 'Quận 12, Hồ Chí Minh', CURRENT_DATE + 12, 'Mình là Anh, tìm bạn nữ văn phòng ở ghép khu vực Quận 12 hoặc lân cận.', true, NOW(), NOW()),
+
+-- tenant5 (Nam, Sinh viên, Cầu Giấy, Hà Nội -> Trùng district & city với tenant1)
+((SELECT id FROM users WHERE email = 'tenant5@rentspace.com'), 'Nam', 'Sinh viên', 1200000, 2200000, 'Cầu Giấy, Hà Nội', CURRENT_DATE + 4, 'Minh Hoàng, thích thể thao, không hút thuốc, tìm bạn nam ở ghép Cầu Giấy.', true, NOW(), NOW()),
+
+-- tenant6 (Nữ, Sinh viên, Quận 1, Hồ Chí Minh -> Trùng district & city với tenant2)
+((SELECT id FROM users WHERE email = 'tenant6@rentspace.com'), 'Nữ', 'Sinh viên', 2000000, 4000000, 'Quận 1, Hồ Chí Minh', CURRENT_DATE + 8, 'Thảo Vy, sinh viên năm 3, cần tìm bạn nữ ở chung phòng studio trung tâm Quận 1.', true, NOW(), NOW()),
+
+-- tenant7 (Nam, VP, Nam Từ Liêm, Hà Nội -> Khác quận cùng thành phố với tenant1)
+((SELECT id FROM users WHERE email = 'tenant7@rentspace.com'), 'Nam', 'Nhân viên văn phòng', 1500000, 3000000, 'Nam Từ Liêm, Hà Nội', CURRENT_DATE + 6, 'Quốc Anh, hiền lành, thích yên tĩnh, tìm bạn nam ghép căn hộ Nam Từ Liêm.', true, NOW(), NOW()),
+
+-- tenant8 (Nữ, VP, Quận 3, Hồ Chí Minh -> Khác quận cùng thành phố với tenant2)
+((SELECT id FROM users WHERE email = 'tenant8@rentspace.com'), 'Nữ', 'Nhân viên văn phòng', 2500000, 4000000, 'Quận 3, Hồ Chí Minh', CURRENT_DATE + 9, 'Thu Hà, hướng ngoại, yêu chó mèo, tìm bạn nữ ghép căn hộ dịch vụ Quận 3.', true, NOW(), NOW());
+
+
+-- ====================================================================
+-- 11. TẠO LỐI SỐNG (ROOMMATE LIFESTYLE TAGS)
+-- ====================================================================
+INSERT INTO roommate_lifestyle_tags (profile_id, tag) VALUES
+-- tenant1 (Tuấn): Quiet, Clean, Non-smoker
+((SELECT id FROM roommate_profiles WHERE user_id = (SELECT id FROM users WHERE email = 'tenant1@rentspace.com')), 'Quiet'),
+((SELECT id FROM roommate_profiles WHERE user_id = (SELECT id FROM users WHERE email = 'tenant1@rentspace.com')), 'Clean'),
+((SELECT id FROM roommate_profiles WHERE user_id = (SELECT id FROM users WHERE email = 'tenant1@rentspace.com')), 'Non-smoker'),
+
+-- tenant2 (Hồng): Friendly, Clean, Pet-friendly
+((SELECT id FROM roommate_profiles WHERE user_id = (SELECT id FROM users WHERE email = 'tenant2@rentspace.com')), 'Friendly'),
+((SELECT id FROM roommate_profiles WHERE user_id = (SELECT id FROM users WHERE email = 'tenant2@rentspace.com')), 'Clean'),
+((SELECT id FROM roommate_profiles WHERE user_id = (SELECT id FROM users WHERE email = 'tenant2@rentspace.com')), 'Pet-friendly'),
+
+-- tenant3 (Dũng): Non-smoker, Quiet
+((SELECT id FROM roommate_profiles WHERE user_id = (SELECT id FROM users WHERE email = 'tenant3@rentspace.com')), 'Non-smoker'),
+((SELECT id FROM roommate_profiles WHERE user_id = (SELECT id FROM users WHERE email = 'tenant3@rentspace.com')), 'Quiet'),
+
+-- tenant4 (Anh): Clean, Quiet, Friendly
+((SELECT id FROM roommate_profiles WHERE user_id = (SELECT id FROM users WHERE email = 'tenant4@rentspace.com')), 'Clean'),
+((SELECT id FROM roommate_profiles WHERE user_id = (SELECT id FROM users WHERE email = 'tenant4@rentspace.com')), 'Quiet'),
+((SELECT id FROM roommate_profiles WHERE user_id = (SELECT id FROM users WHERE email = 'tenant4@rentspace.com')), 'Friendly'),
+
+-- tenant5 (Hoàng): Quiet, Clean, Non-smoker
+((SELECT id FROM roommate_profiles WHERE user_id = (SELECT id FROM users WHERE email = 'tenant5@rentspace.com')), 'Quiet'),
+((SELECT id FROM roommate_profiles WHERE user_id = (SELECT id FROM users WHERE email = 'tenant5@rentspace.com')), 'Clean'),
+((SELECT id FROM roommate_profiles WHERE user_id = (SELECT id FROM users WHERE email = 'tenant5@rentspace.com')), 'Non-smoker'),
+
+-- tenant6 (Vy): Friendly, Clean, Quiet
+((SELECT id FROM roommate_profiles WHERE user_id = (SELECT id FROM users WHERE email = 'tenant6@rentspace.com')), 'Friendly'),
+((SELECT id FROM roommate_profiles WHERE user_id = (SELECT id FROM users WHERE email = 'tenant6@rentspace.com')), 'Clean'),
+((SELECT id FROM roommate_profiles WHERE user_id = (SELECT id FROM users WHERE email = 'tenant6@rentspace.com')), 'Quiet'),
+
+-- tenant7 (Quốc Anh): Non-smoker, Friendly, Quiet
+((SELECT id FROM roommate_profiles WHERE user_id = (SELECT id FROM users WHERE email = 'tenant7@rentspace.com')), 'Non-smoker'),
+((SELECT id FROM roommate_profiles WHERE user_id = (SELECT id FROM users WHERE email = 'tenant7@rentspace.com')), 'Friendly'),
+((SELECT id FROM roommate_profiles WHERE user_id = (SELECT id FROM users WHERE email = 'tenant7@rentspace.com')), 'Quiet'),
+
+-- tenant8 (Hà): Friendly, Pet-friendly, Clean
+((SELECT id FROM roommate_profiles WHERE user_id = (SELECT id FROM users WHERE email = 'tenant8@rentspace.com')), 'Friendly'),
+((SELECT id FROM roommate_profiles WHERE user_id = (SELECT id FROM users WHERE email = 'tenant8@rentspace.com')), 'Pet-friendly'),
+((SELECT id FROM roommate_profiles WHERE user_id = (SELECT id FROM users WHERE email = 'tenant8@rentspace.com')), 'Clean');

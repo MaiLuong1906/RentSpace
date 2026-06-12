@@ -15,6 +15,7 @@ import {
   Building2,
   Shield,
   Users,
+  Sparkles,
 } from "lucide-react";
 import { authApi } from "@/lib/api/auth.api";
 import { useChat } from "@/hooks/useChat";
@@ -67,6 +68,7 @@ export default function DashboardLayout({
   const navItems = [
     { path: "/app", icon: Home, label: "Trang chủ", roles: ["tenant", "landlord", "admin"], exact: true },
     { path: "/app/search", icon: Search, label: "Tìm phòng", roles: ["tenant", "landlord", "admin"], exact: false },
+    { path: "/app/roommates", icon: Sparkles, label: "Ở ghép", roles: ["tenant", "landlord", "admin"], exact: false },
     { path: "/app/community", icon: Users, label: "Cộng đồng", roles: ["tenant", "landlord", "admin"], exact: false },
     { path: "/app/messages", icon: MessageSquare, label: "Tin nhắn", roles: ["tenant", "landlord", "admin"], exact: false },
   ];
