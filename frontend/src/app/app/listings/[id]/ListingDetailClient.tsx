@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -20,6 +20,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { useListing } from "@/hooks/useListings";
+import { listingApi } from "@/lib/api/listing.api";
 import { ReviewSection, ReportModal } from "@/components/review";
 import { chatApi } from "@/lib/api/chat";
 import { useChatStore } from "@/store/chatStore";
@@ -58,6 +59,15 @@ export function ListingDetailClient({ listingId }: ListingDetailClientProps) {
   const listing = apiResponse?.data;
 
   const { data: session } = useSession();
+
+  // Track listing view on mount
+  useEffect(() => {
+    if (listingId) {
+      listingApi.trackListingView(listingId).catch((err) => {
+        console.error("Error tracking listing view:", err);
+      });
+    }
+  }, [listingId]);
   const isLandlord = session?.user?.id && Number(session.user.id) === Number(listing?.landlordId);
 
   const [selectedImage, setSelectedImage] = useState(0);

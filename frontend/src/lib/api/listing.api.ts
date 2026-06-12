@@ -7,6 +7,8 @@ import type {
   CreateListingRequest,
   UpdateListingStatusRequest,
   ListingStatus,
+  PromoteListingResponse,
+  PromotedListingStatusResponse,
 } from "@/types/listing.types";
 import type { ApiResponse, PageResponse } from "@/types/api.types";
 
@@ -84,6 +86,24 @@ export const listingApi = {
   // PATCH /api/v1/admin/listings/{id}/status — Admin đổi trạng thái tin đăng
   updateAdminListingStatus: async (id: string | number, status: ListingStatus): Promise<ApiResponse<Listing>> => {
     const response = await apiClient.patch(`/admin/listings/${id}/status`, { status });
+    return response.data;
+  },
+
+  // POST /api/v1/listings/{id}/promote — Khởi tạo thanh toán VNPay để đẩy tin nổi bật
+  promoteListing: async (id: string | number, durationDays: number): Promise<ApiResponse<PromoteListingResponse>> => {
+    const response = await apiClient.post(`/listings/${id}/promote`, { durationDays });
+    return response.data;
+  },
+
+  // GET /api/v1/listings/{id}/promote/status — Xem trạng thái boost tin của listing
+  getPromotionStatus: async (id: string | number): Promise<ApiResponse<PromotedListingStatusResponse>> => {
+    const response = await apiClient.get(`/listings/${id}/promote/status`);
+    return response.data;
+  },
+
+  // POST /api/v1/listings/{id}/view — Ghi nhận lượt xem tin đăng
+  trackListingView: async (id: string | number): Promise<ApiResponse<void>> => {
+    const response = await apiClient.post(`/listings/${id}/view`);
     return response.data;
   },
 };

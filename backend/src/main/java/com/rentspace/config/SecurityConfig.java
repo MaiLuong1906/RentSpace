@@ -33,6 +33,7 @@ public class SecurityConfig {
             "/api/v1/auth/**",
             "/api/v1/users/{userId}",       // Public - xem hồ sơ công khai
             "/api/v1/deposits/webhook/vnpay", // VNPay IPN callback (Public)
+            "/api/v1/listings/*/view",      // Public - ghi nhận lượt xem (cho phép cả ẩn danh)
             "/uploads/**",                  // Static files (ảnh upload local)
             "/swagger-ui/**",
             "/swagger-ui.html",

@@ -111,6 +111,11 @@ export default function HomePage() {
                     className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-shadow block"
                   >
                     <div className="relative h-48 bg-gray-200">
+                      {listing.isPromoted && (
+                        <div className="absolute top-3 left-3 bg-gradient-to-r from-amber-500 to-orange-600 text-white px-2.5 py-1 rounded-full text-xs font-bold shadow-md flex items-center gap-1 animate-pulse z-10">
+                          <span>✨ Nổi bật</span>
+                        </div>
+                      )}
                       <img
                         src={listing.images?.[0]?.imageUrl || "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800&h=600&fit=crop"}
                         alt={listing.title}

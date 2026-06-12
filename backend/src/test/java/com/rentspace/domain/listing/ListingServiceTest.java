@@ -26,6 +26,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -59,6 +60,12 @@ class ListingServiceTest {
 
     @Mock
     private ReviewRepository reviewRepository;
+
+    @Mock
+    private ListingViewRepository listingViewRepository;
+
+    @Mock
+    private PromotedListingRepository promotedListingRepository;
 
     @InjectMocks
     private ListingService listingService;
@@ -121,6 +128,11 @@ class ListingServiceTest {
                 .areaM2(BigDecimal.valueOf(30.0))
                 .status(ListingStatus.ACTIVE)
                 .build();
+
+        lenient().when(promotedListingRepository.findByListingIdAndIsActiveTrue(anyLong()))
+                .thenReturn(Collections.emptyList());
+        lenient().when(promotedListingRepository.findActiveByListingIds(anyList(), any()))
+                .thenReturn(Collections.emptyList());
     }
 
     // =========================================================================
@@ -140,8 +152,10 @@ class ListingServiceTest {
             when(listingRepository.search(eq(ListingStatus.ACTIVE), anyString(), anyString(), any(), any(), any(), any()))
                     .thenReturn(listingPage);
             when(listingMapper.toResponse(any(Listing.class))).thenReturn(listingResponse);
-            when(reviewRepository.getAverageRatingForListing(10L)).thenReturn(4.5);
-            when(reviewRepository.getReviewCountForListing(10L)).thenReturn(12L);
+            when(reviewRepository.getAverageRatingAndCountForListingIds(anyList()))
+                    .thenReturn(Collections.singletonList(new Object[]{10L, 4.5, 12L}));
+            when(promotedListingRepository.findActiveByListingIds(anyList(), any()))
+                    .thenReturn(Collections.emptyList());
 
             // When
             Page<ListingResponse> result = listingService.search("Hồ Chí Minh", "Quận 1", BigDecimal.ZERO, BigDecimal.valueOf(10000000), BigDecimal.ZERO, pageable);
@@ -161,8 +175,10 @@ class ListingServiceTest {
             // Given
             when(listingRepository.findNearby(10.1, 106.2, 5.0, 5)).thenReturn(Collections.singletonList(listing));
             when(listingMapper.toResponse(any(Listing.class))).thenReturn(listingResponse);
-            when(reviewRepository.getAverageRatingForListing(10L)).thenReturn(5.0);
-            when(reviewRepository.getReviewCountForListing(10L)).thenReturn(1L);
+            when(reviewRepository.getAverageRatingAndCountForListingIds(anyList()))
+                    .thenReturn(Collections.singletonList(new Object[]{10L, 5.0, 1L}));
+            when(promotedListingRepository.findActiveByListingIds(anyList(), any()))
+                    .thenReturn(Collections.emptyList());
 
             // When
             List<ListingResponse> result = listingService.findNearby(10.1, 106.2, 5.0, 5);
@@ -537,6 +553,59 @@ class ListingServiceTest {
             assertNotNull(response);
             assertEquals(ListingStatus.REJECTED, listing.getStatus());
             verify(listingRepository).save(listing);
+        }
+    }
+
+    // =========================================================================
+    // RECORD VIEW
+    // =========================================================================
+    @Nested
+    @DisplayName("Ghi nhận lượt xem tin đăng (recordView)")
+    class RecordViewTests {
+
+        @Test
+        @DisplayName("Người xem ẩn danh — ghi nhận thành công không cần kiểm tra trùng")
+        void recordView_anonymous_shouldSaveSuccessfully() {
+            // Given
+            when(listingRepository.findById(10L)).thenReturn(Optional.of(listing));
+
+            // When
+            listingService.recordView(10L, null);
+
+            // Then
+            verify(listingViewRepository).save(any(ListingView.class));
+        }
+
+        @Test
+        @DisplayName("Người xem đã đăng nhập và chưa xem trong 24h — ghi nhận thành công")
+        void recordView_loggedIn_notViewedRecently_shouldSaveSuccessfully() {
+            // Given
+            when(listingRepository.findById(10L)).thenReturn(Optional.of(listing));
+            when(userRepository.findByEmail("viewer@rentspace.com")).thenReturn(Optional.of(tenant));
+            when(listingViewRepository.existsByListingIdAndViewerIdAndViewedAtAfter(eq(10L), eq(2L), any(LocalDateTime.class)))
+                    .thenReturn(false);
+
+            // When
+            listingService.recordView(10L, "viewer@rentspace.com");
+
+            // Then
+            verify(listingViewRepository).save(any(ListingView.class));
+        }
+
+        @Test
+        @DisplayName("Người xem đã đăng nhập và đã xem trong 24h — bỏ qua không lưu")
+        void recordView_loggedIn_alreadyViewedRecently_shouldSkipSaving() {
+            // Given
+            when(listingRepository.findById(10L)).thenReturn(Optional.of(listing));
+            when(userRepository.findByEmail("viewer@rentspace.com")).thenReturn(Optional.of(tenant));
+            when(listingViewRepository.existsByListingIdAndViewerIdAndViewedAtAfter(eq(10L), eq(2L), any(LocalDateTime.class)))
+                    .thenReturn(true);
+
+            // When
+            listingService.recordView(10L, "viewer@rentspace.com");
+
+            // Then
+            verify(listingViewRepository, never()).save(any(ListingView.class));
         }
     }
 }

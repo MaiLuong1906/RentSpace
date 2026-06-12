@@ -15,12 +15,14 @@ public interface ListingRepository extends JpaRepository<Listing, Long> {
 
     @Query("""
             SELECT l FROM Listing l
+            LEFT JOIN PromotedListing p ON p.listing = l AND p.isActive = true AND p.expiresAt > CURRENT_TIMESTAMP
             WHERE l.status = :status
               AND (CAST(:city AS string) IS NULL OR LOWER(l.city) LIKE LOWER(CONCAT('%', CAST(:city AS string), '%')))
               AND (CAST(:district AS string) IS NULL OR LOWER(l.district) LIKE LOWER(CONCAT('%', CAST(:district AS string), '%')))
               AND (:minPrice IS NULL OR l.pricePerMonth >= :minPrice)
               AND (:maxPrice IS NULL OR l.pricePerMonth <= :maxPrice)
               AND (:minArea IS NULL OR l.areaM2 >= :minArea)
+            ORDER BY (CASE WHEN p.id IS NOT NULL THEN 1 ELSE 0 END) DESC, l.createdAt DESC
             """)
     Page<Listing> search(
             @Param("status") ListingStatus status,

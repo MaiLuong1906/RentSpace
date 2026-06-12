@@ -8,6 +8,7 @@ import org.springframework.stereotype.Repository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import java.util.Optional;
+import java.util.List;
 
 @Repository
 public interface ReviewRepository extends JpaRepository<Review, Long> {
@@ -20,4 +21,7 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
 
     @Query("SELECT COUNT(r) FROM Review r WHERE r.listing.id = :listingId")
     Long getReviewCountForListing(@Param("listingId") Long listingId);
+
+    @Query("SELECT r.listing.id, AVG(r.rating), COUNT(r) FROM Review r WHERE r.listing.id IN :listingIds GROUP BY r.listing.id")
+    List<Object[]> getAverageRatingAndCountForListingIds(@Param("listingIds") List<Long> listingIds);
 }

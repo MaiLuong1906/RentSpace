@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { PlusCircle, Edit, Eye, Trash2, ToggleLeft, ToggleRight, Loader2 } from "lucide-react";
+import { PlusCircle, Edit, Eye, Trash2, ToggleLeft, ToggleRight, Loader2, TrendingUp, Calendar, X } from "lucide-react";
 import { useMyListings } from "@/hooks/useListings";
 import { useQueryClient } from "@tanstack/react-query";
 import { listingApi } from "@/lib/api/listing.api";
@@ -33,6 +33,46 @@ export default function MyListingsPage() {
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [error, setError] = useState("");
 
+  // Promote state variables
+  const [promoteModalOpen, setPromoteModalOpen] = useState(false);
+  const [promoteListingId, setPromoteListingId] = useState<string | null>(null);
+  const [promoteListingTitle, setPromoteListingTitle] = useState("");
+  const [durationDays, setDurationDays] = useState(3);
+  const [promoteLoading, setPromoteLoading] = useState(false);
+
+  const handleOpenPromoteModal = (id: string, title: string) => {
+    setPromoteListingId(id);
+    setPromoteListingTitle(title);
+    setDurationDays(3);
+    setPromoteModalOpen(true);
+  };
+
+  const handlePromoteSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!promoteListingId) return;
+
+    setPromoteLoading(true);
+    setError("");
+    try {
+      const response = await listingApi.promoteListing(promoteListingId, durationDays);
+      if (response.data?.paymentUrl) {
+        // Redirect to VNPay
+        window.location.href = response.data.paymentUrl;
+      } else {
+        throw new Error("Không nhận được URL thanh toán từ hệ thống.");
+      }
+    } catch (err: unknown) {
+      console.error("Error promoting listing:", err);
+      const errorMsg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message 
+        || (err as Error)?.message 
+        || "Không thể khởi tạo thanh toán đẩy tin.";
+      setError(errorMsg);
+      setPromoteModalOpen(false);
+    } finally {
+      setPromoteLoading(false);
+    }
+  };
+
   const apiListings = apiResponse?.data?.content || [];
 
   // Transform real backend response to match layout variables
@@ -50,6 +90,8 @@ export default function MyListingsPage() {
     originalStatus: l.status,
     rating: l.averageRating !== undefined && l.averageRating !== null ? l.averageRating : 0,
     reviewCount: l.reviewCount || 0,
+    isPromoted: l.isPromoted || false,
+    promotedExpiresAt: l.promotedExpiresAt,
   }));
 
   const handleToggleStatus = async (id: string, currentStatus: ListingStatus) => {
@@ -212,12 +254,23 @@ export default function MyListingsPage() {
                                   className="w-16 h-16 rounded-lg object-cover"
                                 />
                                 <div>
-                                  <div className="font-semibold text-gray-900 line-clamp-1">
+                                  <div className="font-semibold text-gray-900 line-clamp-1 flex items-center gap-2 flex-wrap">
                                     {listing.title}
+                                    {listing.isPromoted && (
+                                      <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-amber-100 text-amber-800 border border-amber-200 shadow-sm animate-pulse">
+                                        ✨ Nổi bật
+                                      </span>
+                                    )}
                                   </div>
                                   <div className="text-sm text-gray-600">
                                     {listing.district} • {listing.area}m² • {getRoomTypeLabel(listing.roomType)}
                                   </div>
+                                  {listing.isPromoted && listing.promotedExpiresAt && (
+                                    <div className="text-xs text-amber-600 mt-1 flex items-center gap-1 font-semibold">
+                                      <Calendar className="h-3 w-3" />
+                                      Hạn nổi bật: {new Date(listing.promotedExpiresAt).toLocaleDateString("vi-VN")}
+                                    </div>
+                                  )}
                                 </div>
                               </div>
                             </td>
@@ -273,6 +326,16 @@ export default function MyListingsPage() {
                                 >
                                   <Edit className="h-5 w-5" />
                                 </Link>
+                                {listing.status === "ACTIVE" && (
+                                  <button
+                                    onClick={() => handleOpenPromoteModal(listing.id, listing.title)}
+                                    disabled={isOperating}
+                                    className="p-3 text-amber-600 hover:bg-amber-50 rounded-lg disabled:opacity-50 transition-colors"
+                                    title="Đẩy tin nổi bật (Boost)"
+                                  >
+                                    <TrendingUp className="h-5 w-5" />
+                                  </button>
+                                )}
                                 <button
                                   onClick={() => handleToggleStatus(listing.id, listing.originalStatus)}
                                   disabled={isOperating}
@@ -331,6 +394,97 @@ export default function MyListingsPage() {
           )}
         </div>
       </div>
+
+      {/* Promote Listing Modal */}
+      {promoteModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white rounded-2xl shadow-xl max-w-md w-full overflow-hidden border border-gray-100">
+            <div className="flex items-center justify-between p-6 border-b border-gray-100 bg-gray-50/50">
+              <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                <TrendingUp className="h-5 w-5 text-amber-500" />
+                Đẩy tin nổi bật (Boost Tin)
+              </h3>
+              <button
+                onClick={() => setPromoteModalOpen(false)}
+                className="p-1 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100 transition-colors"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handlePromoteSubmit} className="p-6">
+              <p className="text-sm text-gray-600 mb-4">
+                Tin đăng nổi bật sẽ được sắp xếp lên đầu danh sách tìm kiếm, giúp tiếp cận người thuê nhanh gấp <strong className="text-blue-600">5 lần</strong>!
+              </p>
+
+              <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 mb-6">
+                <div className="text-xs text-blue-700 uppercase font-semibold tracking-wider">Tin đang chọn</div>
+                <div className="text-sm font-bold text-gray-900 line-clamp-2 mt-1">{promoteListingTitle}</div>
+              </div>
+
+              <div className="mb-6">
+                <label className="block text-sm font-semibold text-gray-700 mb-3">
+                  Chọn số ngày quảng cáo:
+                </label>
+                <div className="grid grid-cols-3 gap-3">
+                  {[
+                    { days: 1, label: "1 Ngày", price: 20000 },
+                    { days: 3, label: "3 Ngày", price: 60000 },
+                    { days: 7, label: "7 Ngày", price: 140000 },
+                  ].map((pkg) => (
+                    <button
+                      key={pkg.days}
+                      type="button"
+                      onClick={() => setDurationDays(pkg.days)}
+                      className={`flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all ${
+                        durationDays === pkg.days
+                          ? "border-blue-600 bg-blue-50/30 text-blue-600 shadow-md shadow-blue-500/5"
+                          : "border-gray-200 bg-white text-gray-600 hover:bg-gray-50 hover:border-gray-300"
+                      }`}
+                    >
+                      <span className="font-bold text-sm">{pkg.label}</span>
+                      <span className="text-xs text-gray-500 mt-1">{pkg.price.toLocaleString("vi-VN")}đ</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between p-4 bg-amber-50 border border-amber-100 rounded-xl mb-6">
+                <span className="text-sm text-amber-800 font-semibold">Tổng chi phí:</span>
+                <span className="text-lg font-bold text-amber-700">
+                  {(durationDays * 20000).toLocaleString("vi-VN")}đ
+                </span>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => setPromoteModalOpen(false)}
+                  className="flex-1 py-3 border border-gray-200 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-colors"
+                >
+                  Hủy bỏ
+                </button>
+                <button
+                  type="submit"
+                  disabled={promoteLoading}
+                  className="flex-1 py-3 bg-amber-500 hover:bg-amber-600 text-white rounded-xl font-bold transition-all shadow-md shadow-amber-500/10 flex items-center justify-center gap-2 disabled:opacity-50"
+                >
+                  {promoteLoading ? (
+                    <>
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                      Đang tạo đơn...
+                    </>
+                  ) : (
+                    <>
+                      Thanh toán VNPay
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

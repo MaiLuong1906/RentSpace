@@ -94,6 +94,17 @@ public class ListingController {
         return ResponseEntity.ok(ApiResponse.success(listingService.getById(id, email)));
     }
 
+    // ===== POST /api/v1/listings/{id}/view =====
+    @PostMapping("/{id}/view")
+    @Operation(summary = "Ghi nhận lượt xem cho tin đăng")
+    public ResponseEntity<ApiResponse<Void>> recordView(
+            @PathVariable Long id,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        String email = userDetails != null ? userDetails.getUsername() : null;
+        listingService.recordView(id, email);
+        return ResponseEntity.ok(ApiResponse.success("Đã ghi nhận lượt xem", null));
+    }
+
     // ===== POST /api/v1/listings =====
     @PostMapping
     @Operation(summary = "Đăng tin mới [LANDLORD]")

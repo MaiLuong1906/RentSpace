@@ -22,6 +22,8 @@ import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.method.support.ModelAndViewContainer;
 
+import com.rentspace.infrastructure.payment.VnpayWebhookRouter;
+
 import java.time.LocalDate;
 import java.util.Collections;
 import java.util.Map;
@@ -39,6 +41,9 @@ class DepositControllerTest {
 
     @Mock
     private DepositService depositService;
+
+    @Mock
+    private VnpayWebhookRouter vnpayWebhookRouter;
 
     @InjectMocks
     private DepositController depositController;
@@ -115,7 +120,7 @@ class DepositControllerTest {
     void vnpayWebhook_ShouldReturnVnpayResponseMap() throws Exception {
         // Given
         Map<String, String> expectedResponse = Map.of("RspCode", "00", "Message", "Confirm Success");
-        when(depositService.processVnpayWebhook(anyMap())).thenReturn(expectedResponse);
+        when(vnpayWebhookRouter.routeWebhook(anyMap())).thenReturn(expectedResponse);
 
         // When & Then
         mockMvc.perform(get("/api/v1/deposits/webhook/vnpay")

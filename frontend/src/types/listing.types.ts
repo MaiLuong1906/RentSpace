@@ -54,6 +54,9 @@ export interface Listing {
   averageRating?: number;
   reviewCount?: number;
 
+  isPromoted?: boolean;
+  promotedExpiresAt?: string;
+
   createdAt: string;
   updatedAt: string;
 }
@@ -103,5 +106,20 @@ export interface NearbySearchParams {
   lng: number;
   radius?: number;  // km, default 5.0, no max
   limit?: number;   // default 20, max 50
+}
+
+export interface PromoteListingRequest {
+  durationDays: number;
+}
+
+export interface PromoteListingResponse {
+  paymentUrl: string;
+  amount: number;
+}
+
+export interface PromotedListingStatusResponse {
+  isActive: boolean;
+  startsAt?: string;
+  expiresAt?: string;
 }
 
