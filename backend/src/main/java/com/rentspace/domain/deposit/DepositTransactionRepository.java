@@ -34,5 +34,7 @@ public interface DepositTransactionRepository extends JpaRepository<DepositTrans
 
     @Query("SELECT COALESCE(SUM(d.netAmount), 0L) FROM DepositTransaction d WHERE d.landlord.id = :landlordId AND d.status = com.rentspace.domain.deposit.enums.DepositStatus.RELEASED AND d.releasedAt >= :startDate")
     long sumNetAmountByLandlordIdAndReleasedAtAfter(@Param("landlordId") Long landlordId, @Param("startDate") java.time.LocalDateTime startDate);
+
+    long countByLandlordIdAndPaidAtAfter(Long landlordId, java.time.LocalDateTime since);
 }
 

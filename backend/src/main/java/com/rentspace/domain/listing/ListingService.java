@@ -19,6 +19,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.rentspace.domain.review.ReviewRepository;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -33,6 +34,7 @@ public class ListingService {
     private final StorageService storageService;
     private final ListingMapper listingMapper;
     private final ReviewRepository reviewRepository;
+    private final ListingViewRepository listingViewRepository;
 
     // ===== GET /api/v1/listings =====
     public Page<ListingResponse> search(String city, String district,
@@ -289,6 +291,35 @@ public class ListingService {
             throw new BusinessException("Bạn không có quyền chỉnh sửa tin đăng này");
         }
         return listing;
+    }
+
+    @Transactional
+    public void recordView(Long listingId, String userEmail) {
+        Listing listing = listingRepository.findById(listingId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy tin đăng: " + listingId));
+
+        User viewer = null;
+        if (userEmail != null) {
+            viewer = userRepository.findByEmail(userEmail).orElse(null);
+        }
+
+        if (viewer != null) {
+            LocalDateTime limitTime = LocalDateTime.now().minusDays(1);
+            boolean alreadyViewed = listingViewRepository.existsByListingIdAndViewerIdAndViewedAtAfter(
+                    listingId, viewer.getId(), limitTime);
+            if (alreadyViewed) {
+                log.debug("User {} đã xem tin đăng {} trong vòng 24 giờ. Bỏ qua ghi nhận.", userEmail, listingId);
+                return;
+            }
+        }
+
+        ListingView listingView = ListingView.builder()
+                .listing(listing)
+                .viewer(viewer)
+                .build();
+
+        listingViewRepository.save(listingView);
+        log.info("Đã ghi nhận lượt xem cho tin đăng id={} (người xem: {})", listingId, userEmail != null ? userEmail : "Ẩn danh");
     }
 
     private ListingResponse enrichWithRating(ListingResponse response) {

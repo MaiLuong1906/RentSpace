@@ -26,6 +26,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -59,6 +60,9 @@ class ListingServiceTest {
 
     @Mock
     private ReviewRepository reviewRepository;
+
+    @Mock
+    private ListingViewRepository listingViewRepository;
 
     @InjectMocks
     private ListingService listingService;
@@ -537,6 +541,59 @@ class ListingServiceTest {
             assertNotNull(response);
             assertEquals(ListingStatus.REJECTED, listing.getStatus());
             verify(listingRepository).save(listing);
+        }
+    }
+
+    // =========================================================================
+    // RECORD VIEW
+    // =========================================================================
+    @Nested
+    @DisplayName("Ghi nhận lượt xem tin đăng (recordView)")
+    class RecordViewTests {
+
+        @Test
+        @DisplayName("Người xem ẩn danh — ghi nhận thành công không cần kiểm tra trùng")
+        void recordView_anonymous_shouldSaveSuccessfully() {
+            // Given
+            when(listingRepository.findById(10L)).thenReturn(Optional.of(listing));
+
+            // When
+            listingService.recordView(10L, null);
+
+            // Then
+            verify(listingViewRepository).save(any(ListingView.class));
+        }
+
+        @Test
+        @DisplayName("Người xem đã đăng nhập và chưa xem trong 24h — ghi nhận thành công")
+        void recordView_loggedIn_notViewedRecently_shouldSaveSuccessfully() {
+            // Given
+            when(listingRepository.findById(10L)).thenReturn(Optional.of(listing));
+            when(userRepository.findByEmail("viewer@rentspace.com")).thenReturn(Optional.of(tenant));
+            when(listingViewRepository.existsByListingIdAndViewerIdAndViewedAtAfter(eq(10L), eq(2L), any(LocalDateTime.class)))
+                    .thenReturn(false);
+
+            // When
+            listingService.recordView(10L, "viewer@rentspace.com");
+
+            // Then
+            verify(listingViewRepository).save(any(ListingView.class));
+        }
+
+        @Test
+        @DisplayName("Người xem đã đăng nhập và đã xem trong 24h — bỏ qua không lưu")
+        void recordView_loggedIn_alreadyViewedRecently_shouldSkipSaving() {
+            // Given
+            when(listingRepository.findById(10L)).thenReturn(Optional.of(listing));
+            when(userRepository.findByEmail("viewer@rentspace.com")).thenReturn(Optional.of(tenant));
+            when(listingViewRepository.existsByListingIdAndViewerIdAndViewedAtAfter(eq(10L), eq(2L), any(LocalDateTime.class)))
+                    .thenReturn(true);
+
+            // When
+            listingService.recordView(10L, "viewer@rentspace.com");
+
+            // Then
+            verify(listingViewRepository, never()).save(any(ListingView.class));
         }
     }
 }
