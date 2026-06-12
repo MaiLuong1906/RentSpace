@@ -15,6 +15,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -27,6 +28,7 @@ public class PromotedListingController {
     private final PromotedListingService promotedListingService;
 
     @PostMapping("/{id}/promote")
+    @PreAuthorize("hasRole('LANDLORD')")
     @Operation(summary = "Khởi tạo yêu cầu đẩy tin nổi bật (VNPay) [LANDLORD]")
     @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<ApiResponse<PromoteListingResponse>> promote(
@@ -34,10 +36,6 @@ public class PromotedListingController {
             @AuthenticationPrincipal UserDetails userDetails,
             @Valid @RequestBody PromoteListingRequest request,
             HttpServletRequest servletRequest) {
-
-        if (userDetails == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
 
         String ipAddress = servletRequest.getHeader("X-Forwarded-For");
         if (ipAddress == null || ipAddress.isEmpty()) {

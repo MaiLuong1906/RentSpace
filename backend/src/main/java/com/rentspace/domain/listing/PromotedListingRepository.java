@@ -4,6 +4,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import org.springframework.data.repository.query.Param;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -17,4 +18,7 @@ public interface PromotedListingRepository extends JpaRepository<PromotedListing
     List<PromotedListing> findAllExpired(LocalDateTime now);
     
     List<PromotedListing> findByListingIdAndIsActiveTrue(Long listingId);
+
+    @Query("SELECT p FROM PromotedListing p WHERE p.listing.id IN :listingIds AND p.isActive = true AND p.expiresAt > :now")
+    List<PromotedListing> findActiveByListingIds(@Param("listingIds") List<Long> listingIds, @Param("now") LocalDateTime now);
 }

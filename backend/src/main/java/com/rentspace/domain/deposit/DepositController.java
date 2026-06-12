@@ -19,7 +19,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import com.rentspace.common.ratelimit.RateLimit;
 
-import com.rentspace.domain.listing.PromotedListingService;
+import com.rentspace.infrastructure.payment.VnpayWebhookRouter;
 
 import java.util.List;
 import java.util.Map;
@@ -32,7 +32,7 @@ import java.util.Map;
 public class DepositController {
 
     private final DepositService depositService;
-    private final PromotedListingService promotedListingService;
+    private final VnpayWebhookRouter vnpayWebhookRouter;
 
     @GetMapping("/webhook/vnpay")
     @Operation(summary = "VNPay IPN Callback (Public)")
@@ -51,14 +51,7 @@ public class DepositController {
                 }
             }
             
-            String txnRef = params.get("vnp_TxnRef");
-            Map<String, String> response;
-            if (txnRef != null && txnRef.startsWith("PROMOTE_")) {
-                response = promotedListingService.processPromotedWebhook(params);
-            } else {
-                response = depositService.processVnpayWebhook(params);
-            }
-            
+            Map<String, String> response = vnpayWebhookRouter.routeWebhook(params);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             log.error("Error processing VNPay webhook", e);

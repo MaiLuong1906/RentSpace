@@ -42,31 +42,32 @@ public class ListingService {
     public Page<ListingResponse> search(String city, String district,
                                         BigDecimal minPrice, BigDecimal maxPrice,
                                         BigDecimal minArea, Pageable pageable) {
-        return listingRepository
+        Page<ListingResponse> page = listingRepository
                 .search(ListingStatus.ACTIVE, city, district, minPrice, maxPrice, minArea, pageable)
-                .map(listingMapper::toResponse)
-                .map(this::enrichWithRating);
+                .map(listingMapper::toResponse);
+        return enrichPageWithRatingAndPromotion(page);
     }
 
     // ===== GET /api/v1/listings/nearby =====
     public List<ListingResponse> findNearby(double lat, double lng, double radiusKm, int limit) {
-        return listingRepository.findNearby(lat, lng, radiusKm, limit)
+        List<ListingResponse> list = listingRepository.findNearby(lat, lng, radiusKm, limit)
                 .stream()
                 .map(listingMapper::toResponse)
-                .map(this::enrichWithRating)
                 .toList();
+        return enrichListWithRatingAndPromotion(new java.util.ArrayList<>(list));
     }
 
     // ===== GET /api/v1/listings/my =====
     public Page<ListingResponse> getMyListings(String email, ListingStatus status, Pageable pageable) {
+        Page<ListingResponse> page;
         if (status != null) {
-            return listingRepository.findByLandlord_EmailAndStatus(email, status, pageable)
-                    .map(listingMapper::toResponse)
-                    .map(this::enrichWithRating);
+            page = listingRepository.findByLandlord_EmailAndStatus(email, status, pageable)
+                    .map(listingMapper::toResponse);
+        } else {
+            page = listingRepository.findByLandlord_EmailAndStatusNot(email, ListingStatus.DELETED, pageable)
+                    .map(listingMapper::toResponse);
         }
-        return listingRepository.findByLandlord_EmailAndStatusNot(email, ListingStatus.DELETED, pageable)
-                .map(listingMapper::toResponse)
-                .map(this::enrichWithRating);
+        return enrichPageWithRatingAndPromotion(page);
     }
 
     // ===== GET /api/v1/listings/{id} =====
@@ -344,5 +345,56 @@ public class ListingService {
         }
 
         return response;
+    }
+
+    private Page<ListingResponse> enrichPageWithRatingAndPromotion(Page<ListingResponse> page) {
+        if (page == null || page.isEmpty()) return page;
+        enrichListWithRatingAndPromotion(page.getContent());
+        return page;
+    }
+
+    private List<ListingResponse> enrichListWithRatingAndPromotion(List<ListingResponse> list) {
+        if (list == null || list.isEmpty()) return list;
+
+        List<Long> listingIds = list.stream().map(ListingResponse::getId).toList();
+
+        // 1. Batch fetch average rating & count
+        List<Object[]> ratingData = reviewRepository.getAverageRatingAndCountForListingIds(listingIds);
+        java.util.Map<Long, Double> avgRatingMap = new java.util.HashMap<>();
+        java.util.Map<Long, Integer> countMap = new java.util.HashMap<>();
+        for (Object[] row : ratingData) {
+            Long listingId = (Long) row[0];
+            Double avg = (Double) row[1];
+            Long count = (Long) row[2];
+            avgRatingMap.put(listingId, avg != null ? Math.round(avg * 10.0) / 10.0 : 0.0);
+            countMap.put(listingId, count != null ? count.intValue() : 0);
+        }
+
+        // 2. Batch fetch active promotions
+        List<PromotedListing> activePromotions = promotedListingRepository.findActiveByListingIds(listingIds, LocalDateTime.now());
+        java.util.Map<Long, PromotedListing> promotionMap = new java.util.HashMap<>();
+        for (PromotedListing p : activePromotions) {
+            PromotedListing existing = promotionMap.get(p.getListing().getId());
+            if (existing == null || p.getExpiresAt().isAfter(existing.getExpiresAt())) {
+                promotionMap.put(p.getListing().getId(), p);
+            }
+        }
+
+        // 3. Map to responses
+        for (ListingResponse response : list) {
+            Long id = response.getId();
+            response.setAverageRating(avgRatingMap.getOrDefault(id, 0.0));
+            response.setReviewCount(countMap.getOrDefault(id, 0));
+
+            PromotedListing promo = promotionMap.get(id);
+            if (promo != null) {
+                response.setIsPromoted(true);
+                response.setPromotedExpiresAt(promo.getExpiresAt());
+            } else {
+                response.setIsPromoted(false);
+            }
+        }
+
+        return list;
     }
 }

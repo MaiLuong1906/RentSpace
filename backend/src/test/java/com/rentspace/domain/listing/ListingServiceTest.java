@@ -131,6 +131,8 @@ class ListingServiceTest {
 
         lenient().when(promotedListingRepository.findByListingIdAndIsActiveTrue(anyLong()))
                 .thenReturn(Collections.emptyList());
+        lenient().when(promotedListingRepository.findActiveByListingIds(anyList(), any()))
+                .thenReturn(Collections.emptyList());
     }
 
     // =========================================================================
@@ -150,8 +152,10 @@ class ListingServiceTest {
             when(listingRepository.search(eq(ListingStatus.ACTIVE), anyString(), anyString(), any(), any(), any(), any()))
                     .thenReturn(listingPage);
             when(listingMapper.toResponse(any(Listing.class))).thenReturn(listingResponse);
-            when(reviewRepository.getAverageRatingForListing(10L)).thenReturn(4.5);
-            when(reviewRepository.getReviewCountForListing(10L)).thenReturn(12L);
+            when(reviewRepository.getAverageRatingAndCountForListingIds(anyList()))
+                    .thenReturn(Collections.singletonList(new Object[]{10L, 4.5, 12L}));
+            when(promotedListingRepository.findActiveByListingIds(anyList(), any()))
+                    .thenReturn(Collections.emptyList());
 
             // When
             Page<ListingResponse> result = listingService.search("Hồ Chí Minh", "Quận 1", BigDecimal.ZERO, BigDecimal.valueOf(10000000), BigDecimal.ZERO, pageable);
@@ -171,8 +175,10 @@ class ListingServiceTest {
             // Given
             when(listingRepository.findNearby(10.1, 106.2, 5.0, 5)).thenReturn(Collections.singletonList(listing));
             when(listingMapper.toResponse(any(Listing.class))).thenReturn(listingResponse);
-            when(reviewRepository.getAverageRatingForListing(10L)).thenReturn(5.0);
-            when(reviewRepository.getReviewCountForListing(10L)).thenReturn(1L);
+            when(reviewRepository.getAverageRatingAndCountForListingIds(anyList()))
+                    .thenReturn(Collections.singletonList(new Object[]{10L, 5.0, 1L}));
+            when(promotedListingRepository.findActiveByListingIds(anyList(), any()))
+                    .thenReturn(Collections.emptyList());
 
             // When
             List<ListingResponse> result = listingService.findNearby(10.1, 106.2, 5.0, 5);
