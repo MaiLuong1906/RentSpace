@@ -81,6 +81,7 @@ interface SearchListing {
   createdAt: string;
   rating: number;
   reviewCount: number;
+  isPromoted?: boolean;
 }
 
 export default function SearchPage() {
@@ -172,6 +173,7 @@ export default function SearchPage() {
         createdAt: l.createdAt,
         rating: l.averageRating !== undefined && l.averageRating !== null ? l.averageRating : 0,
         reviewCount: l.reviewCount || 0,
+        isPromoted: l.isPromoted || false,
       };
     });
   }, [standardResponse, nearbyResponse, searchMode]);
@@ -642,14 +644,21 @@ export default function SearchPage() {
                         alt={listing.title}
                         className="w-full h-full object-cover"
                       />
-                      <div className="absolute top-3 right-3 bg-white/95 backdrop-blur-sm px-3 py-1 rounded-full text-sm font-bold text-blue-600 shadow-sm border border-gray-100">
+                      <div className="absolute top-3 right-3 bg-white/95 backdrop-blur-sm px-3 py-1 rounded-full text-sm font-bold text-blue-600 shadow-sm border border-gray-100 animate-fade-in">
                         {formatPrice(listing.price)}/tháng
                       </div>
-                      {listing.landlordVerified && (
-                        <div className="absolute top-3 left-3 bg-emerald-500 text-white px-2.5 py-1 rounded-full text-[10px] font-bold shadow-sm flex items-center gap-1 uppercase tracking-wider">
-                          ✓ Đã KYC
-                        </div>
-                      )}
+                      <div className="absolute top-3 left-3 flex flex-col gap-1.5">
+                        {listing.isPromoted && (
+                          <div className="bg-gradient-to-r from-amber-500 to-amber-600 text-white px-2.5 py-1 rounded-full text-[10px] font-bold shadow-sm flex items-center gap-1 uppercase tracking-wider z-10 animate-pulse">
+                            ✨ Nổi bật
+                          </div>
+                        )}
+                        {listing.landlordVerified && (
+                          <div className="bg-emerald-500 text-white px-2.5 py-1 rounded-full text-[10px] font-bold shadow-sm flex items-center gap-1 uppercase tracking-wider self-start">
+                            ✓ Đã KYC
+                          </div>
+                        )}
+                      </div>
                     </div>
 
                     <div className="p-5 flex-1 flex flex-col justify-between">

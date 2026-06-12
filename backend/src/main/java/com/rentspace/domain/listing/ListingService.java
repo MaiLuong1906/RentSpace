@@ -21,6 +21,7 @@ import com.rentspace.domain.review.ReviewRepository;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -35,6 +36,7 @@ public class ListingService {
     private final ListingMapper listingMapper;
     private final ReviewRepository reviewRepository;
     private final ListingViewRepository listingViewRepository;
+    private final PromotedListingRepository promotedListingRepository;
 
     // ===== GET /api/v1/listings =====
     public Page<ListingResponse> search(String city, String district,
@@ -328,6 +330,19 @@ public class ListingService {
         Long count = reviewRepository.getReviewCountForListing(response.getId());
         response.setAverageRating(avg != null ? Math.round(avg * 10.0) / 10.0 : 0.0);
         response.setReviewCount(count != null ? count.intValue() : 0);
+
+        // Enrich with promotion status
+        List<PromotedListing> activePromotions = promotedListingRepository.findByListingIdAndIsActiveTrue(response.getId());
+        Optional<PromotedListing> currentActive = activePromotions.stream()
+                .filter(p -> p.getExpiresAt().isAfter(LocalDateTime.now()))
+                .findFirst();
+        if (currentActive.isPresent()) {
+            response.setIsPromoted(true);
+            response.setPromotedExpiresAt(currentActive.get().getExpiresAt());
+        } else {
+            response.setIsPromoted(false);
+        }
+
         return response;
     }
 }

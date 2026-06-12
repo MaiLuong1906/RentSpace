@@ -16,6 +16,7 @@ import {
   Shield,
   Users,
   Sparkles,
+  BarChart3,
 } from "lucide-react";
 import { authApi } from "@/lib/api/auth.api";
 import { useChat } from "@/hooks/useChat";
@@ -75,6 +76,7 @@ export default function DashboardLayout({
 
   const landlordItems = [
     { path: "/app/landlord/my-listings", icon: Building2, label: "Quản lý phòng" },
+    { path: "/app/landlord/analytics", icon: BarChart3, label: "Thống kê" },
   ];
 
   const adminItems = [

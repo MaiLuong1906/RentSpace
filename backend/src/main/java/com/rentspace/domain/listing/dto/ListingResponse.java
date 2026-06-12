@@ -43,6 +43,9 @@ public class ListingResponse {
     private Double averageRating;
     private Integer reviewCount;
 
+    private Boolean isPromoted;
+    private LocalDateTime promotedExpiresAt;
+
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

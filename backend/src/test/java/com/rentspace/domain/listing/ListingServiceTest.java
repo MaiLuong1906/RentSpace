@@ -64,6 +64,9 @@ class ListingServiceTest {
     @Mock
     private ListingViewRepository listingViewRepository;
 
+    @Mock
+    private PromotedListingRepository promotedListingRepository;
+
     @InjectMocks
     private ListingService listingService;
 
@@ -125,6 +128,9 @@ class ListingServiceTest {
                 .areaM2(BigDecimal.valueOf(30.0))
                 .status(ListingStatus.ACTIVE)
                 .build();
+
+        lenient().when(promotedListingRepository.findByListingIdAndIsActiveTrue(anyLong()))
+                .thenReturn(Collections.emptyList());
     }
 
     // =========================================================================
