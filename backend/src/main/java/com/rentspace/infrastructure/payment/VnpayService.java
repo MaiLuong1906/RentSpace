@@ -32,6 +32,13 @@ public class VnpayService {
      * Tạo URL thanh toán VNPay 2.1.0
      */
     public String createPaymentUrl(Long amount, String txnRef, String ipAddress) {
+        return createPaymentUrl(amount, txnRef, "Thanh toan dat coc " + txnRef, ipAddress);
+    }
+
+    /**
+     * Tạo URL thanh toán VNPay 2.1.0 với mô tả tùy biến
+     */
+    public String createPaymentUrl(Long amount, String txnRef, String orderInfo, String ipAddress) {
         if (ipAddress != null && ipAddress.contains(",")) {
             ipAddress = ipAddress.split(",")[0].trim();
         }
@@ -46,7 +53,7 @@ public class VnpayService {
         vnp_Params.put("vnp_Amount", String.valueOf(amount * 100));
         vnp_Params.put("vnp_CurrCode", "VND");
         vnp_Params.put("vnp_TxnRef", txnRef);
-        vnp_Params.put("vnp_OrderInfo", "Thanh toan dat coc " + txnRef);
+        vnp_Params.put("vnp_OrderInfo", orderInfo);
         vnp_Params.put("vnp_OrderType", "other");
         vnp_Params.put("vnp_Locale", "vn");
         vnp_Params.put("vnp_ReturnUrl", returnUrl);

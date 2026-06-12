@@ -13,5 +13,8 @@ public interface PromotedListingRepository extends JpaRepository<PromotedListing
     @Query("SELECT p FROM PromotedListing p WHERE p.isActive = true AND p.expiresAt > :now")
     List<PromotedListing> findAllActive(LocalDateTime now);
     
+    @Query("SELECT p FROM PromotedListing p WHERE p.isActive = true AND p.expiresAt <= :now")
+    List<PromotedListing> findAllExpired(LocalDateTime now);
+    
     List<PromotedListing> findByListingIdAndIsActiveTrue(Long listingId);
 }
