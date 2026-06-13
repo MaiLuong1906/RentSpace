@@ -19,6 +19,8 @@ public interface DepositTransactionRepository extends JpaRepository<DepositTrans
     
     List<DepositTransaction> findByListingIdAndStatus(Long listingId, DepositStatus status);
 
+    List<DepositTransaction> findByLandlordIdAndStatus(Long landlordId, DepositStatus status);
+
     @EntityGraph(attributePaths = {"listing", "tenant", "landlord"})
     List<DepositTransaction> findAllByTenantIdOrLandlordIdOrderByCreatedAtDesc(Long tenantId, Long landlordId);
 

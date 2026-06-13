@@ -49,6 +49,7 @@ public class DepositService {
     private final com.rentspace.infrastructure.email.EmailService emailService;
     private final DepositDisputeRepository disputeRepository;
     private final com.rentspace.domain.contract.RentalContractService rentalContractService;
+    private final com.rentspace.domain.payout.PayoutService payoutService;
 
     private static final double PLATFORM_FEE_PERCENT = 0.02; // 2%
     private static final long MAX_PLATFORM_FEE = 100000L; // 100,000 VND
@@ -452,6 +453,9 @@ public class DepositService {
         transaction.setReleasedAt(LocalDateTime.now());
         depositRepository.save(transaction);
 
+        // Trigger Payout
+        payoutService.createPayoutRequest(transaction);
+
         // Log event
         logEvent(transaction, "MOVE_IN_CONFIRMED", currentUser, "Người thuê xác nhận đã nhận phòng. Tiền đặt cọc được giải ngân.");
 
@@ -558,6 +562,10 @@ public class DepositService {
         } else if (resolution == DisputeStatus.RESOLVED_LANDLORD) {
             transaction.setStatus(DepositStatus.RELEASED);
             transaction.setReleasedAt(LocalDateTime.now());
+            
+            // Trigger Payout
+            payoutService.createPayoutRequest(transaction);
+
             logEvent(transaction, "DISPUTE_RESOLVED_RELEASE", admin, "Admin giải quyết tranh chấp: Giải ngân tiền cọc cho chủ nhà. Lý do: " + resolutionNote);
             
             // Generate and save contract PDF
@@ -613,6 +621,9 @@ public class DepositService {
             transaction.setStatus(DepositStatus.RELEASED);
             transaction.setReleasedAt(now);
             depositRepository.save(transaction);
+
+            // Trigger Payout
+            payoutService.createPayoutRequest(transaction);
             
             logEvent(transaction, "AUTO_RELEASED", null, "Hệ thống tự động giải ngân tiền đặt cọc sau thời hạn release deadline.");
             
