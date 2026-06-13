@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
-import { Users, Home, Shield, Flag, Clock, UserCheck, ShieldAlert, AlertTriangle } from "lucide-react";
+import { Users, Home, Shield, Flag, Clock, UserCheck, ShieldAlert, AlertTriangle, CreditCard } from "lucide-react";
 import { userApi } from "@/lib/api/user.api";
 import { listingApi } from "@/lib/api/listing.api";
 import { kycApi } from "@/lib/api/kyc.api";
@@ -158,7 +158,7 @@ export default function AdminDashboard() {
         </div>
 
         {/* Quick Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6 mb-8">
           <Link
             href="/app/admin/kyc"
             className="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-shadow flex flex-col justify-between"
@@ -249,6 +249,24 @@ export default function AdminDashboard() {
               </div>
             </div>
             <div className="text-sm text-amber-600 font-semibold mt-2">
+              Xem tất cả →
+            </div>
+          </Link>
+
+          <Link
+            href="/app/admin/payouts"
+            className="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-shadow flex flex-col justify-between"
+          >
+            <div className="flex items-center gap-4 mb-4">
+              <div className="p-3 bg-green-100 rounded-lg flex-shrink-0">
+                <CreditCard className="h-8 w-8 text-green-600" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold">Đối soát</h3>
+                <p className="text-xs text-gray-600">Giải ngân tiền cọc chủ nhà</p>
+              </div>
+            </div>
+            <div className="text-sm text-green-600 font-semibold mt-2">
               Xem tất cả →
             </div>
           </Link>

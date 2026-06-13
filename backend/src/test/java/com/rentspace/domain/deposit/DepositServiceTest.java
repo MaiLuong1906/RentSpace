@@ -68,6 +68,9 @@ class DepositServiceTest {
     @Mock
     private com.rentspace.domain.contract.RentalContractService rentalContractService;
 
+    @Mock
+    private com.rentspace.domain.payout.PayoutService payoutService;
+
     private DepositService depositService;
 
     private User tenant;
@@ -121,7 +124,8 @@ class DepositServiceTest {
                 notificationService,
                 emailService,
                 disputeRepository,
-                rentalContractService
+                rentalContractService,
+                payoutService
         );
 
         lenient().when(redisTemplate.hasKey(anyString())).thenReturn(false);
