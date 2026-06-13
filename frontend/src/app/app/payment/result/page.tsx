@@ -1,143 +1,233 @@
 "use client";
 
-import React, { useEffect, useState, Suspense } from "react";
+import React, { useEffect, useState, Suspense, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { CheckCircle, XCircle, ShieldCheck, ArrowRight, Home, CreditCard, Sparkles } from "lucide-react";
+import {
+  CheckCircle,
+  XCircle,
+  ShieldCheck,
+  ArrowRight,
+  Home,
+  CreditCard,
+  Sparkles,
+  Loader2,
+  Clock,
+} from "lucide-react";
 import apiClient from "@/lib/api/axios";
+
+// ── Kiểu nguồn callback ──
+type GatewaySource = "VNPAY" | "MOMO" | "UNKNOWN";
+type PaymentStatus = "loading" | "success" | "failed";
+
+function detectGateway(searchParams: URLSearchParams): GatewaySource {
+  if (searchParams.get("vnp_ResponseCode")) return "VNPAY";
+  // MoMo callback có param resultCode hoặc orderId không bắt đầu bằng vnp_
+  if (searchParams.get("resultCode") !== null || searchParams.get("orderId")) return "MOMO";
+  return "UNKNOWN";
+}
+
+function formatPrice(price: number) {
+  return new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(price);
+}
 
 function PaymentResultInner() {
   const searchParams = useSearchParams();
-  const [status, setStatus] = useState<"success" | "failed" | "loading">("loading");
-  
-  const responseCode = searchParams.get("vnp_ResponseCode");
-  const txnRef = searchParams.get("vnp_TxnRef");
-  const amountStr = searchParams.get("vnp_Amount");
-  const transactionNo = searchParams.get("vnp_BankCode");
-  
-  const amount = amountStr ? Number(amountStr) / 100 : 0; // VNPay multiplies by 100
+  const [status, setStatus] = useState<PaymentStatus>("loading");
+  const [countdown, setCountdown] = useState(5);
+  const [gateway, setGateway] = useState<GatewaySource>("UNKNOWN");
+
+  // ── VNPay params ──
+  const vnpResponseCode = searchParams.get("vnp_ResponseCode");
+  const vnpTxnRef = searchParams.get("vnp_TxnRef");
+  const vnpAmountStr = searchParams.get("vnp_Amount");
+  const vnpBankCode = searchParams.get("vnp_BankCode");
+  const vnpAmount = vnpAmountStr ? Number(vnpAmountStr) / 100 : 0;
+
+  // ── MoMo params ──
+  const momoResultCode = searchParams.get("resultCode");
+  const momoOrderId = searchParams.get("orderId");
+  const momoAmountStr = searchParams.get("amount");
+  const momoTransId = searchParams.get("transId");
+  const momoAmount = momoAmountStr ? Number(momoAmountStr) : 0;
+
+  const triggerWebhook = useCallback(async () => {
+    const detected = detectGateway(searchParams);
+    setGateway(detected);
+
+    try {
+      const params: Record<string, string> = {};
+      searchParams.forEach((v, k) => { params[k] = v; });
+
+      if (detected === "VNPAY") {
+        // Kích hoạt webhook VNPay qua GET (cập nhật DB khi test local)
+        await apiClient.get("/deposits/webhook/vnpay", { params });
+        setStatus(vnpResponseCode === "00" ? "success" : "failed");
+
+      } else if (detected === "MOMO") {
+        // Kích hoạt webhook MoMo qua POST
+        await apiClient.post("/deposits/webhook/momo", params);
+        setStatus(momoResultCode === "0" ? "success" : "failed");
+
+      } else {
+        setStatus("failed");
+      }
+    } catch {
+      // Kể cả lỗi mạng vẫn hiển thị kết quả dựa vào param
+      const isVnpayOk = vnpResponseCode === "00";
+      const isMomoOk = momoResultCode === "0";
+      setStatus(isVnpayOk || isMomoOk ? "success" : "failed");
+    }
+  }, [searchParams, vnpResponseCode, momoResultCode]);
+
+  // Tính txnRef & amount chung cho cả 2 cổng
+  const txnRef = vnpTxnRef ?? momoOrderId ?? null;
+  const amount = gateway === "MOMO" ? momoAmount : vnpAmount;
+  const isPromote = txnRef?.startsWith("PROMOTE_");
+  const bankInfo = gateway === "VNPAY" ? (vnpBankCode || "VNPay") : (momoTransId ? `MoMo #${momoTransId}` : "MoMo Wallet");
+  const redirectTarget = isPromote ? "/app/landlord/my-listings" : "/app/deposits";
 
   useEffect(() => {
-    const triggerWebhookAndVerify = async () => {
-      try {
-        // Collect all query parameters from searchParams
-        const params: Record<string, string> = {};
-        searchParams.forEach((value, key) => {
-          params[key] = value;
-        });
+    const timer = setTimeout(() => {
+      triggerWebhook();
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [triggerWebhook]);
 
-        // Call backend webhook to update the transaction status
-        // Since localhost webhook isn't directly reachable by VNPay in local test,
-        // calling it here ensures the database updates on redirect.
-        await apiClient.get("/deposits/webhook/vnpay", { params });
-        
-        if (responseCode === "00") {
-          setTimeout(() => setStatus("success"), 0);
-        } else {
-          setTimeout(() => setStatus("failed"), 0);
+  // ── Auto-redirect countdown sau khi có kết quả ──
+  useEffect(() => {
+    if (status === "loading") return;
+    const timer = setInterval(() => {
+      setCountdown((c) => {
+        if (c <= 1) {
+          clearInterval(timer);
+          return 0;
         }
-      } catch (error) {
-        console.error("Error triggering payment webhook:", error);
-        setTimeout(() => setStatus("failed"), 0);
-      }
-    };
+        return c - 1;
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [status]);
 
-    if (responseCode) {
-      triggerWebhookAndVerify();
-    } else {
-      setTimeout(() => setStatus("failed"), 0);
+  // Thực hiện redirect khi đếm ngược về 0
+  useEffect(() => {
+    if (countdown === 0 && status !== "loading") {
+      window.location.href = redirectTarget;
     }
-  }, [responseCode, searchParams]);
+  }, [countdown, status, redirectTarget]);
 
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(price);
-  };
-
+  // ── Loading ──
   if (status === "loading") {
     return (
-      <div className="min-h-[80vh] flex items-center justify-center bg-gray-50/50 py-12 px-4 sm:px-6 lg:px-8 animate-fade-in">
-        <div className="max-w-md w-full bg-white rounded-3xl shadow-xl p-8 text-center space-y-4 border border-gray-100">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <h2 className="text-lg font-bold text-gray-800">Đang kiểm tra kết quả thanh toán...</h2>
-          <p className="text-xs text-gray-400">Vui lòng không đóng trình duyệt hoặc tải lại trang.</p>
+      <div className="min-h-[80vh] flex items-center justify-center bg-gradient-to-br from-slate-50 to-gray-100 py-12 px-4">
+        <div className="max-w-md w-full bg-white rounded-3xl shadow-xl p-10 text-center space-y-5 border border-gray-100">
+          <div className="relative flex justify-center">
+            <div className="absolute inset-0 m-auto w-16 h-16 rounded-full bg-blue-50 animate-ping opacity-70" />
+            <div className="relative p-4 bg-blue-50 rounded-full text-blue-500">
+              <ShieldCheck className="h-8 w-8" />
+            </div>
+          </div>
+          <div className="space-y-1">
+            <h2 className="text-lg font-bold text-gray-800">Đang xác nhận giao dịch...</h2>
+            <p className="text-xs text-gray-400">Vui lòng không đóng trình duyệt.</p>
+          </div>
+          <Loader2 className="h-6 w-6 text-blue-500 animate-spin mx-auto" />
         </div>
       </div>
     );
   }
 
+  // ── Success ──
   if (status === "success") {
-    const isPromote = txnRef?.startsWith("PROMOTE_");
     return (
-      <div className="min-h-[80vh] flex items-center justify-center bg-gray-50/50 py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-md w-full bg-white rounded-3xl shadow-xl border border-emerald-50 overflow-hidden transform transition-all duration-350 scale-100 hover:shadow-2xl">
-          {/* Header Banner */}
-          <div className={`bg-gradient-to-br ${isPromote ? "from-amber-500 to-orange-600" : "from-emerald-500 to-teal-600"} px-6 py-8 text-center text-white relative`}>
-            <div className="absolute top-3 right-3 opacity-15">
-              {isPromote ? <Sparkles size={120} /> : <ShieldCheck size={120} />}
+      <div className="min-h-[80vh] flex items-center justify-center bg-gradient-to-br from-slate-50 to-gray-100 py-12 px-4">
+        <div className="max-w-md w-full bg-white rounded-3xl shadow-xl border border-emerald-100 overflow-hidden">
+
+          {/* Header banner */}
+          <div className={`px-6 py-8 text-center text-white relative overflow-hidden
+            ${isPromote
+              ? "bg-gradient-to-br from-amber-500 to-orange-600"
+              : gateway === "MOMO"
+                ? "bg-gradient-to-br from-pink-500 to-rose-600"
+                : "bg-gradient-to-br from-emerald-500 to-teal-600"
+            }`}>
+            <div className="absolute -right-6 -top-6 opacity-10">
+              {isPromote ? <Sparkles size={130} /> : <ShieldCheck size={130} />}
             </div>
-            <div className="inline-flex p-3 bg-white/20 backdrop-blur-md rounded-full mb-3 text-white">
-              {isPromote ? (
-                <Sparkles className="h-10 w-10 text-white fill-amber-500" />
-              ) : (
-                <CheckCircle className="h-10 w-10 text-white fill-emerald-500" />
-              )}
+            <div className="inline-flex p-3 bg-white/25 backdrop-blur-md rounded-full mb-3 text-white ring-2 ring-white/30">
+              {isPromote
+                ? <Sparkles className="h-10 w-10 fill-amber-300" />
+                : <CheckCircle className="h-10 w-10 fill-white/30" />}
             </div>
-            <h1 className="text-2xl font-bold tracking-tight">
-              {isPromote ? "Đẩy Tin Nổi Bật Thành Công" : "Thanh Toán Thành Công"}
+            <h1 className="text-2xl font-extrabold tracking-tight">
+              {isPromote ? "Đẩy Tin Thành Công!" : "Thanh Toán Thành Công!"}
             </h1>
-            <p className="text-white/90 text-xs mt-1 font-medium">
-              {isPromote ? "Tin đăng của bạn đã được gắn nhãn nổi bật" : "Giao dịch đã được hệ thống ký xác thực"}
+            <p className="text-white/85 text-xs mt-1 font-medium">
+              {gateway === "MOMO" ? "Giao dịch xác nhận qua Ví MoMo" : "Giao dịch được ký xác thực bởi VNPay"}
             </p>
           </div>
 
-          <div className="p-8 space-y-6">
-            {/* Payment Details Card */}
-            <div className="bg-gray-50 rounded-2xl p-5 border border-gray-100 space-y-3.5 text-sm">
-              <div className="flex justify-between items-center text-gray-500">
-                <span>{isPromote ? "Mã giao dịch đẩy tin:" : "Mã giao dịch đặt cọc:"}</span>
+          <div className="p-7 space-y-5">
+            {/* Details */}
+            <div className="bg-gray-50 rounded-2xl p-4 border border-gray-100 divide-y divide-dashed divide-gray-200 text-sm">
+              <div className="flex justify-between py-2.5 text-gray-500">
+                <span>Mã giao dịch:</span>
                 <span className="font-bold text-gray-800">#{txnRef || "N/A"}</span>
               </div>
-              <div className="flex justify-between items-center text-gray-500">
-                <span>Ngân hàng thanh toán:</span>
-                <span className="font-semibold text-gray-800">{transactionNo || "NCB"}</span>
+              <div className="flex justify-between py-2.5 text-gray-500">
+                <span>Phương thức:</span>
+                <span className="font-semibold text-gray-800">{bankInfo}</span>
               </div>
-              <div className="flex justify-between items-center text-gray-500 border-t border-dashed border-gray-200 pt-3">
-                <span className="text-gray-700 font-medium">Số tiền thanh toán:</span>
-                <span className={`text-lg font-extrabold ${isPromote ? "text-amber-600" : "text-emerald-600"}`}>{formatPrice(amount)}</span>
+              <div className="flex justify-between py-2.5">
+                <span className="font-medium text-gray-700">Số tiền:</span>
+                <span className={`text-lg font-extrabold ${
+                  isPromote ? "text-amber-600" : gateway === "MOMO" ? "text-pink-600" : "text-emerald-600"
+                }`}>{formatPrice(amount)}</span>
               </div>
             </div>
 
             {/* Note box */}
             {isPromote ? (
               <div className="bg-amber-50 border border-amber-100 rounded-xl p-4 flex gap-3">
-                <Sparkles className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
-                <p className="text-xs text-amber-800 leading-relaxed font-medium">
-                  <strong>Ưu tiên hiển thị:</strong> Tin đăng của bạn hiện đã được đưa lên vị trí đầu tiên của kết quả tìm kiếm/lọc phòng và có nhãn nổi bật giúp tiếp cận hàng nghìn khách thuê.
+                <Sparkles className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
+                <p className="text-xs text-amber-800 leading-relaxed">
+                  <strong>Ưu tiên hiển thị đã kích hoạt!</strong> Tin đăng của bạn đang được đưa lên vị trí hàng đầu.
                 </p>
               </div>
             ) : (
               <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-4 flex gap-3">
-                <ShieldCheck className="h-5 w-5 text-emerald-600 shrink-0 mt-0.5" />
-                <p className="text-xs text-emerald-800 leading-relaxed font-medium">
-                  <strong>Đảm bảo an toàn:</strong> Tiền đặt cọc của bạn đang được RentSpace phong tỏa giữ hộ. 
-                  Chủ nhà sẽ chỉ nhận được tiền khi bạn xác nhận đã dọn vào phòng thành công (hoặc sau 7 ngày kể từ ngày nhận phòng).
+                <ShieldCheck className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
+                <p className="text-xs text-emerald-800 leading-relaxed">
+                  <strong>Escrow đang bảo vệ bạn.</strong> Tiền cọc được giữ an toàn. Chủ nhà chỉ nhận tiền sau khi bạn xác nhận dọn vào phòng.
                 </p>
               </div>
             )}
 
-            {/* Action buttons */}
-            <div className="flex flex-col gap-3 pt-2">
-              <Link 
-                href={isPromote ? "/app/landlord/my-listings" : "/app/deposits"}
-                className={`w-full flex items-center justify-center gap-2 ${isPromote ? "bg-amber-500 hover:bg-amber-600 shadow-amber-100" : "bg-emerald-600 hover:bg-emerald-700 shadow-emerald-100"} text-white py-3 rounded-xl font-bold transition-colors shadow-lg`}
+            {/* Auto redirect countdown */}
+            <div className="flex items-center justify-center gap-2 text-xs text-gray-400">
+              <Clock className="h-3.5 w-3.5" />
+              {countdown > 0
+                ? <span>Tự chuyển trang sau <strong>{countdown}s</strong>...</span>
+                : <span>Đang chuyển trang...</span>
+              }
+            </div>
+
+            {/* Actions */}
+            <div className="flex flex-col gap-2.5">
+              <Link
+                href={redirectTarget}
+                className={`w-full flex items-center justify-center gap-2 text-white py-3 rounded-xl font-bold transition-all shadow-lg
+                  ${isPromote
+                    ? "bg-amber-500 hover:bg-amber-600 shadow-amber-100"
+                    : gateway === "MOMO"
+                      ? "bg-pink-500 hover:bg-pink-600 shadow-pink-100"
+                      : "bg-emerald-600 hover:bg-emerald-700 shadow-emerald-100"
+                  }`}
               >
-                <span>{isPromote ? "Quản lý tin đăng" : "Quản lý đặt cọc"}</span>
+                <span>{isPromote ? "Quản lý tin đăng" : "Xem lịch sử đặt cọc"}</span>
                 <ArrowRight className="h-4 w-4" />
               </Link>
-              <Link
-                href="/app"
-                className="w-full flex items-center justify-center gap-2 bg-gray-100 text-gray-750 py-3 rounded-xl font-semibold hover:bg-gray-200 transition-colors"
-              >
+              <Link href="/app" className="w-full flex items-center justify-center gap-2 bg-gray-100 text-gray-600 py-3 rounded-xl font-semibold hover:bg-gray-200 transition-colors">
                 <Home className="h-4 w-4" />
                 <span>Về trang chủ</span>
               </Link>
@@ -148,43 +238,45 @@ function PaymentResultInner() {
     );
   }
 
+  // ── Failed ──
+  const responseCodeDisplay = vnpResponseCode ?? momoResultCode ?? "Lỗi không xác định";
   return (
-    <div className="min-h-[80vh] flex items-center justify-center bg-gray-50/50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-[80vh] flex items-center justify-center bg-gradient-to-br from-slate-50 to-gray-100 py-12 px-4">
       <div className="max-w-md w-full bg-white rounded-3xl shadow-xl border border-red-50 overflow-hidden">
-        {/* Header Banner */}
-        <div className="bg-gradient-to-br from-red-500 to-rose-600 px-6 py-8 text-center text-white">
-          <div className="inline-flex p-3 bg-white/20 backdrop-blur-md rounded-full mb-3 text-white">
-            <XCircle className="h-10 w-10 text-white fill-red-500" />
+        <div className="bg-gradient-to-br from-red-500 to-rose-600 px-6 py-8 text-center text-white relative overflow-hidden">
+          <div className="absolute -right-6 -top-6 opacity-10">
+            <XCircle size={130} />
           </div>
-          <h1 className="text-2xl font-bold tracking-tight">Thanh Toán Thất Bại</h1>
-          <p className="text-red-100 text-xs mt-1 font-medium">Giao dịch không thành công hoặc đã bị hủy bỏ</p>
+          <div className="inline-flex p-3 bg-white/20 backdrop-blur-md rounded-full mb-3 ring-2 ring-white/20">
+            <XCircle className="h-10 w-10 text-white" />
+          </div>
+          <h1 className="text-2xl font-extrabold tracking-tight">Thanh Toán Thất Bại</h1>
+          <p className="text-red-100 text-xs mt-1 font-medium">Giao dịch không thành công hoặc đã bị hủy</p>
         </div>
 
-        <div className="p-8 space-y-6">
-          <div className="bg-red-50/50 border border-red-100 rounded-2xl p-5 text-center space-y-2">
+        <div className="p-7 space-y-5">
+          <div className="bg-red-50/70 border border-red-100 rounded-2xl p-5 text-center space-y-2">
             <p className="text-sm text-red-700 font-semibold">
-              Mã lỗi giao dịch: {responseCode || "Hủy giao dịch"}
+              Mã lỗi: {responseCodeDisplay}
             </p>
             <p className="text-xs text-gray-500 leading-relaxed">
-              Thanh toán của bạn đã bị từ chối hoặc người dùng hủy thao tác trên cổng VNPay. 
-              Vui lòng thực hiện thanh toán lại hoặc liên hệ bộ phận hỗ trợ nếu tài khoản của bạn đã bị trừ tiền.
+              Thanh toán bị từ chối hoặc bạn đã hủy giao dịch.
+              Nếu tài khoản đã bị trừ tiền nhưng giao dịch thất bại, vui lòng liên hệ hỗ trợ.
             </p>
           </div>
 
-          <div className="flex flex-col gap-3 pt-2">
-            {txnRef ? (
-              <Link 
-                href={txnRef.startsWith("PROMOTE_") ? "/app/landlord/my-listings" : `/app/checkout/${txnRef}`}
+          <div className="flex flex-col gap-2.5">
+            {txnRef && !isPromote && (
+              <Link
+                href={`/app/checkout/${txnRef}`}
                 className="w-full flex items-center justify-center gap-2 bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700 transition-colors shadow-lg shadow-blue-100"
               >
                 <CreditCard className="h-4 w-4" />
-                <span>{txnRef.startsWith("PROMOTE_") ? "Quay lại tin đăng" : "Thanh toán lại"}</span>
+                <span>Thử lại với phương thức khác</span>
               </Link>
-            ) : null}
-            <Link
-              href="/app"
-              className="w-full flex items-center justify-center gap-2 bg-gray-100 text-gray-750 py-3 rounded-xl font-semibold hover:bg-gray-200 transition-colors"
-            >
+            )}
+            <Link href="/app" className="w-full flex items-center justify-center gap-2 bg-gray-100 text-gray-600 py-3 rounded-xl font-semibold hover:bg-gray-200 transition-colors">
+              <Home className="h-4 w-4" />
               <span>Về trang chủ</span>
             </Link>
           </div>
@@ -196,14 +288,16 @@ function PaymentResultInner() {
 
 export default function PaymentResultPage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-[80vh] flex items-center justify-center">
-        <div className="text-center space-y-3">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600 mx-auto"></div>
-          <p className="text-sm text-gray-500 font-semibold">Đang tải kết quả...</p>
+    <Suspense
+      fallback={
+        <div className="min-h-[80vh] flex items-center justify-center">
+          <div className="text-center space-y-3">
+            <Loader2 className="h-8 w-8 border-b-2 text-emerald-600 animate-spin mx-auto" />
+            <p className="text-sm text-gray-500 font-semibold">Đang tải kết quả...</p>
+          </div>
         </div>
-      </div>
-    }>
+      }
+    >
       <PaymentResultInner />
     </Suspense>
   );

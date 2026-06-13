@@ -17,11 +17,23 @@ import {
   Users,
   Sparkles,
   BarChart3,
+  ShieldCheck,
+  ChevronDown,
 } from "lucide-react";
 import { authApi } from "@/lib/api/auth.api";
 import { useChat } from "@/hooks/useChat";
 import { useChatStore } from "@/store/chatStore";
 import { NotificationDropdown } from "@/components/notification";
+
+const getShortName = (fullName?: string | null, email?: string | null) => {
+  if (!fullName) {
+    return email ? email.split("@")[0] : "Thành viên";
+  }
+  // Loại bỏ các phần chú thích trong ngoặc đơn ở cuối tên (ví dụ: "(VP)", "(Tenant)")
+  const cleanName = fullName.replace(/\s*\([^)]*\)\s*$/, "");
+  const parts = cleanName.trim().split(/\s+/);
+  return parts[parts.length - 1];
+};
 
 export default function DashboardLayout({
   children,
@@ -36,7 +48,28 @@ export default function DashboardLayout({
   const userRole = (rawRole?.toLowerCase() || "tenant") as "tenant" | "landlord" | "admin";
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const pathname = usePathname();
+
+  // Đóng dropdown khi chuyển trang
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsUserMenuOpen(false);
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [pathname]);
+
+  // Đóng dropdown khi click ra ngoài
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (!target.closest("#user-dropdown-trigger") && !target.closest("#user-dropdown-menu")) {
+        setIsUserMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   // Tự động đăng xuất nếu Refresh Token hết hạn hoặc không hợp lệ (Silent Session Expiration)
   useEffect(() => {
@@ -171,23 +204,83 @@ export default function DashboardLayout({
             <div className="flex items-center gap-2 ml-auto shrink-0">
               <div className="hidden lg:flex items-center gap-1.5">
                 {status === "authenticated" ? (
-                  <>
+                  <div className="flex items-center gap-3">
                     <NotificationDropdown />
-                    <Link
-                      href="/app/profile"
-                      className="flex items-center gap-2 px-4 py-2.5 rounded-xl hover:bg-gray-50 text-gray-700 font-semibold text-[16px] transition-all whitespace-nowrap"
-                    >
-                      <User className="h-5 w-5 text-gray-500 shrink-0" />
-                      <span>Hồ sơ</span>
-                    </Link>
-                    <button
-                      onClick={handleLogout}
-                      className="flex items-center gap-2 px-4 py-2.5 rounded-xl hover:bg-gray-50 text-red-600 font-semibold text-[16px] transition-all active:scale-95 whitespace-nowrap"
-                    >
-                      <LogOut className="h-5 w-5 shrink-0" />
-                      <span>Đăng xuất</span>
-                    </button>
-                  </>
+                    
+                    {/* User Dropdown Container */}
+                    <div className="relative">
+                      <button
+                        id="user-dropdown-trigger"
+                        onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                        className={`flex items-center gap-2 px-3.5 py-2 rounded-xl hover:bg-gray-105 border border-gray-100 transition-all active:scale-[0.98] cursor-pointer text-gray-700 ${
+                          isUserMenuOpen ? "bg-gray-50 border-gray-200 shadow-sm" : "bg-white"
+                        }`}
+                      >
+                        <div className="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-sm border border-blue-100 uppercase">
+                          {getShortName(session?.user?.fullName, session?.user?.email).charAt(0)}
+                        </div>
+                        <div className="text-left hidden xl:block">
+                          <p className="text-sm font-bold text-gray-800 line-clamp-1 max-w-[120px]">
+                            {getShortName(session?.user?.fullName, session?.user?.email)}
+                          </p>
+                          <p className="text-[10px] text-gray-400 font-semibold uppercase tracking-wider">
+                            {userRole === "admin" ? "Quản trị" : userRole === "landlord" ? "Chủ nhà" : "Người thuê"}
+                          </p>
+                        </div>
+                        <ChevronDown className={`h-4 w-4 text-gray-400 transition-transform duration-200 ${isUserMenuOpen ? "rotate-180" : ""}`} />
+                      </button>
+
+                      {/* Dropdown Menu */}
+                      {isUserMenuOpen && (
+                        <div
+                          id="user-dropdown-menu"
+                          className="absolute right-0 mt-2.5 w-60 bg-white border border-gray-150 rounded-2xl shadow-xl py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-150"
+                        >
+                          {/* User Info Header */}
+                          <div className="px-4.5 py-2.5 border-b border-gray-100">
+                            <p className="text-sm font-bold text-gray-950 truncate">{session?.user?.fullName || "Thành viên"}</p>
+                            <p className="text-xs text-gray-400 truncate mt-0.5">{session?.user?.email}</p>
+                          </div>
+
+                          {/* Menu Items */}
+                          <div className="p-1 space-y-0.5">
+                            <Link
+                              href="/app/profile"
+                              className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-[14px] font-semibold transition-colors ${
+                                isActive("/app/profile") ? "bg-blue-50 text-blue-600" : "text-gray-700 hover:bg-gray-50"
+                              }`}
+                            >
+                              <User className="h-4.5 w-4.5 text-gray-400" />
+                              <span>Hồ sơ cá nhân</span>
+                            </Link>
+
+                            <Link
+                              href="/app/deposits"
+                              className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-[14px] font-semibold transition-colors ${
+                                isActive("/app/deposits") ? "bg-blue-50 text-blue-600" : "text-gray-700 hover:bg-gray-50"
+                              }`}
+                            >
+                              <ShieldCheck className="h-4.5 w-4.5 text-gray-400" />
+                              <span>Lịch sử đặt cọc</span>
+                            </Link>
+                          </div>
+
+                          <div className="border-t border-gray-100 my-1" />
+
+                          {/* Logout Button */}
+                          <div className="p-1">
+                            <button
+                              onClick={handleLogout}
+                              className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-[14px] font-semibold text-red-600 hover:bg-red-50 transition-colors cursor-pointer text-left"
+                            >
+                              <LogOut className="h-4.5 w-4.5" />
+                              <span>Đăng xuất</span>
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 ) : status === "unauthenticated" ? (
                   <>
                     <Link
@@ -304,6 +397,16 @@ export default function DashboardLayout({
               <div className="h-px bg-gray-200 my-2" />
               {status === "authenticated" ? (
                 <>
+                  <Link
+                    href="/app/deposits"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className={`flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-sm transition-all ${
+                      isActive("/app/deposits") ? "bg-blue-50 text-blue-600" : "text-gray-700 hover:bg-gray-50"
+                    }`}
+                  >
+                    <ShieldCheck className="h-5 w-5" />
+                    <span>Đặt cọc của tôi</span>
+                  </Link>
                   <Link
                     href="/app/profile"
                     onClick={() => setIsMobileMenuOpen(false)}

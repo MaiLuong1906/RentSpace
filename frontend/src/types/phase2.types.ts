@@ -1,15 +1,19 @@
 export interface DepositTransaction {
   id: number;
   listingId: number;
+  listingTitle?: string;
   tenantId: number;
+  tenantName?: string;
   landlordId: number;
+  landlordName?: string;
   amount: number;
   platformFee: number;
   netAmount: number;
   status: 'PENDING_PAYMENT' | 'PAID' | 'DISPUTED' | 'RELEASED' | 'REFUNDED' | 'CANCELLED';
-  paymentMethod?: string;
+  paymentMethod?: 'VNPAY' | 'MOMO';
   paymentGatewayRef?: string;
   paymentUrl?: string;
+  paymentMethodDetail?: Record<string, unknown>;
   paidAt?: string;
   releasedAt?: string;
   refundedAt?: string;

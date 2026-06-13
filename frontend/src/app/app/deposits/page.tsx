@@ -266,7 +266,7 @@ export default function DepositsPage() {
                   {/* Room Summary */}
                   <div>
                     <h3 className="text-base font-bold text-gray-900 line-clamp-1">
-                      Mã phòng: {item.listingId} (Tin đăng của {item.landlordId === session?.user?.id ? "bạn" : "chủ nhà"})
+                      {item.listingTitle || `Tin đăng #${item.listingId}`}
                     </h3>
                     <p className="text-xs text-gray-500 mt-0.5">Ngày tạo: {formatDate(item.createdAt)}</p>
                   </div>
@@ -278,7 +278,9 @@ export default function DepositsPage() {
                       <div className="flex items-center gap-1 text-gray-850 font-semibold">
                         <User className="h-3 w-3" />
                         <span>
-                          {isTenant ? `Chủ trọ #${item.landlordId}` : `Người thuê #${item.tenantId}`}
+                          {isTenant
+                            ? (item.landlordName || `Chủ trọ #${item.landlordId}`)
+                            : (item.tenantName || `Người thuê #${item.tenantId}`)}
                         </span>
                       </div>
                     </div>

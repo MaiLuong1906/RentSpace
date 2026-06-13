@@ -12,6 +12,7 @@ import com.rentspace.domain.listing.enums.ListingStatus;
 import com.rentspace.domain.user.User;
 import com.rentspace.domain.user.UserRepository;
 import com.rentspace.infrastructure.payment.VnpayService;
+import com.rentspace.infrastructure.payment.MomoGateway;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -45,6 +46,9 @@ class DepositServiceTest {
 
     @Mock
     private VnpayService vnpayService;
+
+    @Mock
+    private MomoGateway momoGateway;
 
     @Mock
     private DepositMapper depositMapper;
@@ -196,11 +200,12 @@ class DepositServiceTest {
         // Given
         when(userRepository.findByEmail("tenant@example.com")).thenReturn(Optional.of(tenant));
         when(depositRepository.findById(10L)).thenReturn(Optional.of(transaction));
-        when(vnpayService.createPaymentUrl(eq(5000000L), eq("10"), eq("127.0.0.1")))
+        when(vnpayService.getGatewayName()).thenReturn("VNPAY");
+        when(vnpayService.createPaymentUrl(eq(5000000L), eq("10"), eq("Thanh toan dat coc 10"), eq("127.0.0.1")))
                 .thenReturn("http://vnpay.vn/payment");
 
         // When
-        String paymentUrl = depositService.initiatePayment(10L, "127.0.0.1", "tenant@example.com");
+        String paymentUrl = depositService.initiatePayment(10L, "VNPAY", "127.0.0.1", "tenant@example.com");
 
         // Then
         assertEquals("http://vnpay.vn/payment", paymentUrl);
@@ -216,7 +221,7 @@ class DepositServiceTest {
         when(depositRepository.findById(10L)).thenReturn(Optional.of(transaction));
 
         // When & Then
-        assertThrows(BusinessException.class, () -> depositService.initiatePayment(10L, "127.0.0.1", "landlord@example.com"));
+        assertThrows(BusinessException.class, () -> depositService.initiatePayment(10L, "VNPAY", "127.0.0.1", "landlord@example.com"));
         verify(depositRepository, never()).save(any(DepositTransaction.class));
     }
 

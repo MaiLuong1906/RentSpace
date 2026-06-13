@@ -4,6 +4,7 @@ import com.rentspace.common.response.ApiResponse;
 import com.rentspace.domain.deposit.dto.DepositRequest;
 import com.rentspace.domain.deposit.dto.DepositResponse;
 import com.rentspace.domain.deposit.dto.LandlordDepositSummary;
+import com.rentspace.domain.deposit.dto.MomoWebhookRequest;
 import com.rentspace.domain.deposit.dto.PaymentResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -19,7 +20,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import com.rentspace.common.ratelimit.RateLimit;
 
-import com.rentspace.infrastructure.payment.VnpayWebhookRouter;
+import com.rentspace.infrastructure.payment.PaymentWebhookRouter;
 
 import java.util.List;
 import java.util.Map;
@@ -32,7 +33,7 @@ import java.util.Map;
 public class DepositController {
 
     private final DepositService depositService;
-    private final VnpayWebhookRouter vnpayWebhookRouter;
+    private final PaymentWebhookRouter paymentWebhookRouter;
 
     @GetMapping("/webhook/vnpay")
     @Operation(summary = "VNPay IPN Callback (Public)")
@@ -51,13 +52,28 @@ public class DepositController {
                 }
             }
             
-            Map<String, String> response = vnpayWebhookRouter.routeWebhook(params);
+            Map<String, String> response = paymentWebhookRouter.routeVnpayWebhook(params);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             log.error("Error processing VNPay webhook", e);
             return ResponseEntity.ok(Map.of("RspCode", "99", "Message", "Unknown error: " + e.getMessage()));
         }
     }
+
+    @PostMapping("/webhook/momo")
+    @Operation(summary = "MoMo IPN Callback (Public)")
+    public ResponseEntity<Map<String, Object>> momoWebhook(
+            @RequestBody MomoWebhookRequest request) {
+        try {
+            Map<String, Object> response = paymentWebhookRouter.routeMomoWebhook(request.toParamMap());
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            log.error("Error processing MoMo webhook", e);
+            return ResponseEntity.ok(Map.of("resultCode", 99, "message", "Unknown error: " + e.getMessage()));
+        }
+    }
+
+
 
     @PostMapping
     @RateLimit(capacity = 5, durationInSeconds = 60)
@@ -73,10 +89,11 @@ public class DepositController {
 
     @PostMapping("/{id}/initiate-payment")
     @RateLimit(capacity = 5, durationInSeconds = 60)
-    @Operation(summary = "Lấy URL thanh toán VNPay cho giao dịch đặt cọc")
+    @Operation(summary = "Lấy URL thanh toán VNPay hoặc MoMo cho giao dịch đặt cọc")
     @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<ApiResponse<PaymentResponse>> initiatePayment(
             @PathVariable Long id,
+            @RequestParam(value = "method", defaultValue = "VNPAY") String method,
             @AuthenticationPrincipal UserDetails userDetails,
             HttpServletRequest request) {
         String ipAddress = request.getHeader("X-Forwarded-For");
@@ -86,7 +103,7 @@ public class DepositController {
         if (ipAddress == null || ipAddress.isEmpty()) {
             ipAddress = request.getRemoteAddr();
         }
-        String paymentUrl = depositService.initiatePayment(id, ipAddress, userDetails.getUsername());
+        String paymentUrl = depositService.initiatePayment(id, method, ipAddress, userDetails.getUsername());
         return ResponseEntity.ok(ApiResponse.success(new PaymentResponse(paymentUrl)));
     }
 

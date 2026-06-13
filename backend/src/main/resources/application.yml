@@ -109,3 +109,14 @@ vnpay:
   hash-secret: ${VNPAY_HASH_SECRET:none}
   pay-url: ${VNPAY_PAY_URL:https://sandbox.vnpayment.vn/paymentv2/vpcpay.html}
   return-url: ${VNPAY_RETURN_URL:http://localhost:3000/app/payment/result}
+
+# ===== MoMo =====
+# Credentials Sandbox công khai từ tài liệu MoMo Developer (test environment)
+momo:
+  partner-code: ${MOMO_PARTNER_CODE:MOMOBKUN20180529}
+  access-key: ${MOMO_ACCESS_KEY:klm05TvNBzhg7h7j}
+  secret-key: ${MOMO_SECRET_KEY:at67qH6mk8w5Y1nAyMoYKMWACiEi2bsa}
+  pay-url: ${MOMO_PAY_URL:https://test-payment.momo.vn/v2/gateway/api/create}
+  return-url: ${MOMO_RETURN_URL:http://localhost:3000/app/payment/result}
+  ipn-url: ${MOMO_IPN_URL:http://localhost:8080/api/v1/deposits/webhook/momo}
+
