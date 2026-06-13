@@ -174,7 +174,10 @@ public class PayoutService {
         payout.setBankRef(bankRef);
         payout.setNote(note);
         payout.setProcessedAt(LocalDateTime.now());
+        payout.setProcessedBy(adminEmail);
         payout = payoutRepository.save(payout);
+
+        log.info("Admin {} successfully processed payout request {} with status {}", adminEmail, payoutId, status);
 
         // Notify landlord
         try {

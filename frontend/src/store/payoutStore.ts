@@ -83,10 +83,9 @@ export const usePayoutStore = create<PayoutState>((set) => ({
       const res = await payoutApi.getPayoutHistory(page, size);
       if (res.success && res.data) {
         set({ payoutHistory: res.data.content || [] });
-        const data = res.data as any;
         return {
-          totalElements: data.totalElements ?? data.page?.totalElements ?? 0,
-          totalPages: data.totalPages ?? data.page?.totalPages ?? 0
+          totalElements: res.data.totalElements ?? res.data.page?.totalElements ?? 0,
+          totalPages: res.data.totalPages ?? res.data.page?.totalPages ?? 0
         };
       }
       return { totalElements: 0, totalPages: 0 };
@@ -105,10 +104,9 @@ export const usePayoutStore = create<PayoutState>((set) => ({
       const res = await payoutApi.adminGetPayouts(status, page, size);
       if (res.success && res.data) {
         set({ adminPayouts: res.data.content || [] });
-        const data = res.data as any;
         return {
-          totalElements: data.totalElements ?? data.page?.totalElements ?? 0,
-          totalPages: data.totalPages ?? data.page?.totalPages ?? 0
+          totalElements: res.data.totalElements ?? res.data.page?.totalElements ?? 0,
+          totalPages: res.data.totalPages ?? res.data.page?.totalPages ?? 0
         };
       }
       return { totalElements: 0, totalPages: 0 };

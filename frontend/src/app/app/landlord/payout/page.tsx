@@ -311,7 +311,7 @@ export default function LandlordPayoutPage() {
                       type="text"
                       placeholder="Ví dụ: NGUYEN VAN A"
                       value={accountName}
-                      onChange={(e) => setAccountName(e.target.value.toUpperCase())}
+                      onChange={(e) => setAccountName(e.target.value.toUpperCase().replace(/[^A-Z\s]/g, ""))}
                       className="w-full pl-9 pr-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs font-semibold uppercase focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
                     />
                   </div>

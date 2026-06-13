@@ -26,6 +26,7 @@ public class PayoutResponse {
     private String bankRef;
     private LocalDateTime processedAt;
     private String note;
+    private String processedBy;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

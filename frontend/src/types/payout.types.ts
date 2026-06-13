@@ -28,6 +28,7 @@ export interface PayoutTransaction {
   bankRef?: string;
   processedAt?: string;
   note?: string;
+  processedBy?: string;
   createdAt: string;
   updatedAt: string;
 }

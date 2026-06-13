@@ -61,6 +61,9 @@ public class Payout {
     @Column(columnDefinition = "TEXT")
     private String note;
 
+    @Column(name = "processed_by", length = 100)
+    private String processedBy;
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;

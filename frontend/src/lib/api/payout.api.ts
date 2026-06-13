@@ -1,5 +1,5 @@
 import apiClient from "./axios";
-import { ApiResponse } from "@/types/api.types";
+import { ApiResponse, PageResponse } from "@/types/api.types";
 import { 
   LandlordPayoutAccount, 
   PayoutTransaction, 
@@ -26,7 +26,7 @@ export const payoutApi = {
 
   // Landlord: Lấy lịch sử giải ngân của mình
   getPayoutHistory: async (page = 0, size = 10) => {
-    const response = await apiClient.get<ApiResponse<{ content: PayoutTransaction[]; totalElements: number; totalPages: number }>>(
+    const response = await apiClient.get<ApiResponse<PageResponse<PayoutTransaction>>>(
       `/landlord/payouts?page=${page}&size=${size}`
     );
     return response.data;
@@ -34,7 +34,7 @@ export const payoutApi = {
 
   // ADMIN: Xem các yêu cầu giải ngân theo trạng thái
   adminGetPayouts: async (status: PayoutStatus = 'PENDING', page = 0, size = 10) => {
-    const response = await apiClient.get<ApiResponse<{ content: PayoutTransaction[]; totalElements: number; totalPages: number }>>(
+    const response = await apiClient.get<ApiResponse<PageResponse<PayoutTransaction>>>(
       `/admin/payouts?status=${status}&page=${page}&size=${size}`
     );
     return response.data;
