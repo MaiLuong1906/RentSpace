@@ -11,7 +11,7 @@ import com.rentspace.domain.notification.enums.NotificationType;
 import com.rentspace.domain.user.User;
 import com.rentspace.domain.user.UserRepository;
 import com.rentspace.domain.user.enums.KycStatus;
-import com.rentspace.infrastructure.payment.VnpayService;
+import com.rentspace.infrastructure.payment.PaymentGateway;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -33,7 +33,7 @@ public class PromotedListingService {
     private final PromotedListingRepository promotedListingRepository;
     private final ListingRepository listingRepository;
     private final UserRepository userRepository;
-    private final VnpayService vnpayService;
+    private final List<PaymentGateway> paymentGateways;
     private final StringRedisTemplate redisTemplate;
     private final NotificationService notificationService;
 
@@ -81,9 +81,11 @@ public class PromotedListingService {
         promoted.setPaymentRef(txnRef);
         promotedListingRepository.save(promoted);
 
-        // 7. Tạo URL thanh toán VNPay
+        // 7. Tạo URL thanh toán
         String orderInfo = "Day tin noi bat phong: " + listing.getTitle();
-        String paymentUrl = vnpayService.createPaymentUrl(amount, txnRef, orderInfo, ipAddress);
+        String method = request.getMethod() != null ? request.getMethod() : "VNPAY";
+        PaymentGateway gateway = getGateway(method);
+        String paymentUrl = gateway.createPaymentUrl(amount, txnRef, orderInfo, ipAddress);
 
         log.info("Khởi tạo yêu cầu đẩy tin thành công: listingId={}, durationDays={}, amount={}", listingId, request.getDurationDays(), amount);
 
@@ -97,7 +99,7 @@ public class PromotedListingService {
         // Tìm bản ghi đang hoạt động
         List<PromotedListing> activePromotions = promotedListingRepository.findByListingIdAndIsActiveTrue(listingId);
         Optional<PromotedListing> currentActive = activePromotions.stream()
-                .filter(p -> p.getExpiresAt().isAfter(LocalDateTime.now()))
+                .filter(p -> p.getExpiresAt() != null && p.getExpiresAt().isAfter(LocalDateTime.now()))
                 .findFirst();
 
         if (currentActive.isPresent()) {
@@ -119,7 +121,8 @@ public class PromotedListingService {
         log.info("Processing Promoted Webhook with params: {}", params);
 
         // 1. Verify Signature
-        if (!vnpayService.verifySignature(params)) {
+        PaymentGateway gateway = getGateway("VNPAY");
+        if (!gateway.verifySignature(params)) {
             log.error("Invalid VNPay signature for promote webhook");
             return Map.of("RspCode", "97", "Message", "Invalid Checksum");
         }
@@ -196,5 +199,97 @@ public class PromotedListingService {
         redisTemplate.opsForValue().set(redisKey, "1", 7, TimeUnit.DAYS);
 
         return Map.of("RspCode", "00", "Message", "Confirm Success");
+    }
+
+    private PaymentGateway getGateway(String method) {
+        return paymentGateways.stream()
+                .filter(g -> g.getGatewayName().equalsIgnoreCase(method))
+                .findFirst()
+                .orElseThrow(() -> new BusinessException("Cổng thanh toán không hỗ trợ: " + method));
+    }
+
+    @Transactional
+    public Map<String, Object> processPromotedMomoWebhook(Map<String, String> params) {
+        log.info("Processing Promoted MoMo Webhook with params: {}", params);
+
+        // 1. Verify Signature
+        PaymentGateway gateway = getGateway("MOMO");
+        if (!gateway.verifySignature(params)) {
+            log.error("Invalid MoMo signature for promote webhook");
+            return Map.of("resultCode", 98, "message", "Invalid Signature");
+        }
+
+        String txnRef = params.get("orderId");
+        if (txnRef == null || !txnRef.startsWith("PROMOTE_")) {
+            return Map.of("resultCode", 96, "message", "Order not found");
+        }
+
+        // 2. Check Idempotency (Already processed?)
+        String redisKey = "webhook_processed:" + txnRef;
+        if (Boolean.TRUE.equals(redisTemplate.hasKey(redisKey))) {
+            log.info("Webhook for promotion {} was already processed (Redis cache hit)", txnRef);
+            return Map.of("resultCode", 0, "message", "Success");
+        }
+
+        Long promotedId;
+        try {
+            promotedId = Long.parseLong(txnRef.replace("PROMOTE_", ""));
+        } catch (NumberFormatException e) {
+            return Map.of("resultCode", 96, "message", "Order not found");
+        }
+
+        PromotedListing promoted = promotedListingRepository.findById(promotedId).orElse(null);
+        if (promoted == null) {
+            return Map.of("resultCode", 96, "message", "Order not found");
+        }
+
+        if (Boolean.TRUE.equals(promoted.getIsActive())) {
+            log.info("Promotion {} already activated", promotedId);
+            return Map.of("resultCode", 0, "message", "Success");
+        }
+
+        // 3. Check Amount
+        String amountStr = params.get("amount");
+        if (amountStr == null || amountStr.isEmpty()) {
+            return Map.of("resultCode", 95, "message", "Invalid Amount");
+        }
+
+        long amount = Long.parseLong(amountStr);
+        if (amount != promoted.getAmountPaid()) {
+            log.error("Amount mismatch for promotion {}: Expected {}, Got {}", promotedId, promoted.getAmountPaid(), amount);
+            return Map.of("resultCode", 95, "message", "Invalid Amount");
+        }
+
+        // 4. Update Status
+        String resultCode = params.get("resultCode");
+        if ("0".equals(resultCode)) {
+            promoted.setIsActive(true);
+            long durationDays = promoted.getAmountPaid() / PRICE_PER_DAY;
+            promoted.setExpiresAt(LocalDateTime.now().plusDays(durationDays));
+            promotedListingRepository.save(promoted);
+
+            log.info("Promotion {} marked as ACTIVE via MoMo. Expires at {}", promotedId, promoted.getExpiresAt());
+
+            // Gửi thông báo cho chủ nhà
+            try {
+                notificationService.createAndSendNotification(
+                        promoted.getLandlord(),
+                        "Đẩy tin nổi bật thành công",
+                        "Tin đăng \"" + promoted.getListing().getTitle() + "\" của bạn đã được đẩy lên nổi bật trong " + durationDays + " ngày.",
+                        NotificationType.PAYMENT
+                );
+            } catch (Exception e) {
+                log.error("Failed to send promotion success notification", e);
+            }
+        } else {
+            promoted.setIsActive(false);
+            promotedListingRepository.save(promoted);
+            log.warn("Promotion payment {} failed with MoMo resultCode {}", promotedId, resultCode);
+        }
+
+        // Lưu Redis chặn trùng lặp
+        redisTemplate.opsForValue().set(redisKey, "1", 7, TimeUnit.DAYS);
+
+        return Map.of("resultCode", 0, "message", "Success");
     }
 }

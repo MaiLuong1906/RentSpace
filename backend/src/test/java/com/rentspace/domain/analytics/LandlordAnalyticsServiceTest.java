@@ -27,6 +27,10 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 @ExtendWith(MockitoExtension.class)
 class LandlordAnalyticsServiceTest {
 
@@ -41,6 +45,15 @@ class LandlordAnalyticsServiceTest {
 
     @Mock
     private UserRepository userRepository;
+
+    @Mock
+    private StringRedisTemplate redisTemplate;
+
+    @Mock
+    private ValueOperations<String, String> valueOperations;
+
+    @Mock
+    private ObjectMapper objectMapper;
 
     @InjectMocks
     private LandlordAnalyticsService landlordAnalyticsService;
@@ -57,8 +70,8 @@ class LandlordAnalyticsServiceTest {
     }
 
     @Test
-    @DisplayName("Lấy thống kê thành công — trả về đầy đủ số liệu và biểu đồ 30 ngày")
-    void getLandlordAnalytics_success() {
+    @DisplayName("Lấy thống kê thành công — trả về đầy đủ số liệu và biểu đồ 30 ngày (Cache Miss)")
+    void getLandlordAnalytics_success() throws Exception {
         // Given
         LocalDate today = LocalDate.now();
         LocalDate yesterday = today.minusDays(1);
@@ -66,6 +79,9 @@ class LandlordAnalyticsServiceTest {
         List<Object[]> mockDailyViews = new ArrayList<>();
         mockDailyViews.add(new Object[]{java.sql.Date.valueOf(today), 5L});
         mockDailyViews.add(new Object[]{java.sql.Date.valueOf(yesterday), 3L});
+
+        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+        when(valueOperations.get("landlord:analytics:landlord@example.com")).thenReturn(null);
 
         when(userRepository.findByEmail("landlord@example.com")).thenReturn(Optional.of(landlord));
         when(listingViewRepository.countByListing_Landlord_IdAndViewedAtAfter(eq(1L), any(LocalDateTime.class)))
@@ -76,6 +92,7 @@ class LandlordAnalyticsServiceTest {
                 .thenReturn(4L);
         when(listingViewRepository.findDailyViewsForLandlord(eq(1L), any(LocalDateTime.class)))
                 .thenReturn(mockDailyViews);
+        when(objectMapper.writeValueAsString(any())).thenReturn("serialized_json");
 
         // When
         LandlordAnalyticsResponse response = landlordAnalyticsService.getLandlordAnalytics("landlord@example.com");
@@ -105,11 +122,42 @@ class LandlordAnalyticsServiceTest {
                 .filter(d -> d.getViews() == 0L)
                 .count();
         assertEquals(28, zeroCountDays);
+
+        verify(valueOperations).set(eq("landlord:analytics:landlord@example.com"), eq("serialized_json"), eq(15L), any());
+    }
+
+    @Test
+    @DisplayName("Lấy thống kê thành công từ Cache — Cache Hit")
+    void getLandlordAnalytics_cacheHit() throws Exception {
+        // Given
+        LandlordAnalyticsResponse cachedResponse = LandlordAnalyticsResponse.builder()
+                .totalViews(100L)
+                .totalMessages(15L)
+                .totalDeposits(4L)
+                .viewsOverTime(List.of())
+                .build();
+
+        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+        when(valueOperations.get("landlord:analytics:landlord@example.com")).thenReturn("cached_json");
+        when(objectMapper.readValue("cached_json", LandlordAnalyticsResponse.class)).thenReturn(cachedResponse);
+
+        // When
+        LandlordAnalyticsResponse response = landlordAnalyticsService.getLandlordAnalytics("landlord@example.com");
+
+        // Then
+        assertNotNull(response);
+        assertEquals(100L, response.getTotalViews());
+        assertEquals(15L, response.getTotalMessages());
+        assertEquals(4L, response.getTotalDeposits());
+
+        verifyNoInteractions(userRepository, listingViewRepository, conversationRepository, depositTransactionRepository);
     }
 
     @Test
     @DisplayName("Lấy thống kê thất bại — chủ trọ không tồn tại")
     void getLandlordAnalytics_userNotFound() {
+        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+        when(valueOperations.get("landlord:analytics:nonexistent@example.com")).thenReturn(null);
         when(userRepository.findByEmail("nonexistent@example.com")).thenReturn(Optional.empty());
 
         assertThrows(ResourceNotFoundException.class, 

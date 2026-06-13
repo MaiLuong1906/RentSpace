@@ -12,6 +12,9 @@ import com.rentspace.domain.listing.enums.ListingStatus;
 import com.rentspace.domain.user.User;
 import com.rentspace.domain.user.UserRepository;
 import com.rentspace.infrastructure.payment.VnpayService;
+import com.rentspace.infrastructure.payment.MomoGateway;
+import com.rentspace.infrastructure.payment.PaymentGateway;
+import java.util.HashMap;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -39,7 +42,7 @@ public class DepositService {
     private final DepositTransactionEventRepository eventRepository;
     private final ListingRepository listingRepository;
     private final UserRepository userRepository;
-    private final VnpayService vnpayService;
+    private final List<PaymentGateway> paymentGateways;
     private final DepositMapper depositMapper;
     private final org.springframework.data.redis.core.StringRedisTemplate redisTemplate;
     private final com.rentspace.domain.notification.NotificationService notificationService;
@@ -56,7 +59,8 @@ public class DepositService {
         log.info("Processing VNPay Webhook with params: {}", params);
 
         // 1. Verify Signature
-        if (!vnpayService.verifySignature(params)) {
+        PaymentGateway gateway = getGateway("VNPAY");
+        if (!gateway.verifySignature(params)) {
             log.error("Invalid VNPay signature for webhook");
             return Map.of("RspCode", "97", "Message", "Invalid Checksum");
         }
@@ -173,6 +177,134 @@ public class DepositService {
     }
 
     @Transactional
+    public Map<String, Object> processMomoWebhook(Map<String, String> params) {
+        log.info("Processing MoMo Webhook with params: {}", params);
+
+        // 1. Verify Signature
+        PaymentGateway gateway = getGateway("MOMO");
+        if (!gateway.verifySignature(params)) {
+            log.error("Invalid MoMo signature for webhook");
+            return Map.of("resultCode", 98, "message", "Invalid Signature");
+        }
+
+        String orderId = params.get("orderId");
+        if (orderId == null || orderId.isEmpty()) {
+            return Map.of("resultCode", 99, "message", "Order not found");
+        }
+
+        String redisKey = "webhook_processed:momo:" + orderId;
+        if (Boolean.TRUE.equals(redisTemplate.hasKey(redisKey))) {
+            log.info("Webhook for MoMo transaction {} was already processed (Redis cache hit)", orderId);
+            return Map.of("resultCode", 0, "message", "Order already confirmed");
+        }
+
+        Long depositId;
+        try {
+            depositId = Long.parseLong(orderId);
+        } catch (NumberFormatException e) {
+            return Map.of("resultCode", 99, "message", "Order not found");
+        }
+
+        DepositTransaction transaction = depositRepository.findById(depositId).orElse(null);
+        if (transaction == null) {
+            return Map.of("resultCode", 99, "message", "Order not found");
+        }
+
+        // 2. Check Idempotency
+        if (transaction.getStatus() != DepositStatus.PENDING_PAYMENT) {
+            log.info("Transaction {} already processed with status {}", depositId, transaction.getStatus());
+            return Map.of("resultCode", 0, "message", "Order already confirmed");
+        }
+
+        // 3. Check Amount (MoMo amount is numeric string)
+        String momoAmountStr = params.get("amount");
+        if (momoAmountStr == null || momoAmountStr.isEmpty()) {
+            return Map.of("resultCode", 99, "message", "Invalid Amount");
+        }
+
+        long momoAmount = Long.parseLong(momoAmountStr);
+        if (momoAmount != transaction.getAmount()) {
+            log.error("Amount mismatch for MoMo transaction {}: Expected {}, Got {}", depositId, transaction.getAmount(), momoAmount);
+            logEvent(transaction, "PAYMENT_FAILED", null, "Số tiền không khớp (MoMo). Mong đợi: " + transaction.getAmount() + ", Nhận được: " + momoAmount);
+            return Map.of("resultCode", 99, "message", "Invalid Amount");
+        }
+
+        // 4. Update Status based on resultCode
+        String resultCodeStr = params.get("resultCode");
+        String transId = params.get("transId");
+
+        if ("0".equals(resultCodeStr)) {
+            transaction.setStatus(DepositStatus.PAID);
+            transaction.setPaidAt(LocalDateTime.now());
+            transaction.setPaymentGatewayRef(transId);
+            
+            // Set payment detail JSON
+            Map<String, Object> detail = new HashMap<>();
+            detail.put("transId", transId);
+            detail.put("payType", params.get("payType"));
+            detail.put("responseTime", params.get("responseTime"));
+            transaction.setPaymentMethodDetail(detail);
+
+            if (transaction.getMoveInDate() != null) {
+                transaction.setReleaseDeadline(transaction.getMoveInDate().atStartOfDay().plusDays(7));
+            } else {
+                transaction.setReleaseDeadline(LocalDateTime.now().plusDays(10));
+            }
+
+            log.info("Transaction {} marked as PAID via MoMo", depositId);
+            logEvent(transaction, "PAYMENT_SUCCESS", null, "Thanh toán thành công qua MoMo. Ref: " + transId);
+
+            // Send PAID notifications
+            try {
+                // Notify Tenant
+                notificationService.createAndSendNotification(
+                        transaction.getTenant(),
+                        "Thanh toán đặt cọc thành công",
+                        "Bạn đã thanh toán đặt cọc thành công cho tin đăng \"" + transaction.getListing().getTitle() + "\".",
+                        com.rentspace.domain.notification.enums.NotificationType.PAYMENT
+                );
+                // Email Tenant
+                emailService.sendDepositPaidEmail(
+                        transaction.getTenant().getEmail(),
+                        transaction.getTenant().getFullName(),
+                        transaction.getListing().getTitle(),
+                        transaction.getAmount(),
+                        false
+                );
+
+                // Notify Landlord
+                notificationService.createAndSendNotification(
+                        transaction.getLandlord(),
+                        "Đã nhận tiền đặt cọc giữ chỗ",
+                        "Người thuê đã thanh toán đặt cọc thành công cho tin đăng \"" + transaction.getListing().getTitle() + "\". Tiền cọc đang được giữ hộ (Escrow).",
+                        com.rentspace.domain.notification.enums.NotificationType.PAYMENT
+                );
+                // Email Landlord
+                emailService.sendDepositPaidEmail(
+                        transaction.getLandlord().getEmail(),
+                        transaction.getLandlord().getFullName(),
+                        transaction.getListing().getTitle(),
+                        transaction.getAmount(),
+                        true
+                );
+            } catch (Exception e) {
+                log.error("Failed to send payment success notifications for MoMo", e);
+            }
+        } else {
+            transaction.setStatus(DepositStatus.CANCELLED);
+            log.warn("Transaction {} payment failed with MoMo code {}", depositId, resultCodeStr);
+            logEvent(transaction, "PAYMENT_FAILED", null, "Thanh toán thất bại qua MoMo với mã: " + resultCodeStr);
+        }
+
+        depositRepository.save(transaction);
+
+        // Save to Redis to prevent double processing
+        redisTemplate.opsForValue().set(redisKey, "1", 7, java.util.concurrent.TimeUnit.DAYS);
+
+        return Map.of("resultCode", 0, "message", "Confirm Success");
+    }
+
+    @Transactional
     public DepositResponse createDeposit(DepositRequest request, String email) {
         User currentUser = userRepository.findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException("Người dùng không tồn tại"));
@@ -240,7 +372,7 @@ public class DepositService {
     }
 
     @Transactional
-    public String initiatePayment(Long depositId, String ipAddress, String email) {
+    public String initiatePayment(Long depositId, String method, String ipAddress, String email) {
         User currentUser = userRepository.findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException("Người dùng không tồn tại"));
 
@@ -255,13 +387,23 @@ public class DepositService {
             throw new BusinessException("Giao dịch không ở trạng thái CHỜ THANH TOÁN");
         }
 
-        String paymentUrl = vnpayService.createPaymentUrl(transaction.getAmount(), transaction.getId().toString(), ipAddress);
+        PaymentGateway gateway = getGateway(method);
+
+        String orderInfo = "Thanh toan dat coc " + transaction.getId();
+        String paymentUrl = gateway.createPaymentUrl(transaction.getAmount(), transaction.getId().toString(), orderInfo, ipAddress);
         
         transaction.setPaymentUrl(paymentUrl);
-        transaction.setPaymentMethod("VNPAY");
+        transaction.setPaymentMethod(gateway.getGatewayName());
         depositRepository.save(transaction);
 
         return paymentUrl;
+    }
+
+    private PaymentGateway getGateway(String method) {
+        return paymentGateways.stream()
+                .filter(g -> g.getGatewayName().equalsIgnoreCase(method))
+                .findFirst()
+                .orElseThrow(() -> new BusinessException("Cổng thanh toán không hỗ trợ: " + method));
     }
 
     public List<DepositResponse> getMyDeposits(String email) {

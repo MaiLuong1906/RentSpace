@@ -37,4 +37,22 @@ public class PromotedListingScheduler {
         promotedListingRepository.saveAll(expiredPromotions);
         log.info("Successfully deactivated {} expired listing promotions.", expiredPromotions.size());
     }
+
+    /**
+     * Chạy định kỳ mỗi 24 giờ lúc 2:00 sáng để dọn dẹp các yêu cầu đẩy tin chưa thanh toán (isActive = false) 
+     * được tạo quá 24 giờ trước.
+     */
+    @Scheduled(cron = "0 0 2 * * *")
+    @Transactional
+    public void cleanupUnpaidPromotions() {
+        log.info("Starting scheduled job: Cleaning up unpaid promotions...");
+        LocalDateTime threshold = LocalDateTime.now().minusDays(1);
+        List<PromotedListing> unpaidPromotions = promotedListingRepository.findUnpaidOlderThan(threshold);
+        if (unpaidPromotions.isEmpty()) {
+            log.info("No unpaid promotions found for cleanup.");
+            return;
+        }
+        promotedListingRepository.deleteAll(unpaidPromotions);
+        log.info("Successfully cleaned up {} unpaid promotions.", unpaidPromotions.size());
+    }
 }

@@ -26,9 +26,9 @@ export const depositApi = {
     return response.data;
   },
 
-  // Khởi tạo thanh toán VNPay
-  initiatePayment: async (id: number) => {
-    const response = await apiClient.post<ApiResponse<{ paymentUrl: string }>>(`/deposits/${id}/initiate-payment`);
+  // Khởi tạo thanh toán (VNPay hoặc MoMo)
+  initiatePayment: async (id: number, method: 'VNPAY' | 'MOMO' = 'VNPAY') => {
+    const response = await apiClient.post<ApiResponse<{ paymentUrl: string }>>(`/deposits/${id}/initiate-payment?method=${method}`);
     return response.data;
   },
 

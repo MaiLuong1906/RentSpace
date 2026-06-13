@@ -8,8 +8,11 @@ import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Map;
 
 @Entity
 @Table(name = "deposit_transactions", indexes = {
@@ -81,6 +84,10 @@ public class DepositTransaction {
 
     @Column(columnDefinition = "TEXT")
     private String notes;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "payment_method_detail")
+    private Map<String, Object> paymentMethodDetail;
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)

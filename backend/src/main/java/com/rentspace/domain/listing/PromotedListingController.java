@@ -52,7 +52,9 @@ public class PromotedListingController {
     }
 
     @GetMapping("/{id}/promote/status")
-    @Operation(summary = "Lấy trạng thái tin nổi bật của tin đăng")
+    @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "Lấy trạng thái tin nổi bật của tin đăng [AUTHENTICATED]")
+    @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<ApiResponse<PromotedListingStatusResponse>> getStatus(
             @PathVariable Long id) {
         PromotedListingStatusResponse response = promotedListingService.getPromotionStatus(id);

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { Star, Trash2, Pencil, Check, X, Loader2 } from "lucide-react";
 import type { Review } from "@/types/review.types";
 import { formatDistanceToNow } from "date-fns";
@@ -64,10 +65,12 @@ export function ReviewCard({ review, listingId, onDelete, canDelete, canEdit }: 
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center gap-3">
           {review.author.avatarUrl ? (
-            <img
+            <Image
               src={review.author.avatarUrl}
               alt={review.author.fullName}
-              className="w-10 h-10 rounded-full object-cover border border-gray-200 flex-shrink-0"
+              width={40}
+              height={40}
+              className="rounded-full object-cover border border-gray-200 flex-shrink-0"
             />
           ) : (
             <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-base flex-shrink-0">

@@ -14,13 +14,24 @@ public class DepositResponse {
     private Long listingId;
     private String listingTitle;
     private Long tenantId;
+    private String tenantName;     // Tên đầy đủ của người thuê
     private Long landlordId;
+    private String landlordName;   // Tên đầy đủ của chủ trọ
     private Long amount;
     private Long platformFee;
     private Long netAmount;
     private DepositStatus status;
+    private String paymentMethod;
+    private String paymentGatewayRef;
     private String paymentUrl;
+    private java.util.Map<String, Object> paymentMethodDetail;
+    private java.time.LocalDateTime paidAt;
+    private java.time.LocalDateTime releasedAt;
+    private java.time.LocalDateTime refundedAt;
+    private java.time.LocalDateTime releaseDeadline;
     private LocalDate moveInDate;
+    private String notes;
     private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
     private String contractUrl;
 }

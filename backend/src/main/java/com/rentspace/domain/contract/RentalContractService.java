@@ -39,10 +39,10 @@ public class RentalContractService {
             document.open();
 
             // Fonts
-            Font titleFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 18);
-            Font headerFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12);
-            Font normalFont = FontFactory.getFont(FontFactory.HELVETICA, 10);
-            Font boldFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10);
+            Font titleFont = getVietnameseFont(true, 18);
+            Font headerFont = getVietnameseFont(true, 12);
+            Font normalFont = getVietnameseFont(false, 10);
+            Font boldFont = getVietnameseFont(true, 10);
 
             // Title
             Paragraph title = new Paragraph("CONG HOA XA HOI CHU NGHIA VIET NAM\nDoc lap - Tu do - Hanh phuc\n\n", headerFont);
@@ -137,5 +137,50 @@ public class RentalContractService {
             log.error("Failed to generate and save contract PDF", e);
             throw new RuntimeException("Loi khi tao hop dong PDF: " + e.getMessage(), e);
         }
+    }
+
+    private Font getVietnameseFont(boolean isBold, float size) {
+        String[] fontPaths;
+        if (System.getProperty("os.name").toLowerCase().contains("win")) {
+            fontPaths = isBold 
+                ? new String[]{"C:/Windows/Fonts/arialbd.ttf", "C:/Windows/Fonts/timesbd.ttf", "C:/Windows/Fonts/tahomabd.ttf"}
+                : new String[]{"C:/Windows/Fonts/arial.ttf", "C:/Windows/Fonts/times.ttf", "C:/Windows/Fonts/tahoma.ttf"};
+        } else {
+            // Linux / Docker container fallbacks
+            fontPaths = isBold
+                ? new String[]{
+                    "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf",
+                    "/usr/share/fonts/liberation/LiberationSans-Bold.ttf",
+                    "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
+                }
+                : new String[]{
+                    "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf",
+                    "/usr/share/fonts/liberation/LiberationSans-Regular.ttf",
+                    "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"
+                };
+        }
+
+        for (String path : fontPaths) {
+            try {
+                java.io.File file = new java.io.File(path);
+                if (file.exists()) {
+                    com.lowagie.text.pdf.BaseFont bf = com.lowagie.text.pdf.BaseFont.createFont(
+                        path, 
+                        com.lowagie.text.pdf.BaseFont.IDENTITY_H, 
+                        com.lowagie.text.pdf.BaseFont.EMBEDDED
+                    );
+                    return new Font(bf, size);
+                }
+            } catch (Exception e) {
+                log.warn("Failed to load font from path: {}", path, e);
+            }
+        }
+
+        // Fallback if no system fonts found
+        log.warn("No suitable Vietnamese system fonts found. Falling back to default Helvetica.");
+        return FontFactory.getFont(
+            isBold ? FontFactory.HELVETICA_BOLD : FontFactory.HELVETICA, 
+            size
+        );
     }
 }

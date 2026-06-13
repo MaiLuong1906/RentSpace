@@ -51,18 +51,30 @@ public class RoommateScheduler {
         Map<User, Integer> newMatchCounts = new HashMap<>();
 
         // 2. So khớp cặp chéo (N * (N-1) / 2)
+        List<RoommateMatch> allMatches = matchRepository.findAll();
+        Map<String, RoommateMatch> matchMap = new HashMap<>();
+        for (RoommateMatch m : allMatches) {
+            long id1 = m.getProfileA().getId();
+            long id2 = m.getProfileB().getId();
+            String key = id1 < id2 ? id1 + ":" + id2 : id2 + ":" + id1;
+            matchMap.put(key, m);
+        }
+
+        List<RoommateMatch> newMatches = new java.util.ArrayList<>();
+        List<RoommateMatch> updatedMatches = new java.util.ArrayList<>();
+
         for (int i = 0; i < activeProfiles.size(); i++) {
             RoommateProfile profileA = activeProfiles.get(i);
 
             for (int j = i + 1; j < activeProfiles.size(); j++) {
                 RoommateProfile profileB = activeProfiles.get(j);
 
-                // Kiểm tra xem đã có bản ghi match giữa hai người hay chưa
-                Optional<RoommateMatch> existingMatchOpt = matchRepository.findMatchBetween(profileA.getId(), profileB.getId());
+                long id1 = profileA.getId();
+                long id2 = profileB.getId();
+                String key = id1 < id2 ? id1 + ":" + id2 : id2 + ":" + id1;
+                RoommateMatch existingMatch = matchMap.get(key);
 
-                if (existingMatchOpt.isPresent()) {
-                    RoommateMatch existingMatch = existingMatchOpt.get();
-                    
+                if (existingMatch != null) {
                     // Nếu đã bị dismiss thì bỏ qua hoàn toàn
                     if (existingMatch.getStatus() == MatchStatus.DISMISSED) {
                         continue;
@@ -71,7 +83,7 @@ public class RoommateScheduler {
                     // Ngược lại, cập nhật điểm số tương hợp mới nhất
                     BigDecimal newScore = matchingEngine.calculateMatchScore(profileA, profileB);
                     existingMatch.setMatchScore(newScore);
-                    matchRepository.save(existingMatch);
+                    updatedMatches.add(existingMatch);
                 } else {
                     // Chưa có bản ghi, tính điểm tương hợp mới
                     BigDecimal score = matchingEngine.calculateMatchScore(profileA, profileB);
@@ -85,7 +97,7 @@ public class RoommateScheduler {
                                 .status(MatchStatus.SUGGESTED)
                                 .createdAt(LocalDateTime.now())
                                 .build();
-                        matchRepository.save(match);
+                        newMatches.add(match);
 
                         // Nếu điểm tương hợp cao (>= 80%), tăng biến đếm để gửi thông báo
                         if (score.compareTo(BigDecimal.valueOf(80)) >= 0) {
@@ -95,6 +107,13 @@ public class RoommateScheduler {
                     }
                 }
             }
+        }
+
+        if (!newMatches.isEmpty()) {
+            matchRepository.saveAll(newMatches);
+        }
+        if (!updatedMatches.isEmpty()) {
+            matchRepository.saveAll(updatedMatches);
         }
 
         // 3. Gửi thông báo tổng hợp và xóa cache cho người dùng có gợi ý mới phù hợp cao

@@ -6,7 +6,7 @@ import com.rentspace.domain.roommate.dto.RoommateMatchResponse;
 import com.rentspace.domain.roommate.dto.RoommateProfileRequest;
 import com.rentspace.domain.roommate.dto.RoommateProfileResponse;
 import com.rentspace.domain.user.User;
-import com.rentspace.domain.user.UserRepository;
+import com.rentspace.domain.user.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -29,7 +29,7 @@ import java.util.List;
 public class RoommateController {
 
     private final RoommateService roommateService;
-    private final UserRepository userRepository;
+    private final UserService userService;
 
     @GetMapping("/profile")
     @Operation(summary = "Lấy hồ sơ tìm bạn ở ghép của người dùng hiện tại")
@@ -73,7 +73,6 @@ public class RoommateController {
         if (userDetails == null) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Bạn cần đăng nhập để thực hiện thao tác này");
         }
-        return userRepository.findByEmail(userDetails.getUsername())
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy thông tin tài khoản"));
+        return userService.getUserByEmail(userDetails.getUsername());
     }
 }

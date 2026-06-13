@@ -107,13 +107,22 @@ public class RoommateServiceImpl implements RoommateService {
         // Lấy tất cả các hồ sơ đang hoạt động khác đã KYC VERIFIED
         List<RoommateProfile> otherProfiles = profileRepository.findActiveProfilesForMatching(currentUser.getId());
         List<RoommateMatch> newMatches = new ArrayList<>();
+        List<RoommateMatch> updatedMatches = new ArrayList<>();
+
+        // Tải trước toàn bộ các bản ghi match hiện tại của myProfile để tối ưu truy vấn (tránh N+1)
+        List<RoommateMatch> existingMatches = matchRepository.findAllMatchesForProfile(myProfile.getId());
+        java.util.Map<Long, RoommateMatch> matchMap = new java.util.HashMap<>();
+        for (RoommateMatch match : existingMatches) {
+            Long otherProfileId = match.getProfileA().getId().equals(myProfile.getId()) 
+                    ? match.getProfileB().getId() 
+                    : match.getProfileA().getId();
+            matchMap.put(otherProfileId, match);
+        }
 
         for (RoommateProfile otherProfile : otherProfiles) {
-            // Kiểm tra quan hệ match đã tồn tại giữa hai người hay chưa
-            Optional<RoommateMatch> existingMatchOpt = matchRepository.findMatchBetween(myProfile.getId(), otherProfile.getId());
+            RoommateMatch existingMatch = matchMap.get(otherProfile.getId());
 
-            if (existingMatchOpt.isPresent()) {
-                RoommateMatch existingMatch = existingMatchOpt.get();
+            if (existingMatch != null) {
                 // Nếu bị Dismissed thì bỏ qua không xử lý tiếp
                 if (existingMatch.getStatus() == MatchStatus.DISMISSED) {
                     continue;
@@ -121,7 +130,7 @@ public class RoommateServiceImpl implements RoommateService {
                 // Nếu ở trạng thái khác, cập nhật lại điểm match mới dựa trên hồ sơ hiện tại
                 BigDecimal newScore = matchingEngine.calculateMatchScore(myProfile, otherProfile);
                 existingMatch.setMatchScore(newScore);
-                matchRepository.save(existingMatch);
+                updatedMatches.add(existingMatch);
             } else {
                 // Tính điểm match mới
                 BigDecimal score = matchingEngine.calculateMatchScore(myProfile, otherProfile);
@@ -141,6 +150,9 @@ public class RoommateServiceImpl implements RoommateService {
 
         if (!newMatches.isEmpty()) {
             matchRepository.saveAll(newMatches);
+        }
+        if (!updatedMatches.isEmpty()) {
+            matchRepository.saveAll(updatedMatches);
         }
 
         // 5. Query lại từ database danh sách gợi ý chưa bị dismiss, sắp xếp theo điểm cao nhất

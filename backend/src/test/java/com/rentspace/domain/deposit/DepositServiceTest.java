@@ -12,6 +12,7 @@ import com.rentspace.domain.listing.enums.ListingStatus;
 import com.rentspace.domain.user.User;
 import com.rentspace.domain.user.UserRepository;
 import com.rentspace.infrastructure.payment.VnpayService;
+import com.rentspace.infrastructure.payment.MomoGateway;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -47,6 +48,9 @@ class DepositServiceTest {
     private VnpayService vnpayService;
 
     @Mock
+    private MomoGateway momoGateway;
+
+    @Mock
     private DepositMapper depositMapper;
 
     @Mock
@@ -64,7 +68,6 @@ class DepositServiceTest {
     @Mock
     private com.rentspace.domain.contract.RentalContractService rentalContractService;
 
-    @InjectMocks
     private DepositService depositService;
 
     private User tenant;
@@ -103,7 +106,24 @@ class DepositServiceTest {
                 .netAmount(4900000L)
                 .status(DepositStatus.PENDING_PAYMENT)
                 .build();
-                
+
+        lenient().when(vnpayService.getGatewayName()).thenReturn("VNPAY");
+        lenient().when(momoGateway.getGatewayName()).thenReturn("MOMO");
+        
+        depositService = new DepositService(
+                depositRepository,
+                eventRepository,
+                listingRepository,
+                userRepository,
+                java.util.List.of(vnpayService, momoGateway),
+                depositMapper,
+                redisTemplate,
+                notificationService,
+                emailService,
+                disputeRepository,
+                rentalContractService
+        );
+
         lenient().when(redisTemplate.hasKey(anyString())).thenReturn(false);
         lenient().when(redisTemplate.opsForValue()).thenReturn(mock(org.springframework.data.redis.core.ValueOperations.class));
     }
@@ -196,11 +216,12 @@ class DepositServiceTest {
         // Given
         when(userRepository.findByEmail("tenant@example.com")).thenReturn(Optional.of(tenant));
         when(depositRepository.findById(10L)).thenReturn(Optional.of(transaction));
-        when(vnpayService.createPaymentUrl(eq(5000000L), eq("10"), eq("127.0.0.1")))
+        when(vnpayService.getGatewayName()).thenReturn("VNPAY");
+        when(vnpayService.createPaymentUrl(eq(5000000L), eq("10"), eq("Thanh toan dat coc 10"), eq("127.0.0.1")))
                 .thenReturn("http://vnpay.vn/payment");
 
         // When
-        String paymentUrl = depositService.initiatePayment(10L, "127.0.0.1", "tenant@example.com");
+        String paymentUrl = depositService.initiatePayment(10L, "VNPAY", "127.0.0.1", "tenant@example.com");
 
         // Then
         assertEquals("http://vnpay.vn/payment", paymentUrl);
@@ -216,7 +237,7 @@ class DepositServiceTest {
         when(depositRepository.findById(10L)).thenReturn(Optional.of(transaction));
 
         // When & Then
-        assertThrows(BusinessException.class, () -> depositService.initiatePayment(10L, "127.0.0.1", "landlord@example.com"));
+        assertThrows(BusinessException.class, () -> depositService.initiatePayment(10L, "VNPAY", "127.0.0.1", "landlord@example.com"));
         verify(depositRepository, never()).save(any(DepositTransaction.class));
     }
 
@@ -430,5 +451,69 @@ class DepositServiceTest {
         assertEquals(5000000L, summary.getTotalNetAmount()); // 3M + 2M
         assertEquals(3000000L, summary.getWeeklyNetAmount()); // Only releasedTx1 (2 days ago)
         assertEquals(5000000L, summary.getMonthlyNetAmount()); // Both releasedTx1 and releasedTx2 (2 and 10 days ago)
+    }
+
+    @Test
+    void processMomoWebhook_PaymentSuccess_ShouldUpdateToPaid() {
+        // Given
+        Map<String, String> params = Map.of(
+                "orderId", "10",
+                "amount", "5000000",
+                "resultCode", "0",
+                "transId", "MOMO123456"
+        );
+        when(momoGateway.verifySignature(params)).thenReturn(true);
+        when(depositRepository.findById(10L)).thenReturn(Optional.of(transaction));
+
+        // When
+        Map<String, Object> response = depositService.processMomoWebhook(params);
+
+        // Then
+        assertEquals(0, response.get("resultCode"));
+        assertEquals("Confirm Success", response.get("message"));
+        assertEquals(DepositStatus.PAID, transaction.getStatus());
+        assertEquals("MOMO123456", transaction.getPaymentGatewayRef());
+        assertNotNull(transaction.getPaidAt());
+        assertNotNull(transaction.getReleaseDeadline());
+        verify(depositRepository, times(1)).save(transaction);
+        verify(eventRepository, times(1)).save(any(DepositTransactionEvent.class));
+    }
+
+    @Test
+    void processMomoWebhook_SignatureInvalid_ShouldReturnInvalidSignature() {
+        // Given
+        Map<String, String> params = Map.of("orderId", "10");
+        when(momoGateway.verifySignature(params)).thenReturn(false);
+
+        // When
+        Map<String, Object> response = depositService.processMomoWebhook(params);
+
+        // Then
+        assertEquals(98, response.get("resultCode"));
+        assertEquals("Invalid Signature", response.get("message"));
+        verify(depositRepository, never()).save(any(DepositTransaction.class));
+    }
+
+    @Test
+    void processMomoWebhook_PaymentFailed_ShouldUpdateToCancelled() {
+        // Given
+        Map<String, String> params = Map.of(
+                "orderId", "10",
+                "amount", "5000000",
+                "resultCode", "1006",
+                "transId", "MOMO123456"
+        );
+        when(momoGateway.verifySignature(params)).thenReturn(true);
+        when(depositRepository.findById(10L)).thenReturn(Optional.of(transaction));
+
+        // When
+        Map<String, Object> response = depositService.processMomoWebhook(params);
+
+        // Then
+        assertEquals(0, response.get("resultCode"));
+        assertEquals("Confirm Success", response.get("message"));
+        assertEquals(DepositStatus.CANCELLED, transaction.getStatus());
+        verify(depositRepository, times(1)).save(transaction);
+        verify(eventRepository, times(1)).save(any(DepositTransactionEvent.class));
     }
 }

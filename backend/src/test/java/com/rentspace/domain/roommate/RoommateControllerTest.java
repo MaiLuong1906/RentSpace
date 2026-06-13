@@ -7,7 +7,7 @@ import com.rentspace.domain.roommate.dto.RoommateMatchResponse;
 import com.rentspace.domain.roommate.dto.RoommateProfileRequest;
 import com.rentspace.domain.roommate.dto.RoommateProfileResponse;
 import com.rentspace.domain.user.User;
-import com.rentspace.domain.user.UserRepository;
+import com.rentspace.domain.user.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -27,7 +27,6 @@ import org.springframework.web.method.support.ModelAndViewContainer;
 import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -48,7 +47,7 @@ class RoommateControllerTest {
     private RoommateService roommateService;
 
     @Mock
-    private UserRepository userRepository;
+    private UserService userService;
 
     @InjectMocks
     private RoommateController roommateController;
@@ -101,7 +100,7 @@ class RoommateControllerTest {
                 .isActive(true)
                 .build();
 
-        when(userRepository.findByEmail("tenant@example.com")).thenReturn(Optional.of(mockUser));
+        when(userService.getUserByEmail("tenant@example.com")).thenReturn(mockUser);
         when(roommateService.getProfile(mockUser)).thenReturn(response);
 
         // When & Then
@@ -140,7 +139,7 @@ class RoommateControllerTest {
                 .isActive(true)
                 .build();
 
-        when(userRepository.findByEmail("tenant@example.com")).thenReturn(Optional.of(mockUser));
+        when(userService.getUserByEmail("tenant@example.com")).thenReturn(mockUser);
         when(roommateService.updateProfile(any(RoommateProfileRequest.class), eq(mockUser))).thenReturn(response);
 
         // When & Then
@@ -163,7 +162,7 @@ class RoommateControllerTest {
                 .status("SUGGESTED")
                 .build();
 
-        when(userRepository.findByEmail("tenant@example.com")).thenReturn(Optional.of(mockUser));
+        when(userService.getUserByEmail("tenant@example.com")).thenReturn(mockUser);
         when(roommateService.getSuggestions(mockUser)).thenReturn(List.of(matchResponse));
 
         // When & Then
@@ -179,7 +178,7 @@ class RoommateControllerTest {
     @Test
     void dismissMatch_ShouldReturnSuccess() throws Exception {
         // Given
-        when(userRepository.findByEmail("tenant@example.com")).thenReturn(Optional.of(mockUser));
+        when(userService.getUserByEmail("tenant@example.com")).thenReturn(mockUser);
         doNothing().when(roommateService).dismissMatch(eq(50L), eq(mockUser));
 
         // When & Then

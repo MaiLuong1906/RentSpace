@@ -60,4 +60,17 @@ class PromotedListingSchedulerTest {
 
         verify(promotedListingRepository, never()).saveAll(anyList());
     }
+
+    @Test
+    @DisplayName("Dọn dẹp quảng bá chưa thanh toán - Dọn dẹp thành công")
+    void cleanupUnpaidPromotions_success() {
+        PromotedListing p1 = PromotedListing.builder().id(3L).isActive(false).startsAt(LocalDateTime.now().minusDays(2)).build();
+        List<PromotedListing> unpaidList = List.of(p1);
+
+        when(promotedListingRepository.findUnpaidOlderThan(any(LocalDateTime.class))).thenReturn(unpaidList);
+
+        promotedListingScheduler.cleanupUnpaidPromotions();
+
+        verify(promotedListingRepository).deleteAll(unpaidList);
+    }
 }
