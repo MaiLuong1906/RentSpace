@@ -41,8 +41,7 @@ public class PaymentWebhookRouter {
         log.info("Routing MoMo Webhook for orderId: {}", orderId);
 
         if (orderId != null && orderId.startsWith("PROMOTE_")) {
-            log.warn("MoMo payment is not implemented for Promoted Listings yet.");
-            return Map.of("resultCode", 99, "message", "MoMo is not supported for promotions yet");
+            return promotedListingService.processPromotedMomoWebhook(params);
         } else {
             return depositService.processMomoWebhook(params);
         }

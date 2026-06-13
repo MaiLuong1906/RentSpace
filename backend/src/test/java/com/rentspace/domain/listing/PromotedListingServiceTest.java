@@ -12,6 +12,8 @@ import com.rentspace.domain.user.User;
 import com.rentspace.domain.user.UserRepository;
 import com.rentspace.domain.user.enums.KycStatus;
 import com.rentspace.infrastructure.payment.VnpayService;
+import com.rentspace.infrastructure.payment.MomoGateway;
+import com.rentspace.infrastructure.payment.PaymentGateway;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -49,6 +51,9 @@ class PromotedListingServiceTest {
     private VnpayService vnpayService;
 
     @Mock
+    private MomoGateway momoGateway;
+
+    @Mock
     private StringRedisTemplate redisTemplate;
 
     @Mock
@@ -57,7 +62,6 @@ class PromotedListingServiceTest {
     @Mock
     private NotificationService notificationService;
 
-    @InjectMocks
     private PromotedListingService promotedListingService;
 
     private User landlord;
@@ -66,6 +70,18 @@ class PromotedListingServiceTest {
 
     @BeforeEach
     void setUp() {
+        lenient().when(vnpayService.getGatewayName()).thenReturn("VNPAY");
+        lenient().when(momoGateway.getGatewayName()).thenReturn("MOMO");
+
+        promotedListingService = new PromotedListingService(
+                promotedListingRepository,
+                listingRepository,
+                userRepository,
+                java.util.List.of(vnpayService, momoGateway),
+                redisTemplate,
+                notificationService
+        );
+
         landlord = User.builder()
                 .id(1L)
                 .email("landlord@example.com")
@@ -228,6 +244,57 @@ class PromotedListingServiceTest {
         Map<String, String> response = promotedListingService.processPromotedWebhook(params);
 
         assertEquals("00", response.get("RspCode"));
+        assertTrue(promotedListing.getIsActive());
+        verify(promotedListingRepository).save(promotedListing);
+        verify(notificationService).createAndSendNotification(
+                eq(landlord), anyString(), anyString(), eq(NotificationType.PAYMENT));
+    }
+
+    @Test
+    @DisplayName("Đẩy tin thành công qua MoMo - sinh URL thanh toán MoMo và lưu thông tin đẩy tin tạm thời")
+    void createPromotionPayment_momo_success() {
+        PromoteListingRequest request = new PromoteListingRequest();
+        request.setDurationDays(7);
+        request.setMethod("MOMO");
+
+        when(userRepository.findByEmail("landlord@example.com")).thenReturn(Optional.of(landlord));
+        when(listingRepository.findById(10L)).thenReturn(Optional.of(listing));
+        when(promotedListingRepository.save(any(PromotedListing.class))).thenAnswer(i -> {
+            PromotedListing p = i.getArgument(0);
+            p.setId(100L);
+            return p;
+        });
+        when(momoGateway.createPaymentUrl(eq(140000L), eq("PROMOTE_100"), anyString(), anyString()))
+                .thenReturn("https://test-payment.momo.vn/pay");
+
+        PromoteListingResponse response = promotedListingService.createPromotionPayment(
+                10L, "landlord@example.com", request, "127.0.0.1");
+
+        assertNotNull(response);
+        assertEquals("https://test-payment.momo.vn/pay", response.getPaymentUrl());
+        assertEquals(140000L, response.getAmount());
+
+        verify(promotedListingRepository, times(2)).save(any(PromotedListing.class));
+    }
+
+    @Test
+    @DisplayName("Xử lý Webhook MoMo đẩy tin thành công - kích hoạt trạng thái boost và cập nhật hạn dùng")
+    void processPromotedMomoWebhook_success() {
+        Map<String, String> params = new HashMap<>();
+        params.put("orderId", "PROMOTE_100");
+        params.put("amount", "140000");
+        params.put("resultCode", "0");
+        params.put("transId", "MOMO123456");
+
+        when(momoGateway.verifySignature(params)).thenReturn(true);
+        when(redisTemplate.hasKey("webhook_processed:PROMOTE_100")).thenReturn(false);
+        when(promotedListingRepository.findById(100L)).thenReturn(Optional.of(promotedListing));
+        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+
+        Map<String, Object> response = promotedListingService.processPromotedMomoWebhook(params);
+
+        assertEquals(0, response.get("resultCode"));
+        assertEquals("Success", response.get("message"));
         assertTrue(promotedListing.getIsActive());
         verify(promotedListingRepository).save(promotedListing);
         verify(notificationService).createAndSendNotification(

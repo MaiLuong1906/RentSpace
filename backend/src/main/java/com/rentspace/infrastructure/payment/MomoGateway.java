@@ -21,6 +21,7 @@ import java.util.UUID;
  */
 @Slf4j
 @Service
+@lombok.RequiredArgsConstructor
 public class MomoGateway implements PaymentGateway {
 
     @Value("${momo.partner-code}")
@@ -41,7 +42,7 @@ public class MomoGateway implements PaymentGateway {
     @Value("${momo.ipn-url}")
     private String ipnUrl;
 
-    private final RestTemplate restTemplate = new RestTemplate();
+    private final RestTemplate restTemplate;
 
     @Override
     public String getGatewayName() {

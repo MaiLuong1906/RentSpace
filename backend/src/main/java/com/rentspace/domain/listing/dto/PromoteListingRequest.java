@@ -10,4 +10,6 @@ public class PromoteListingRequest {
     @NotNull(message = "Số ngày đẩy tin không được để trống")
     @Min(value = 1, message = "Số ngày đẩy tin tối thiểu là 1")
     private Integer durationDays;
+
+    private String method = "VNPAY";
 }

@@ -42,8 +42,7 @@ public class DepositService {
     private final DepositTransactionEventRepository eventRepository;
     private final ListingRepository listingRepository;
     private final UserRepository userRepository;
-    private final VnpayService vnpayService;
-    private final MomoGateway momoGateway;
+    private final List<PaymentGateway> paymentGateways;
     private final DepositMapper depositMapper;
     private final org.springframework.data.redis.core.StringRedisTemplate redisTemplate;
     private final com.rentspace.domain.notification.NotificationService notificationService;
@@ -60,7 +59,8 @@ public class DepositService {
         log.info("Processing VNPay Webhook with params: {}", params);
 
         // 1. Verify Signature
-        if (!vnpayService.verifySignature(params)) {
+        PaymentGateway gateway = getGateway("VNPAY");
+        if (!gateway.verifySignature(params)) {
             log.error("Invalid VNPay signature for webhook");
             return Map.of("RspCode", "97", "Message", "Invalid Checksum");
         }
@@ -181,7 +181,8 @@ public class DepositService {
         log.info("Processing MoMo Webhook with params: {}", params);
 
         // 1. Verify Signature
-        if (!momoGateway.verifySignature(params)) {
+        PaymentGateway gateway = getGateway("MOMO");
+        if (!gateway.verifySignature(params)) {
             log.error("Invalid MoMo signature for webhook");
             return Map.of("resultCode", 98, "message", "Invalid Signature");
         }
@@ -386,12 +387,7 @@ public class DepositService {
             throw new BusinessException("Giao dịch không ở trạng thái CHỜ THANH TOÁN");
         }
 
-        PaymentGateway gateway;
-        if ("MOMO".equalsIgnoreCase(method)) {
-            gateway = momoGateway;
-        } else {
-            gateway = vnpayService;
-        }
+        PaymentGateway gateway = getGateway(method);
 
         String orderInfo = "Thanh toan dat coc " + transaction.getId();
         String paymentUrl = gateway.createPaymentUrl(transaction.getAmount(), transaction.getId().toString(), orderInfo, ipAddress);
@@ -401,6 +397,13 @@ public class DepositService {
         depositRepository.save(transaction);
 
         return paymentUrl;
+    }
+
+    private PaymentGateway getGateway(String method) {
+        return paymentGateways.stream()
+                .filter(g -> g.getGatewayName().equalsIgnoreCase(method))
+                .findFirst()
+                .orElseThrow(() -> new BusinessException("Cổng thanh toán không hỗ trợ: " + method));
     }
 
     public List<DepositResponse> getMyDeposits(String email) {

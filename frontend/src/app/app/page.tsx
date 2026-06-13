@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { Search, MapPin, TrendingUp, Star, Loader2, Users, MessageCircle } from "lucide-react";
 import { useListings } from "@/hooks/useListings";
 
@@ -116,12 +117,14 @@ export default function HomePage() {
                           <span>✨ Nổi bật</span>
                         </div>
                       )}
-                      <img
+                      <Image
                         src={listing.images?.[0]?.imageUrl || "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800&h=600&fit=crop"}
                         alt={listing.title}
-                        className="w-full h-full object-cover"
+                        fill
+                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                        className="object-cover"
                       />
-                      <div className="absolute top-3 right-3 bg-white px-3 py-1 rounded-full text-sm font-semibold text-blue-600">
+                      <div className="absolute top-3 right-3 bg-white px-3 py-1 rounded-full text-sm font-semibold text-blue-600 z-10">
                         {formatPrice(listing.pricePerMonth)}/tháng
                       </div>
                     </div>
