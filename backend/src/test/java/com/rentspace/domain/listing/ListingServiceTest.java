@@ -32,6 +32,12 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
+import com.rentspace.domain.subscription.UserSubscriptionRepository;
+import com.rentspace.domain.subscription.SubscriptionService;
+import com.rentspace.domain.subscription.UserSubscription;
+import com.rentspace.domain.subscription.SubscriptionPlan;
+import com.rentspace.domain.subscription.enums.SubscriptionStatus;
+
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
@@ -66,6 +72,12 @@ class ListingServiceTest {
 
     @Mock
     private PromotedListingRepository promotedListingRepository;
+
+    @Mock
+    private UserSubscriptionRepository userSubscriptionRepository;
+
+    @Mock
+    private SubscriptionService subscriptionService;
 
     @InjectMocks
     private ListingService listingService;
@@ -463,7 +475,11 @@ class ListingServiceTest {
         @DisplayName("Thêm ảnh thành công khi số ảnh dưới 10")
         void addImage_whenCountLessThanTen_shouldUploadAndSave() {
             // Given
+            SubscriptionPlan plan = SubscriptionPlan.builder().id(1).name(com.rentspace.domain.subscription.enums.PlanName.FREE).displayName("Miễn phí").maxImages(10).build();
+            UserSubscription sub = UserSubscription.builder().id(1L).user(landlord).plan(plan).status(SubscriptionStatus.ACTIVE).build();
             when(listingRepository.findByIdAndStatusNot(10L, ListingStatus.DELETED)).thenReturn(Optional.of(listing));
+            when(userSubscriptionRepository.findFirstByUserIdAndStatusOrderByStartedAtDesc(landlord.getId(), SubscriptionStatus.ACTIVE))
+                    .thenReturn(Optional.of(sub));
             when(storageService.uploadFile(any(), anyString())).thenReturn("https://s3.com/image.jpg");
             when(listingImageRepository.save(any(ListingImage.class))).thenAnswer(i -> i.getArgument(0));
             when(listingMapper.toImageResponse(any(ListingImage.class))).thenReturn(
@@ -483,10 +499,14 @@ class ListingServiceTest {
         @DisplayName("Thêm ảnh thất bại khi số ảnh đã đạt 10")
         void addImage_whenCountIsTen_shouldThrowException() {
             // Given
+            SubscriptionPlan plan = SubscriptionPlan.builder().id(1).name(com.rentspace.domain.subscription.enums.PlanName.FREE).displayName("Miễn phí").maxImages(10).build();
+            UserSubscription sub = UserSubscription.builder().id(1L).user(landlord).plan(plan).status(SubscriptionStatus.ACTIVE).build();
             for (int i = 0; i < 10; i++) {
                 listing.getImages().add(new ListingImage());
             }
             when(listingRepository.findByIdAndStatusNot(10L, ListingStatus.DELETED)).thenReturn(Optional.of(listing));
+            when(userSubscriptionRepository.findFirstByUserIdAndStatusOrderByStartedAtDesc(landlord.getId(), SubscriptionStatus.ACTIVE))
+                    .thenReturn(Optional.of(sub));
 
             // When & Then
             BusinessException exception = assertThrows(BusinessException.class,

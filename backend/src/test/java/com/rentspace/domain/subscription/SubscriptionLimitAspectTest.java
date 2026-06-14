@@ -88,13 +88,13 @@ class SubscriptionLimitAspectTest {
         when(userRepository.findByEmail("landlord@example.com")).thenReturn(Optional.of(user));
         when(userSubscriptionRepository.findFirstByUserIdAndStatusOrderByStartedAtDesc(user.getId(), SubscriptionStatus.ACTIVE))
                 .thenReturn(Optional.of(activeFreeSub));
-        when(listingRepository.countByLandlordIdAndStatus(user.getId(), ListingStatus.ACTIVE)).thenReturn(5L); // 5/10
+        when(listingRepository.countByLandlordIdAndStatusNot(user.getId(), ListingStatus.DELETED)).thenReturn(5L); // 5/10
 
         assertDoesNotThrow(() -> subscriptionLimitAspect.checkListingLimit(joinPoint));
 
         verify(userRepository, times(1)).findByEmail("landlord@example.com");
         verify(userSubscriptionRepository, times(1)).findFirstByUserIdAndStatusOrderByStartedAtDesc(user.getId(), SubscriptionStatus.ACTIVE);
-        verify(listingRepository, times(1)).countByLandlordIdAndStatus(user.getId(), ListingStatus.ACTIVE);
+        verify(listingRepository, times(1)).countByLandlordIdAndStatusNot(user.getId(), ListingStatus.DELETED);
     }
 
     @Test
@@ -105,14 +105,14 @@ class SubscriptionLimitAspectTest {
         when(userRepository.findByEmail("landlord@example.com")).thenReturn(Optional.of(user));
         when(userSubscriptionRepository.findFirstByUserIdAndStatusOrderByStartedAtDesc(user.getId(), SubscriptionStatus.ACTIVE))
                 .thenReturn(Optional.of(activeFreeSub));
-        when(listingRepository.countByLandlordIdAndStatus(user.getId(), ListingStatus.ACTIVE)).thenReturn(10L); // 10/10 limit reached
+        when(listingRepository.countByLandlordIdAndStatusNot(user.getId(), ListingStatus.DELETED)).thenReturn(10L); // 10/10 limit reached
 
         SubscriptionLimitExceededException exception = assertThrows(SubscriptionLimitExceededException.class,
                 () -> subscriptionLimitAspect.checkListingLimit(joinPoint));
 
         assertTrue(exception.getMessage().contains("đạt tới giới hạn đăng tin tối đa"));
         assertTrue(exception.getMessage().contains("Miễn phí"));
-        verify(listingRepository, times(1)).countByLandlordIdAndStatus(user.getId(), ListingStatus.ACTIVE);
+        verify(listingRepository, times(1)).countByLandlordIdAndStatusNot(user.getId(), ListingStatus.DELETED);
     }
 
     @Test
@@ -124,12 +124,12 @@ class SubscriptionLimitAspectTest {
         when(userSubscriptionRepository.findFirstByUserIdAndStatusOrderByStartedAtDesc(user.getId(), SubscriptionStatus.ACTIVE))
                 .thenReturn(Optional.empty());
         when(subscriptionService.getOrCreateDefaultFreeSubscription(user)).thenReturn(activeFreeSub);
-        when(listingRepository.countByLandlordIdAndStatus(user.getId(), ListingStatus.ACTIVE)).thenReturn(9L); // 9/10 under limit
+        when(listingRepository.countByLandlordIdAndStatusNot(user.getId(), ListingStatus.DELETED)).thenReturn(9L); // 9/10 under limit
 
         assertDoesNotThrow(() -> subscriptionLimitAspect.checkListingLimit(joinPoint));
 
         verify(subscriptionService, times(1)).getOrCreateDefaultFreeSubscription(user);
-        verify(listingRepository, times(1)).countByLandlordIdAndStatus(user.getId(), ListingStatus.ACTIVE);
+        verify(listingRepository, times(1)).countByLandlordIdAndStatusNot(user.getId(), ListingStatus.DELETED);
     }
 
     @Test
