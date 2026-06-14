@@ -20,6 +20,7 @@ import {
   ShieldCheck,
   ChevronDown,
   CreditCard,
+  Zap,
 } from "lucide-react";
 import { authApi } from "@/lib/api/auth.api";
 import { useChat } from "@/hooks/useChat";
@@ -256,15 +257,26 @@ export default function DashboardLayout({
                             </Link>
 
                             {userRole === "landlord" && (
-                              <Link
-                                href="/app/landlord/payout"
-                                className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-[14px] font-semibold transition-colors ${
-                                  isActive("/app/landlord/payout") ? "bg-blue-50 text-blue-600" : "text-gray-700 hover:bg-gray-50"
-                                }`}
-                              >
-                                <CreditCard className="h-4.5 w-4.5 text-gray-400" />
-                                <span>Giải ngân tiền cọc</span>
-                              </Link>
+                              <>
+                                <Link
+                                  href="/app/landlord/subscription"
+                                  className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-[14px] font-semibold transition-colors ${
+                                    isActive("/app/landlord/subscription") ? "bg-blue-50 text-blue-600" : "text-gray-700 hover:bg-gray-50"
+                                  }`}
+                                >
+                                  <Zap className="h-4.5 w-4.5 text-gray-400" />
+                                  <span>Gói hội viên</span>
+                                </Link>
+                                <Link
+                                  href="/app/landlord/payout"
+                                  className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-[14px] font-semibold transition-colors ${
+                                    isActive("/app/landlord/payout") ? "bg-blue-50 text-blue-600" : "text-gray-700 hover:bg-gray-50"
+                                  }`}
+                                >
+                                  <CreditCard className="h-4.5 w-4.5 text-gray-400" />
+                                  <span>Giải ngân tiền cọc</span>
+                                </Link>
+                              </>
                             )}
 
                             {userRole === "tenant" && (
@@ -425,16 +437,28 @@ export default function DashboardLayout({
                     </Link>
                   )}
                   {userRole === "landlord" && (
-                    <Link
-                      href="/app/landlord/payout"
-                      onClick={() => setIsMobileMenuOpen(false)}
-                      className={`flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-sm transition-all ${
-                        isActive("/app/landlord/payout") ? "bg-blue-50 text-blue-600" : "text-gray-700 hover:bg-gray-50"
-                      }`}
-                    >
-                      <CreditCard className="h-5 w-5" />
-                      <span>Giải ngân tiền cọc</span>
-                    </Link>
+                    <>
+                      <Link
+                        href="/app/landlord/subscription"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                        className={`flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-sm transition-all ${
+                          isActive("/app/landlord/subscription") ? "bg-blue-50 text-blue-600" : "text-gray-700 hover:bg-gray-50"
+                        }`}
+                      >
+                        <Zap className="h-5 w-5 text-gray-500" />
+                        <span>Gói hội viên</span>
+                      </Link>
+                      <Link
+                        href="/app/landlord/payout"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                        className={`flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-sm transition-all ${
+                          isActive("/app/landlord/payout") ? "bg-blue-50 text-blue-600" : "text-gray-700 hover:bg-gray-50"
+                        }`}
+                      >
+                        <CreditCard className="h-5 w-5 text-gray-500" />
+                        <span>Giải ngân tiền cọc</span>
+                      </Link>
+                    </>
                   )}
                   <Link
                     href="/app/profile"

@@ -29,6 +29,13 @@ public class GlobalExceptionHandler {
                 .body(ApiResponse.error(ex.getMessage()));
     }
 
+    @ExceptionHandler(SubscriptionLimitExceededException.class)
+    public ResponseEntity<ApiResponse<Void>> handleSubscriptionLimitExceeded(SubscriptionLimitExceededException ex) {
+        log.warn("Subscription limit exceeded: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(ApiResponse.error(ex.getMessage()));
+    }
+
     @ExceptionHandler(BusinessException.class)
     public ResponseEntity<ApiResponse<Void>> handleBusinessException(BusinessException ex) {
         log.warn("Business exception: {}", ex.getMessage());
@@ -62,7 +69,7 @@ public class GlobalExceptionHandler {
                 .body(ApiResponse.error("Bạn không có quyền thực hiện hành động này"));
     }
 
-    @ExceptionHandler({MissingServletRequestPartException.class, MissingServletRequestParameterException.class})
+    @ExceptionHandler({ MissingServletRequestPartException.class, MissingServletRequestParameterException.class })
     public ResponseEntity<ApiResponse<Void>> handleMissingRequestPart(Exception ex) {
         log.warn("Missing request part or parameter: {}", ex.getMessage());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)

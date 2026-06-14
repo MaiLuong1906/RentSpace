@@ -18,6 +18,11 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.rentspace.domain.review.ReviewRepository;
+import com.rentspace.domain.subscription.annotation.EnforceSubscriptionLimit;
+import com.rentspace.domain.subscription.UserSubscriptionRepository;
+import com.rentspace.domain.subscription.SubscriptionService;
+import com.rentspace.domain.subscription.UserSubscription;
+import com.rentspace.domain.subscription.enums.SubscriptionStatus;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -37,6 +42,8 @@ public class ListingService {
     private final ReviewRepository reviewRepository;
     private final ListingViewRepository listingViewRepository;
     private final PromotedListingRepository promotedListingRepository;
+    private final UserSubscriptionRepository userSubscriptionRepository;
+    private final SubscriptionService subscriptionService;
 
     // ===== GET /api/v1/listings =====
     public Page<ListingResponse> search(String city, String district,
@@ -94,6 +101,7 @@ public class ListingService {
 
     // ===== POST /api/v1/listings =====
     @Transactional
+    @EnforceSubscriptionLimit
     public ListingResponse create(String email, CreateListingRequest request) {
         User landlord = userRepository.findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy người dùng"));
@@ -195,8 +203,16 @@ public class ListingService {
     public ListingImageResponse addImage(Long id, String email, MultipartFile file) {
         Listing listing = findOwnedListing(id, email);
 
-        if (listing.getImages().size() >= 10) {
-            throw new BusinessException("Tin đăng chỉ được tối đa 10 ảnh");
+        User landlord = listing.getLandlord();
+        UserSubscription activeSub = userSubscriptionRepository
+                .findFirstByUserIdAndStatusOrderByStartedAtDesc(landlord.getId(), SubscriptionStatus.ACTIVE)
+                .orElseGet(() -> subscriptionService.getOrCreateDefaultFreeSubscription(landlord));
+
+        int maxImages = activeSub.getPlan().getMaxImages();
+
+        if (listing.getImages().size() >= maxImages) {
+            throw new BusinessException(String.format("Tin đăng chỉ được tải lên tối đa %d ảnh (Theo gói %s)", 
+                    maxImages, activeSub.getPlan().getDisplayName()));
         }
 
         String imageUrl = storageService.uploadFile(file, "listings/" + id);

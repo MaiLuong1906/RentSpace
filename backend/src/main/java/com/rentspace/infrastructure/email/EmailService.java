@@ -148,4 +148,23 @@ public class EmailService {
             log.warn("Không thể gửi email xác nhận thanh toán đặt cọc thực tế do chưa cấu hình SMTP. (Bỏ qua lỗi này ở môi trường dev)");
         }
     }
+
+    @Async
+    public void sendSubscriptionExpiredEmail(String toEmail, String fullName, String planName) {
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setFrom(fromEmail);
+        message.setTo(toEmail);
+        message.setSubject("[RentSpace] Gói hội viên của bạn đã hết hạn");
+        message.setText(String.format(
+                "Xin chào %s,\n\nGói hội viên \"%s\" của bạn trên RentSpace đã hết hạn sử dụng. Tài khoản của bạn đã được chuyển về gói FREE (Miễn phí) mặc định.\n\nĐể tiếp tục nhận các ưu đãi và giới hạn đăng bài cao hơn, vui lòng truy cập trang Quản lý gói cước trên ứng dụng RentSpace để gia hạn hoặc đăng ký gói mới.\n\nTrân trọng,\nĐội ngũ RentSpace",
+                fullName,
+                planName
+        ));
+        try {
+            mailSender.send(message);
+            log.info("Đã gửi email thông báo hết hạn gói cước đến: {}", toEmail);
+        } catch (Exception e) {
+            log.warn("Không thể gửi email thông báo hết hạn gói cước thực tế do chưa cấu hình SMTP. (Bỏ qua lỗi này ở môi trường dev)");
+        }
+    }
 }
