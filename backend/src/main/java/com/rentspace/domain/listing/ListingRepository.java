@@ -80,4 +80,13 @@ public interface ListingRepository extends JpaRepository<Listing, Long> {
 
     // [ADMIN] Lấy tất cả listing trừ một status nhất định
     Page<Listing> findByStatusNot(ListingStatus status, Pageable pageable);
+
+    // Đếm số tin đăng theo Landlord và Trạng thái
+    long countByLandlordIdAndStatus(Long landlordId, ListingStatus status);
+
+    // Đếm số tin đăng của Landlord trừ trạng thái DELETED
+    long countByLandlordIdAndStatusNot(Long landlordId, ListingStatus status);
+
+    // Đếm số tin đăng của Landlord trong chu kỳ gói cước (từ startDate) trừ trạng thái DELETED
+    long countByLandlordIdAndStatusNotAndCreatedAtGreaterThanEqual(Long landlordId, ListingStatus status, java.time.LocalDateTime startDate);
 }

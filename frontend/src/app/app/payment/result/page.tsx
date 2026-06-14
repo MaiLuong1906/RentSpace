@@ -84,8 +84,11 @@ function PaymentResultInner() {
   const txnRef = vnpTxnRef ?? momoOrderId ?? null;
   const amount = gateway === "MOMO" ? momoAmount : vnpAmount;
   const isPromote = txnRef?.startsWith("PROMOTE_");
+  const isSubscription = txnRef?.startsWith("SUB_");
   const bankInfo = gateway === "VNPAY" ? (vnpBankCode || "VNPay") : (momoTransId ? `MoMo #${momoTransId}` : "MoMo Wallet");
-  const redirectTarget = isPromote ? "/app/landlord/my-listings" : "/app/deposits";
+  const redirectTarget = isSubscription 
+    ? "/app/landlord/subscription" 
+    : (isPromote ? "/app/landlord/my-listings" : "/app/deposits");
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -145,22 +148,24 @@ function PaymentResultInner() {
 
           {/* Header banner */}
           <div className={`px-6 py-8 text-center text-white relative overflow-hidden
-            ${isPromote
-              ? "bg-gradient-to-br from-amber-500 to-orange-600"
-              : gateway === "MOMO"
-                ? "bg-gradient-to-br from-pink-500 to-rose-600"
-                : "bg-gradient-to-br from-emerald-500 to-teal-600"
+            ${isSubscription
+              ? "bg-gradient-to-br from-indigo-500 to-purple-600"
+              : isPromote
+                ? "bg-gradient-to-br from-amber-500 to-orange-600"
+                : gateway === "MOMO"
+                  ? "bg-gradient-to-br from-pink-500 to-rose-600"
+                  : "bg-gradient-to-br from-emerald-500 to-teal-600"
             }`}>
             <div className="absolute -right-6 -top-6 opacity-10">
-              {isPromote ? <Sparkles size={130} /> : <ShieldCheck size={130} />}
+              {isSubscription || isPromote ? <Sparkles size={130} /> : <ShieldCheck size={130} />}
             </div>
             <div className="inline-flex p-3 bg-white/25 backdrop-blur-md rounded-full mb-3 text-white ring-2 ring-white/30">
-              {isPromote
+              {isSubscription || isPromote
                 ? <Sparkles className="h-10 w-10 fill-amber-300" />
                 : <CheckCircle className="h-10 w-10 fill-white/30" />}
             </div>
             <h1 className="text-2xl font-extrabold tracking-tight">
-              {isPromote ? "Đẩy Tin Thành Công!" : "Thanh Toán Thành Công!"}
+              {isSubscription ? "Đăng Ký Hội Viên Thành Công!" : (isPromote ? "Đẩy Tin Thành Công!" : "Thanh Toán Thành Công!")}
             </h1>
             <p className="text-white/85 text-xs mt-1 font-medium">
               {gateway === "MOMO" ? "Giao dịch xác nhận qua Ví MoMo" : "Giao dịch được ký xác thực bởi VNPay"}
@@ -181,13 +186,20 @@ function PaymentResultInner() {
               <div className="flex justify-between py-2.5">
                 <span className="font-medium text-gray-700">Số tiền:</span>
                 <span className={`text-lg font-extrabold ${
-                  isPromote ? "text-amber-600" : gateway === "MOMO" ? "text-pink-600" : "text-emerald-600"
+                  isSubscription ? "text-indigo-600" : isPromote ? "text-amber-600" : gateway === "MOMO" ? "text-pink-600" : "text-emerald-600"
                 }`}>{formatPrice(amount)}</span>
               </div>
             </div>
 
             {/* Note box */}
-            {isPromote ? (
+            {isSubscription ? (
+              <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-4 flex gap-3">
+                <Sparkles className="h-4 w-4 text-indigo-600 shrink-0 mt-0.5" />
+                <p className="text-xs text-indigo-800 leading-relaxed">
+                  <strong>Kích hoạt gói Seller Pro thành công!</strong> Các đặc quyền giới hạn tin đăng mới và tăng tốc hiển thị của bạn đã sẵn sàng sử dụng.
+                </p>
+              </div>
+            ) : isPromote ? (
               <div className="bg-amber-50 border border-amber-100 rounded-xl p-4 flex gap-3">
                 <Sparkles className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
                 <p className="text-xs text-amber-800 leading-relaxed">
@@ -217,14 +229,16 @@ function PaymentResultInner() {
               <Link
                 href={redirectTarget}
                 className={`w-full flex items-center justify-center gap-2 text-white py-3 rounded-xl font-bold transition-all shadow-lg
-                  ${isPromote
-                    ? "bg-amber-500 hover:bg-amber-600 shadow-amber-100"
-                    : gateway === "MOMO"
-                      ? "bg-pink-500 hover:bg-pink-600 shadow-pink-100"
-                      : "bg-emerald-600 hover:bg-emerald-700 shadow-emerald-100"
+                  ${isSubscription
+                    ? "bg-indigo-600 hover:bg-indigo-700 shadow-indigo-100"
+                    : isPromote
+                      ? "bg-amber-500 hover:bg-amber-600 shadow-amber-100"
+                      : gateway === "MOMO"
+                        ? "bg-pink-500 hover:bg-pink-600 shadow-pink-100"
+                        : "bg-emerald-600 hover:bg-emerald-700 shadow-emerald-100"
                   }`}
               >
-                <span>{isPromote ? "Quản lý tin đăng" : "Xem lịch sử đặt cọc"}</span>
+                <span>{isSubscription ? "Xem gói hội viên của tôi" : (isPromote ? "Quản lý tin đăng" : "Xem lịch sử đặt cọc")}</span>
                 <ArrowRight className="h-4 w-4" />
               </Link>
               <Link href="/app" className="w-full flex items-center justify-center gap-2 bg-gray-100 text-gray-600 py-3 rounded-xl font-semibold hover:bg-gray-200 transition-colors">

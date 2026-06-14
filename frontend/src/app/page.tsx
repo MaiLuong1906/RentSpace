@@ -137,6 +137,7 @@ export default function LandingPage() {
               <ul className="space-y-2 text-sm">
                 <li><Link href="/app/search" className="hover:text-white">Tìm phòng</Link></li>
                 <li><Link href="/auth/register" className="hover:text-white">Đăng tin</Link></li>
+                <li><Link href="/pricing" className="hover:text-white">Bảng giá dịch vụ</Link></li>
               </ul>
             </div>
             <div>

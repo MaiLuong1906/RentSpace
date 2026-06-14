@@ -91,7 +91,25 @@ INSERT INTO listings (landlord_id, title, description, address, ward, district, 
 'Phòng studio tiện nghi gần Landmark 81', 
 'Đầy đủ tiện ích cao cấp, khu giặt sấy riêng, khóa vân tay, có sân thượng sinh hoạt chung cực thoáng mát.', 
 '15/8 Nguyễn Hữu Cảnh', 'Phường 22', 'Bình Thạnh', 'Hồ Chí Minh', 10.793245, 106.719876, 
-4800000, 28.0, 1, 1, true, true, true, true, false, 'RENTED', NOW() - INTERVAL '12 days', NOW() - INTERVAL '2 days');
+4800000, 28.0, 1, 1, true, true, true, true, false, 'RENTED', NOW() - INTERVAL '12 days', NOW() - INTERVAL '2 days'),
+
+-- Chèn thêm 8 tin đăng ACTIVE cho landlord1 để dễ test giới hạn 10 tin của gói FREE
+((SELECT id FROM users WHERE email = 'landlord1@rentspace.com'), 
+'Phòng trọ test giới hạn 1', 'Mô tả test 1', 'Địa chỉ test 1', 'Ward 1', 'District 1', 'City 1', 10.0, 106.0, 2000000, 20.0, 1, 1, true, true, true, true, false, 'ACTIVE', NOW(), NOW()),
+((SELECT id FROM users WHERE email = 'landlord1@rentspace.com'), 
+'Phòng trọ test giới hạn 2', 'Mô tả test 2', 'Địa chỉ test 2', 'Ward 2', 'District 2', 'City 2', 10.0, 106.0, 2000000, 20.0, 1, 1, true, true, true, true, false, 'ACTIVE', NOW(), NOW()),
+((SELECT id FROM users WHERE email = 'landlord1@rentspace.com'), 
+'Phòng trọ test giới hạn 3', 'Mô tả test 3', 'Địa chỉ test 3', 'Ward 3', 'District 3', 'City 3', 10.0, 106.0, 2000000, 20.0, 1, 1, true, true, true, true, false, 'ACTIVE', NOW(), NOW()),
+((SELECT id FROM users WHERE email = 'landlord1@rentspace.com'), 
+'Phòng trọ test giới hạn 4', 'Mô tả test 4', 'Địa chỉ test 4', 'Ward 4', 'District 4', 'City 4', 10.0, 106.0, 2000000, 20.0, 1, 1, true, true, true, true, false, 'ACTIVE', NOW(), NOW()),
+((SELECT id FROM users WHERE email = 'landlord1@rentspace.com'), 
+'Phòng trọ test giới hạn 5', 'Mô tả test 5', 'Địa chỉ test 5', 'Ward 5', 'District 5', 'City 5', 10.0, 106.0, 2000000, 20.0, 1, 1, true, true, true, true, false, 'ACTIVE', NOW(), NOW()),
+((SELECT id FROM users WHERE email = 'landlord1@rentspace.com'), 
+'Phòng trọ test giới hạn 6', 'Mô tả test 6', 'Địa chỉ test 6', 'Ward 6', 'District 6', 'City 6', 10.0, 106.0, 2000000, 20.0, 1, 1, true, true, true, true, false, 'ACTIVE', NOW(), NOW()),
+((SELECT id FROM users WHERE email = 'landlord1@rentspace.com'), 
+'Phòng trọ test giới hạn 7', 'Mô tả test 7', 'Địa chỉ test 7', 'Ward 7', 'District 7', 'City 7', 10.0, 106.0, 2000000, 20.0, 1, 1, true, true, true, true, false, 'ACTIVE', NOW(), NOW()),
+((SELECT id FROM users WHERE email = 'landlord1@rentspace.com'), 
+'Phòng trọ test giới hạn 8', 'Mô tả test 8', 'Địa chỉ test 8', 'Ward 8', 'District 8', 'City 8', 10.0, 106.0, 2000000, 20.0, 1, 1, true, true, true, true, false, 'ACTIVE', NOW(), NOW());
 
 
 -- ====================================================================

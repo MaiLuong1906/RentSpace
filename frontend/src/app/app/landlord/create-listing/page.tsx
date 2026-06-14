@@ -1,12 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Upload, X, Loader2, Locate } from "lucide-react";
+import { Upload, X, Loader2, Locate, AlertOctagon, ArrowLeft, ArrowUpCircle } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { listingApi } from "@/lib/api/listing.api";
+import { getCurrentSubscription } from "@/lib/api/subscription.api";
 import type { CreateListingRequest } from "@/types/listing.types";
 import { toast } from "sonner";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 import Map, { Marker } from "react-map-gl/maplibre";
 import maplibregl from "maplibre-gl";
@@ -37,15 +39,89 @@ const osmStyle = {
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
+const CITY_DISTRICTS: Record<string, string[]> = {
+  "Đà Nẵng": [
+    "Hải Châu",
+    "Thanh Khê",
+    "Sơn Trà",
+    "Liên Chiểu",
+    "Ngũ Hành Sơn",
+    "Cẩm Lệ",
+    "Hòa Vang"
+  ],
+  "Hà Nội": [
+    "Cầu Giấy",
+    "Đống Đa",
+    "Ba Đình",
+    "Hoàn Kiếm",
+    "Hai Bà Trưng",
+    "Tây Hồ",
+    "Thanh Xuân",
+    "Hoàng Mai",
+    "Long Biên",
+    "Nam Từ Liêm",
+    "Bắc Từ Liêm",
+    "Hà Đông"
+  ],
+  "Hồ Chí Minh": [
+    "Quận 1",
+    "Quận 3",
+    "Quận 4",
+    "Quận 5",
+    "Quận 6",
+    "Quận 7",
+    "Quận 8",
+    "Quận 10",
+    "Quận 11",
+    "Quận 12",
+    "Bình Thạnh",
+    "Gò Vấp",
+    "Phú Nhuận",
+    "Tân Bình",
+    "Tân Phú",
+    "Thủ Đức",
+    "Bình Tân"
+  ]
+};
+
+const CITY_COORDS: Record<string, { lat: number; lng: number }> = {
+  "Đà Nẵng": { lat: 16.0544, lng: 108.2022 },
+  "Hà Nội": { lat: 21.0285, lng: 105.8542 },
+  "Hồ Chí Minh": { lat: 10.7769, lng: 106.7009 }
+};
+
 export default function CreateListingPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
+
+  const [limitReached, setLimitReached] = useState(false);
+  const [checkingLimit, setCheckingLimit] = useState(true);
+  const [currentPlanName, setCurrentPlanName] = useState("FREE");
+  const [maxListingsCount, setMaxListingsCount] = useState(10);
   
   const [images, setImages] = useState<string[]>([]);
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [createdListingId, setCreatedListingId] = useState<number | null>(null);
+
+  useEffect(() => {
+    const checkUserSubscriptionLimit = async () => {
+      try {
+        const subData = await getCurrentSubscription();
+        if (subData) {
+          setLimitReached(subData.limitReached);
+          setCurrentPlanName(subData.subscription?.plan.displayName || "FREE");
+          setMaxListingsCount(subData.subscription?.plan.maxListings || 10);
+        }
+      } catch (err) {
+        console.error("Error checking subscription limit:", err);
+      } finally {
+        setCheckingLimit(false);
+      }
+    };
+    checkUserSubscriptionLimit();
+  }, []);
   const [coords, setCoords] = useState<{ lat: number; lng: number }>({
     lat: 16.0544,
     lng: 108.2022,
@@ -256,6 +332,15 @@ export default function CreateListingPage() {
     }
   };
 
+  if (checkingLimit) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 py-8">
+        <Loader2 className="h-10 w-10 text-blue-600 animate-spin mb-4" />
+        <p className="text-gray-500 font-medium">Đang kiểm tra hạn mức đăng tin...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -408,6 +493,36 @@ export default function CreateListingPage() {
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Thành phố <span className="text-red-600">*</span>
+                  </label>
+                  <select
+                    value={formData.city}
+                    onChange={(e) => {
+                      const selectedCity = e.target.value;
+                      const coords = CITY_COORDS[selectedCity] || CITY_COORDS["Đà Nẵng"];
+                      setFormData({ 
+                        ...formData, 
+                        city: selectedCity, 
+                        district: "" 
+                      });
+                      setCoords(coords);
+                      setViewport({
+                        latitude: coords.lat,
+                        longitude: coords.lng,
+                        zoom: 12,
+                      });
+                    }}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    required
+                  >
+                    {Object.keys(CITY_DISTRICTS).map((city) => (
+                      <option key={city} value={city}>{city}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
                     Quận/Huyện <span className="text-red-600">*</span>
                   </label>
                   <select
@@ -417,25 +532,10 @@ export default function CreateListingPage() {
                     required
                   >
                     <option value="">Chọn quận/huyện</option>
-                    <option value="Hải Châu">Hải Châu</option>
-                    <option value="Thanh Khê">Thanh Khê</option>
-                    <option value="Sơn Trà">Sơn Trà</option>
-                    <option value="Liên Chiểu">Liên Chiểu</option>
-                    <option value="Ngũ Hành Sơn">Ngũ Hành Sơn</option>
-                    <option value="Cẩm Lệ">Cẩm Lệ</option>
+                    {(CITY_DISTRICTS[formData.city] || []).map((district) => (
+                      <option key={district} value={district}>{district}</option>
+                    ))}
                   </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Thành phố
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.city}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50"
-                    readOnly
-                  />
                 </div>
               </div>
 
@@ -534,6 +634,55 @@ export default function CreateListingPage() {
           </div>
         </form>
       </div>
+
+      {/* Subscription Limit Upsell Modal */}
+      <Dialog open={limitReached} onOpenChange={() => {}}>
+        <DialogContent className="sm:max-w-[420px] rounded-3xl overflow-hidden border border-slate-100 bg-white shadow-2xl p-0">
+          <div className="bg-gradient-to-br from-rose-500 to-red-600 px-6 py-8 text-white text-center relative overflow-hidden">
+            <div className="absolute -right-6 -top-6 opacity-10">
+              <AlertOctagon size={130} />
+            </div>
+            <div className="inline-flex p-3 bg-white/20 backdrop-blur-md rounded-full mb-3 text-white ring-2 ring-white/30">
+              <AlertOctagon className="h-10 w-10 text-white animate-bounce" />
+            </div>
+            <DialogTitle className="text-xl font-bold tracking-tight">Đã Đạt Giới Hạn Đăng Tin</DialogTitle>
+            <DialogDescription className="text-rose-100/90 text-xs mt-1">
+              Bạn cần nâng cấp gói cước để tiếp tục sử dụng dịch vụ.
+            </DialogDescription>
+          </div>
+
+          <div className="p-6 space-y-6 text-center">
+            <div className="space-y-2">
+              <p className="text-sm text-slate-600 leading-relaxed">
+                Tài khoản của bạn hiện đang sử dụng gói <strong className="text-slate-900">{currentPlanName}</strong> và đã chạm mốc giới hạn tối đa <strong className="text-rose-600">{maxListingsCount} tin đăng hiển thị</strong>.
+              </p>
+              <p className="text-xs text-slate-400">
+                Hãy nâng cấp lên gói Seller Pro để có ngay hạn mức đăng tin lên tới 50 tin hiển thị cùng nhiều đặc quyền ưu tiên khác.
+              </p>
+            </div>
+
+            {/* Action buttons */}
+            <div className="flex flex-col gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => router.push("/app/landlord/subscription")}
+                className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold shadow-md shadow-indigo-500/10 transition-all flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <ArrowUpCircle className="h-5 w-5" />
+                Nâng cấp gói cước ngay
+              </button>
+              <button
+                type="button"
+                onClick={() => router.push("/app/landlord/my-listings")}
+                className="w-full py-3 border border-slate-200 text-slate-650 rounded-xl font-semibold hover:bg-slate-50 transition-colors flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                Quay lại danh sách tin
+              </button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

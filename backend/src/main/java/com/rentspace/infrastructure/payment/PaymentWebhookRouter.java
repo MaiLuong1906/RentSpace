@@ -2,6 +2,7 @@ package com.rentspace.infrastructure.payment;
 
 import com.rentspace.domain.deposit.DepositService;
 import com.rentspace.domain.listing.PromotedListingService;
+import com.rentspace.domain.subscription.SubscriptionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -18,6 +19,7 @@ public class PaymentWebhookRouter {
 
     private final DepositService depositService;
     private final PromotedListingService promotedListingService;
+    private final SubscriptionService subscriptionService;
 
     /**
      * Định tuyến Webhook VNPay (GET).
@@ -28,6 +30,8 @@ public class PaymentWebhookRouter {
 
         if (txnRef != null && txnRef.startsWith("PROMOTE_")) {
             return promotedListingService.processPromotedWebhook(params);
+        } else if (txnRef != null && txnRef.startsWith("SUB_")) {
+            return subscriptionService.processVnpayWebhook(params);
         } else {
             return depositService.processVnpayWebhook(params);
         }
@@ -42,8 +46,11 @@ public class PaymentWebhookRouter {
 
         if (orderId != null && orderId.startsWith("PROMOTE_")) {
             return promotedListingService.processPromotedMomoWebhook(params);
+        } else if (orderId != null && orderId.startsWith("SUB_")) {
+            return subscriptionService.processMomoWebhook(params);
         } else {
             return depositService.processMomoWebhook(params);
         }
     }
 }
+

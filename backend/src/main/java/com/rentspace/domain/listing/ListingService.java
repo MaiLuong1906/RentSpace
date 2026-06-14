@@ -18,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.rentspace.domain.review.ReviewRepository;
+import com.rentspace.domain.subscription.annotation.EnforceSubscriptionLimit;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -94,6 +95,7 @@ public class ListingService {
 
     // ===== POST /api/v1/listings =====
     @Transactional
+    @EnforceSubscriptionLimit
     public ListingResponse create(String email, CreateListingRequest request) {
         User landlord = userRepository.findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy người dùng"));
