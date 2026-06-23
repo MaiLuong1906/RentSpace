@@ -259,7 +259,7 @@ export default function SearchPage() {
               <span>Tìm theo khu vực</span>
             </button>
             <button
-              onClick={() => setSearchMode("nearby")}
+              onClick={() => { setSearchMode("nearby"); setPolygon([]); }}
               className={`px-5 py-2.5 rounded-xl text-xs font-bold transition-all ${
                 searchMode === "nearby"
                   ? "bg-blue-600 text-white shadow-md shadow-blue-500/10"

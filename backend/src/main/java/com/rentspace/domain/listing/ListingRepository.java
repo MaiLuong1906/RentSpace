@@ -68,13 +68,18 @@ public interface ListingRepository extends JpaRepository<Listing, Long> {
             LEFT JOIN promoted_listings p ON p.listing_id = l.id AND p.is_active = true AND p.expires_at > CURRENT_TIMESTAMP
             WHERE l.status = 'ACTIVE'
               AND (CAST(:wktPolygon AS VARCHAR) IS NULL OR ST_Contains(ST_GeomFromText(CAST(:wktPolygon AS VARCHAR), 4326), l.geom))
-              AND (CAST(:centerLng AS double precision) IS NULL OR CAST(:centerLat AS double precision) IS NULL OR :radiusMeters IS NULL 
-                   OR ST_DistanceSphere(l.geom, ST_SetSRID(ST_Point(CAST(:centerLng AS double precision), CAST(:centerLat AS double precision)), 4326)) <= :radiusMeters)
+              AND (CAST(:centerLng AS double precision) IS NULL OR CAST(:centerLat AS double precision) IS NULL OR :radiusMeters IS NULL
+                   OR ST_DWithin(
+                       l.geom::geography,
+                       ST_SetSRID(ST_Point(CAST(:centerLng AS double precision), CAST(:centerLat AS double precision)), 4326)::geography,
+                       :radiusMeters
+                   ))
               AND (CAST(:roomType AS VARCHAR) IS NULL OR l.room_type = CAST(:roomType AS VARCHAR))
               AND (:minPrice IS NULL OR l.price_per_month >= :minPrice)
               AND (:maxPrice IS NULL OR l.price_per_month <= :maxPrice)
               AND (:minArea IS NULL OR l.area_m2 >= :minArea)
             ORDER BY (CASE WHEN p.id IS NOT NULL THEN 1 ELSE 0 END) DESC, l.created_at DESC
+            LIMIT 200
             """, nativeQuery = true)
     List<Listing> searchGeo(
             @Param("wktPolygon") String wktPolygon,
