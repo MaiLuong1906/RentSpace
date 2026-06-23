@@ -208,8 +208,14 @@ public class ListingService {
         listing.setHasAirConditioner(Boolean.TRUE.equals(request.getHasAirConditioner()));
         listing.setHasWashingMachine(Boolean.TRUE.equals(request.getHasWashingMachine()));
         listing.setAllowPets(Boolean.TRUE.equals(request.getAllowPets()));
-        if (request.getRoomType() != null) {
+        if (request.getRoomType() != null && !request.getRoomType().equals(listing.getRoomType())) {
+            RoomType oldRoomType = listing.getRoomType();
             listing.setRoomType(request.getRoomType());
+            // Thay đổi loại phòng cần admin duyệt lại để đảm bảo tính chính xác
+            if (listing.getStatus() == ListingStatus.ACTIVE) {
+                listing.setStatus(ListingStatus.PENDING);
+                log.info("Listing id={} reset về PENDING do thay đổi loại phòng: {} -> {}", listing.getId(), oldRoomType, request.getRoomType());
+            }
         }
 
         return listingMapper.toResponse(listingRepository.save(listing));

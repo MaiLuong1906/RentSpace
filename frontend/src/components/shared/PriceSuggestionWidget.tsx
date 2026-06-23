@@ -4,16 +4,8 @@ import { useEffect, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { TrendingDown, TrendingUp, AlertCircle, Info, Sparkles } from "lucide-react";
 import { getPriceSuggestion, PriceSuggestionResponse } from "@/lib/api/price-suggestion.api";
-import { formatPrice } from "@/lib/mockData";
-
-// Bản đồ ánh xạ loại phòng từ frontend sang backend enum
-const FRONTEND_TO_BACKEND_ROOM_TYPE: Record<string, string> = {
-  single: "PHONG_TRO",
-  shared: "NGAN_GIAN",
-  apartment: "CHUNG_CU",
-  studio: "CHUNG_CU_MINI",
-  house: "NHA_NGUYEN_CAN",
-};
+import { formatPrice } from "@/lib/utils";
+import { FRONTEND_TO_BACKEND_ROOM_TYPE } from "@/lib/constants/roomTypes";
 
 interface PriceSuggestionWidgetProps {
   city: string;
@@ -38,7 +30,7 @@ export function PriceSuggestionWidget({
 
   useEffect(() => {
     const fetchSuggestion = async () => {
-      if (!city || !district || !roomType || !area || area <= 0) {
+      if (!city || !roomType || !area || area <= 0) {
         setSuggestion(null);
         return;
       }
@@ -61,12 +53,12 @@ export function PriceSuggestionWidget({
     return () => clearTimeout(timer);
   }, [city, district, roomType, area]);
 
-  if (!city || !district || !roomType || !area || area <= 0) {
+  if (!city || !roomType || !area || area <= 0) {
     return (
       <div className="bg-blue-50/50 border border-blue-100 rounded-xl p-4 text-sm text-blue-705 flex items-start gap-2.5">
         <Info className="h-4.5 w-4.5 text-blue-600 shrink-0 mt-0.5" />
         <p>
-          Nhập đầy đủ <strong>Khu vực</strong>, <strong>Loại phòng</strong> và <strong>Diện tích</strong> để nhận gợi ý giá thuê thông minh từ RentSpace.
+          Nhập đầy đủ <strong>Thành phố</strong>, <strong>Loại phòng</strong> và <strong>Diện tích</strong> để nhận gợi ý giá thuê thông minh từ RentSpace.
         </p>
       </div>
     );
