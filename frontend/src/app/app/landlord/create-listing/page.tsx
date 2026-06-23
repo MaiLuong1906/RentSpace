@@ -9,6 +9,8 @@ import { getCurrentSubscription } from "@/lib/api/subscription.api";
 import type { CreateListingRequest } from "@/types/listing.types";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { PriceSuggestionWidget } from "@/components/shared/PriceSuggestionWidget";
+import { FRONTEND_TO_BACKEND_ROOM_TYPE } from "@/lib/constants/roomTypes";
 
 import Map, { Marker } from "react-map-gl/maplibre";
 import maplibregl from "maplibre-gl";
@@ -284,6 +286,7 @@ export default function CreateListingPage() {
           hasAirConditioner: formData.amenities.includes("Điều hòa"),
           hasWashingMachine: formData.amenities.includes("Máy giặt"),
           allowPets: false,
+          roomType: FRONTEND_TO_BACKEND_ROOM_TYPE[formData.roomType] || "PHONG_TRO",
         };
 
         const response = await listingApi.createListing(payload);
@@ -467,6 +470,16 @@ export default function CreateListingPage() {
                   <option value="apartment">Căn hộ</option>
                   <option value="studio">Studio</option>
                 </select>
+              </div>
+
+              <div className="mt-6 pt-4 border-t border-gray-100">
+                <PriceSuggestionWidget
+                  city={formData.city}
+                  district={formData.district}
+                  roomType={formData.roomType}
+                  area={Number(formData.area)}
+                  currentPrice={Number(formData.price)}
+                />
               </div>
             </div>
           </div>

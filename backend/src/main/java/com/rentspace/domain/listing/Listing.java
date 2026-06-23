@@ -1,6 +1,7 @@
 package com.rentspace.domain.listing;
 
 import com.rentspace.domain.listing.enums.ListingStatus;
+import com.rentspace.domain.listing.enums.RoomType;
 import com.rentspace.domain.user.User;
 import jakarta.persistence.*;
 import lombok.*;
@@ -91,6 +92,12 @@ public class Listing {
     @Column(name = "allow_pets")
     @Builder.Default
     private Boolean allowPets = false;
+
+    // ===== Loại phòng =====
+    @Enumerated(EnumType.STRING)
+    @Column(name = "room_type", nullable = false)
+    @Builder.Default
+    private RoomType roomType = RoomType.PHONG_TRO;
 
     // ===== Trạng thái =====
     @Enumerated(EnumType.STRING)

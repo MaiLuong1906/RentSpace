@@ -1,5 +1,6 @@
 package com.rentspace.domain.listing.dto;
 
+import com.rentspace.domain.listing.enums.RoomType;
 import jakarta.validation.constraints.*;
 import lombok.Data;
 
@@ -43,4 +44,7 @@ public class CreateListingRequest {
     private Boolean hasAirConditioner = false;
     private Boolean hasWashingMachine = false;
     private Boolean allowPets = false;
+
+    private RoomType roomType;
 }
+

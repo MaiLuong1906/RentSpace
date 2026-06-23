@@ -48,6 +48,8 @@ export interface Listing {
   hasWashingMachine?: boolean;
   allowPets?: boolean;
 
+  roomType: string;
+
   status: ListingStatus;
   images: ListingImage[];
 
@@ -80,6 +82,7 @@ export interface CreateListingRequest {
   hasAirConditioner?: boolean;
   hasWashingMachine?: boolean;
   allowPets?: boolean;
+  roomType?: string;
 }
 
 // --- Request đổi trạng thái (khớp UpdateListingStatusRequest.java) ---

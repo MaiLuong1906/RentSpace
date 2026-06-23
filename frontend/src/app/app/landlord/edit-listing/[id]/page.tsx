@@ -7,6 +7,8 @@ import { useQueryClient } from "@tanstack/react-query";
 import { listingApi } from "@/lib/api/listing.api";
 import type { CreateListingRequest, ListingImage } from "@/types/listing.types";
 import { toast } from "sonner";
+import { PriceSuggestionWidget } from "@/components/shared/PriceSuggestionWidget";
+import { FRONTEND_TO_BACKEND_ROOM_TYPE, BACKEND_TO_FRONTEND_ROOM_TYPE } from "@/lib/constants/roomTypes";
 
 import Map, { Marker } from "react-map-gl/maplibre";
 import maplibregl from "maplibre-gl";
@@ -117,7 +119,7 @@ export default function EditListingPage() {
           district: l.district || "",
           city: l.city || "Đà Nẵng",
           area: l.areaM2 ? String(l.areaM2) : "",
-          roomType: "single",
+          roomType: l.roomType ? (BACKEND_TO_FRONTEND_ROOM_TYPE[l.roomType] || "single") : "single",
           amenities,
         });
 
@@ -268,6 +270,7 @@ export default function EditListingPage() {
         hasAirConditioner: formData.amenities.includes("Điều hòa"),
         hasWashingMachine: formData.amenities.includes("Máy giặt"),
         allowPets: false,
+        roomType: FRONTEND_TO_BACKEND_ROOM_TYPE[formData.roomType] || "PHONG_TRO",
       };
 
       await listingApi.updateListing(listingIdStr, payload);
@@ -465,6 +468,34 @@ export default function EditListingPage() {
                     required
                   />
                 </div>
+              </div>
+
+              <div className="mt-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Loại phòng <span className="text-red-600">*</span>
+                </label>
+                <select
+                  value={formData.roomType}
+                  onChange={(e) => setFormData({ ...formData, roomType: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  required
+                >
+                  <option value="single">Phòng đơn</option>
+                  <option value="shared">Phòng ở ghép</option>
+                  <option value="apartment">Căn hộ</option>
+                  <option value="studio">Studio</option>
+                  <option value="house">Nhà nguyên căn</option>
+                </select>
+              </div>
+
+              <div className="mt-6 pt-4 border-t border-gray-100">
+                <PriceSuggestionWidget
+                  city={formData.city}
+                  district={formData.district}
+                  roomType={formData.roomType}
+                  area={Number(formData.area)}
+                  currentPrice={Number(formData.price)}
+                />
               </div>
             </div>
           </div>
