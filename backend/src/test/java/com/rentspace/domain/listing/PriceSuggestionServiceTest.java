@@ -70,7 +70,7 @@ class PriceSuggestionServiceTest {
         assertThat(response.getIsFallback()).isFalse();
         assertThat(response.getP50Price()).isEqualTo(2500000L);
         assertThat(response.getSampleCount()).isEqualTo(5);
-        verify(priceBenchmarkRepository, never()).findFirstByCityAndRoomTypeAndAreaBucketOrderBySampleCountDesc(any(), any(), any());
+        verify(priceBenchmarkRepository, never()).findBestCityFallback(any(), any(), any(), any());
     }
 
     @Test
@@ -80,8 +80,8 @@ class PriceSuggestionServiceTest {
         when(priceBenchmarkRepository.findByCityAndDistrictAndRoomTypeAndAreaBucket(
                 "Đà Nẵng", "Hải Châu", RoomType.PHONG_TRO, "20-30"))
                 .thenReturn(Optional.of(mockBenchmark));
-        when(priceBenchmarkRepository.findFirstByCityAndRoomTypeAndAreaBucketOrderBySampleCountDesc(
-                "Đà Nẵng", RoomType.PHONG_TRO, "20-30"))
+        when(priceBenchmarkRepository.findBestCityFallback(
+                "Đà Nẵng", RoomType.PHONG_TRO, "20-30", "Hải Châu"))
                 .thenReturn(Optional.of(mockCityFallbackBenchmark));
 
         // when
@@ -101,8 +101,8 @@ class PriceSuggestionServiceTest {
         when(priceBenchmarkRepository.findByCityAndDistrictAndRoomTypeAndAreaBucket(
                 "Đà Nẵng", "Hải Châu", RoomType.PHONG_TRO, "20-30"))
                 .thenReturn(Optional.empty());
-        when(priceBenchmarkRepository.findFirstByCityAndRoomTypeAndAreaBucketOrderBySampleCountDesc(
-                "Đà Nẵng", RoomType.PHONG_TRO, "20-30"))
+        when(priceBenchmarkRepository.findBestCityFallback(
+                "Đà Nẵng", RoomType.PHONG_TRO, "20-30", "Hải Châu"))
                 .thenReturn(Optional.of(mockCityFallbackBenchmark));
 
         // when
@@ -121,8 +121,8 @@ class PriceSuggestionServiceTest {
         when(priceBenchmarkRepository.findByCityAndDistrictAndRoomTypeAndAreaBucket(
                 "Đà Nẵng", "Hải Châu", RoomType.PHONG_TRO, "20-30"))
                 .thenReturn(Optional.empty());
-        when(priceBenchmarkRepository.findFirstByCityAndRoomTypeAndAreaBucketOrderBySampleCountDesc(
-                "Đà Nẵng", RoomType.PHONG_TRO, "20-30"))
+        when(priceBenchmarkRepository.findBestCityFallback(
+                "Đà Nẵng", RoomType.PHONG_TRO, "20-30", "Hải Châu"))
                 .thenReturn(Optional.empty());
 
         // when
