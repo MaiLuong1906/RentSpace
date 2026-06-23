@@ -165,6 +165,19 @@ export default function SearchPage() {
     });
   }, [transformedListings, filters]);
 
+  const allAmenities = useMemo(() => {
+    return Array.from(new Set(transformedListings.flatMap((l) => l.amenities)));
+  }, [transformedListings]);
+
+  const toggleAmenity = (amenity: string) => {
+    setFilters((prev) => ({
+      ...prev,
+      amenities: prev.amenities.includes(amenity)
+        ? prev.amenities.filter((a) => a !== amenity)
+        : [...prev.amenities, amenity],
+    }));
+  };
+
   const resetFilters = () => {
     setFilters({
       query: "",
