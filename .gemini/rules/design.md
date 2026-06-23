@@ -16,59 +16,82 @@ Các giá trị thiết kế cốt lõi:
 
 ---
 
-## 2. Hệ Thống Màu Sắc (Color System)
+## 2. Hệ Thống Màu Sắc (Color System - Premium)
 
-Dự án dùng **TailwindCSS v4** với CSS custom properties. Màu được định nghĩa trong `globals.css`.
+RentSpace áp dụng mô hình thẩm mỹ **Soft Structuralism** — sử dụng background trắng/off-white ấm áp, typography đậm và rõ ràng, các component nổi với ambient shadow cực kỳ mềm mại, và màu xanh thương hiệu làm điểm nhấn (accent) nhất quán.
 
-### Bảng màu chính
+Dự án sử dụng **TailwindCSS v4** với CSS custom properties. Các mã màu Premium:
 
 ```css
-/* Light Mode */
---primary: hsl(220, 90%, 56%);         /* Xanh dương — CTA chính */
---primary-foreground: hsl(0, 0%, 100%);
---secondary: hsl(220, 14%, 96%);       /* Nền thứ cấp */
---accent: hsl(38, 92%, 50%);           /* Cam — Highlight, badge */
---destructive: hsl(0, 84%, 60%);       /* Đỏ — Error, delete */
---success: hsl(142, 71%, 45%);         /* Xanh lá — Success */
+/* Background */
+--bg-base:     #FAFAFA;  /* off-white ấm, không dùng trắng tinh cho background chính */
+--bg-surface:  #FFFFFF;  /* card surface */
+--bg-subtle:   #F3F4F6;  /* background cho section xen kẽ */
 
-/* Neutral (Dark Mode ready) */
---background: hsl(0, 0%, 100%);
---foreground: hsl(222, 47%, 11%);
---muted: hsl(210, 40%, 96%);
---border: hsl(214, 32%, 91%);
+/* Text */
+--text-primary:  #111827; /* gray-900, tránh đen thuần (#000) */
+--text-muted:    #6B7280; /* gray-500 */
+--text-subtle:   #9CA3AF; /* gray-400 */
+
+/* Brand */
+--brand-primary: #2563EB; /* blue-600 — màu nhấn (accent) DUY NHẤT */
+--brand-light:   #EFF6FF; /* blue-50 — nền cho trust badge */
+--brand-medium:  #DBEAFE; /* blue-100 — highlight và focus border */
+
+/* Border & Shadow */
+--border-default: #E5E7EB; /* gray-200 */
+--border-strong:  #D1D5DB; /* gray-300 */
+
+/* Status Colors */
+--success: #059669; /* emerald-600 — Trạng thái KYC Verified, active subscription */
+--warning: #D97706; /* amber-600 — Cảnh báo limit */
+--error:   #DC2626; /* red-600 — Lỗi hoặc destructive action */
 ```
 
-### Quy tắc dùng màu
-
-| Màu | Khi nào dùng |
-|---|---|
-| `primary` | Nút CTA chính, link quan trọng, active state |
-| `secondary` | Nút phụ, nền section |
-| `accent` | Badge "Nổi bật", giá tiền, highlight |
-| `destructive` | Nút xóa, thông báo lỗi |
-| `success` | Trạng thái KYC verified, booking confirmed |
-| `muted` | Placeholder text, disabled state |
+### Quy tắc dùng màu:
+- **Không phối hợp gradient background bừa bãi** (đặc biệt là gradient tím-xanh ở hero section).
+- **Không dùng màu accent thứ hai** (không phối xanh lá, tím, hay cam cạnh xanh dương thương hiệu `blue-600`).
+- **Light mode toàn trang** — tránh pha trộn các section tối (dark section) trong bố cục tổng thể.
 
 ---
 
-## 3. Typography
+## 3. Typography Premium
 
+Font stack chính thức của dự án:
 ```css
-/* Font stack */
 font-family: 'Inter', 'Be Vietnam Pro', system-ui, sans-serif;
-/* Be Vietnam Pro cho UI text tiếng Việt cho đẹp hơn */
+/* Be Vietnam Pro được ưu tiên cho copy tiếng Việt để tối ưu hiển thị dấu */
 ```
 
-### Scale Typography (TailwindCSS classes)
+### Scale Typography trong JSX:
 
-| Class | Size | Weight | Dùng cho |
-|---|---|---|---|
-| `text-4xl font-bold` | 36px / 700 | Bold | Page title (h1) |
-| `text-2xl font-semibold` | 24px / 600 | Semibold | Section title (h2) |
-| `text-xl font-semibold` | 20px / 600 | Semibold | Card title (h3) |
-| `text-base` | 16px / 400 | Regular | Body text |
-| `text-sm` | 14px / 400 | Regular | Caption, label |
-| `text-xs text-muted-foreground` | 12px / 400 | Regular | Timestamp, metadata |
+- **Display heading (Hero page, Pricing title):**
+  ```tsx
+  <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight leading-tight text-gray-900">
+  ```
+- **Section heading (H2):**
+  ```tsx
+  <h2 className="text-2xl md:text-3xl font-bold tracking-tight text-gray-900">
+  ```
+- **Card title (H3):**
+  ```tsx
+  <h3 className="text-lg font-semibold text-gray-900">
+  ```
+- **Body copy:**
+  ```tsx
+  <p className="text-base text-gray-600 leading-relaxed max-w-[65ch]">
+  ```
+- **Label / Eyebrow (dùng tối giản):**
+  ```tsx
+  <span className="text-xs font-semibold uppercase tracking-widest text-blue-600">
+  ```
+- **Price display (định dạng tiếng Việt):**
+  ```tsx
+  <span className="text-4xl font-bold text-gray-900">
+    {price.toLocaleString("vi-VN")}đ
+  </span>
+  <span className="text-sm text-gray-500">/tháng</span>
+  ```
 
 ---
 
@@ -97,6 +120,73 @@ export function PriceInput({ ...props }: InputProps) {
 // ❌ Tránh tự viết modal/dialog từ đầu
 // ❌ Tránh dùng inline style, ưu tiên Tailwind class
 ```
+
+### 4.2 Premium Component Patterns (RentSpace Specific)
+
+#### Pricing Cards (Gói Free vs Seller Pro)
+```tsx
+// FREE Tier — Subtle border, clean background
+<div className="border border-gray-200 rounded-2xl p-8 bg-white transition-all hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)]">
+  <h3>Gói Cơ Bản</h3>
+  {/* Content */}
+</div>
+
+// PRO Tier (Seller Pro) — Elevated, highlighted border & badge
+<div className="border-2 border-blue-600 rounded-2xl p-8 bg-white relative transition-all shadow-[0_8px_24px_rgba(37,99,235,0.12)]">
+  <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+    <span className="bg-blue-600 text-white text-xs font-semibold px-4 py-1 rounded-full whitespace-nowrap">
+      Phổ biến nhất
+    </span>
+  </div>
+  <h3>Seller Pro</h3>
+  {/* Content */}
+</div>
+```
+
+#### Feature Comparison Row (Bảng so sánh tính năng - Tránh grid 3 cột đều nhau)
+```tsx
+// Table-like row layout
+<div className="grid grid-cols-1 md:grid-cols-[1fr_auto_auto] gap-4 py-3 border-b border-gray-100 items-center">
+  <div className="text-sm text-gray-700">Số lượng tin đăng tối đa</div>
+  <div className="text-center text-sm text-gray-500 w-24">10 tin</div>
+  <div className="text-center text-sm font-semibold text-blue-600 w-24">50 tin</div>
+</div>
+```
+
+#### Upsell Popup (Khi landlord vượt giới hạn)
+```tsx
+// Dùng Dialog từ Shadcn UI. Khi cần hard-block (đạt giới hạn), khóa nút Close bên ngoài.
+<Dialog open={limitReached} onOpenChange={() => {}}>
+  <DialogContent className="sm:max-w-[420px] rounded-3xl p-6" interactOutsideBehavior="close">
+    <div className="text-center">
+      <div className="mx-auto w-12 h-12 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mb-4">
+        <TrendingUp className="h-6 w-6" />
+      </div>
+      <h3 className="text-xl font-bold mb-2">Đạt giới hạn tin đăng</h3>
+      <p className="text-sm text-gray-500 mb-6">Nâng cấp gói Seller Pro để tiếp tục đăng thêm tin và tiếp cận 10,000+ khách thuê tiềm năng.</p>
+      <div className="flex flex-col gap-2">
+        <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white rounded-xl">
+          Nâng cấp ngay
+        </Button>
+        <Button variant="ghost" className="w-full text-gray-500" onClick={handleClose}>
+          Để sau
+        </Button>
+      </div>
+    </div>
+  </DialogContent>
+</Dialog>
+```
+
+#### Trust Badge (KYC Verified)
+```tsx
+// Hiển thị trạng thái xác thực uy tín
+<div className="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-50 text-blue-700 rounded-full border border-blue-100">
+  <ShieldCheck className="h-3.5 w-3.5 text-blue-600" />
+  <span className="text-xs font-semibold uppercase tracking-wide">Đã xác minh KYC</span>
+</div>
+```
+
+---
 
 ### 4.2 Bộ Component Ưu Tiên
 
@@ -177,39 +267,46 @@ Luôn dùng Tailwind spacing scale (bội số 4px):
 
 ---
 
-## 7. Animation & Micro-interactions
+## 7. Animation & Micro-interactions (Framer Motion v12)
 
 ### 7.1 Dùng Framer Motion cho animation phức tạp
-
 ```typescript
-// ✅ Page transition
-<motion.div
-  initial={{ opacity: 0, y: 20 }}
-  animate={{ opacity: 1, y: 0 }}
-  exit={{ opacity: 0, y: -20 }}
-  transition={{ duration: 0.3 }}
->
+// ✅ CHUẨN - Chỉ import từ "framer-motion"
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 
-// ✅ Stagger animation cho danh sách card
-const container = { hidden: {}, show: { transition: { staggerChildren: 0.1 } } };
-const item = { hidden: { opacity: 0, y: 20 }, show: { opacity: 1, y: 0 } };
+// ❌ SAI - Không được import từ "motion/react" trong dự án này
+import { motion } from "motion/react";
 ```
 
-### 7.2 CSS Transition cho hover effects
+#### Quy tắc Animation:
+- **Bắt buộc check `useReducedMotion()`** để tôn trọng cấu hình hệ thống của người dùng.
+- **Chỉ animate `transform` (scale, x, y) và `opacity`** để tối ưu GPU acceleration.
+- **CẤM TUYỆT ĐỐI** animate các thuộc tính kích thước layout trực tiếp như `top`, `left`, `width`, `height` (gây layout thrashing).
+- Tránh dùng `window.addEventListener("scroll")` để làm scroll effects. Thay bằng `useScroll` của Framer Motion.
 
-```typescript
-// ✅ Card hover effect
-<div className="
-  transition-all duration-200 ease-in-out
-  hover:shadow-lg hover:-translate-y-1
-  cursor-pointer
-">
+#### Mẫu Scroll Reveal chuẩn:
+```tsx
+const shouldReduceMotion = useReducedMotion();
 
-// ✅ Button loading state
-<Button disabled={isLoading}>
-  {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-  {isLoading ? "Đang xử lý..." : "Đăng tin"}
-</Button>
+// Animate reveal
+<motion.div
+  initial={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: 16 }}
+  whileInView={{ opacity: 1, y: 0 }}
+  viewport={{ once: true, amount: 0.2 }}
+  transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+>
+```
+
+### 7.2 CSS Transition cho Hover Effects
+
+#### Shadow & Depth:
+- Tránh dùng các class shadow mặc định như `shadow-lg`, `shadow-xl`.
+- **Card hover cực nhẹ:** `hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)]`
+- **Elevated card (như Gói VIP/Pro):** `shadow-[0_8px_24px_rgba(37,99,235,0.12)]`
+
+```tsx
+// ✅ Card hover transition mẫu
+<div className="border border-gray-200 rounded-xl p-6 transition-all duration-200 ease-in-out hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] hover:-translate-y-0.5 cursor-pointer">
 ```
 
 ---
@@ -217,17 +314,17 @@ const item = { hidden: { opacity: 0, y: 20 }, show: { opacity: 1, y: 0 } };
 ## 8. Pattern Xử Lý Loading & Error State
 
 ```typescript
-// ✅ Chuẩn — Luôn xử lý đủ 3 trạng thái
+// ✅ Chuẩn - Luôn xử lý đủ 3 trạng thái
 export function ListingPage({ id }: { id: number }) {
   const { data, isLoading, error } = useListing(id);
 
-  // Loading state — dùng Skeleton, không dùng spinner cả trang
+  // Loading state - dùng Skeleton, không dùng spinner cả trang
   if (isLoading) return <ListingCardSkeleton />;
 
-  // Error state — thân thiện với user
+  // Error state - thân thiện với user và có nút retry
   if (error) return (
     <ErrorCard
-      message="Không thể tải thông tin listing"
+      message="Không thể tải thông tin phòng trọ"
       action={{ label: "Thử lại", onClick: refetch }}
     />
   );
@@ -248,14 +345,14 @@ export function ListingPage({ id }: { id: number }) {
 </Button>
 
 // ✅ Alt text cho hình ảnh
-<Image src={listing.imageUrl} alt={`Ảnh của ${listing.title}`} />
+<Image src={listing.imageUrl} alt={`Ảnh chụp thực tế của ${listing.title}`} />
 
 // ✅ Role cho interactive elements
 <div role="button" tabIndex={0} onKeyDown={handleKeyDown} onClick={handleClick}>
 
-// ✅ Đủ color contrast — không dùng text màu nhạt trên nền trắng
-// ❌ text-gray-300 trên nền trắng — contrast ratio < 4.5:1
-// ✅ text-gray-600 trên nền trắng — đạt WCAG AA
+// ✅ Đủ color contrast - không dùng text màu nhạt trên nền trắng
+// ❌ text-gray-300 trên nền trắng - contrast ratio < 4.5:1
+// ✅ text-gray-600 trên nền trắng - đạt WCAG AA
 ```
 
 ---
