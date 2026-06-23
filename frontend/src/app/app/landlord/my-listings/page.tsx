@@ -398,7 +398,7 @@ export default function MyListingsPage() {
       {/* Promote Listing Modal */}
       {promoteModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
-          <div className="bg-white rounded-2xl shadow-xl max-w-md w-full overflow-hidden border border-gray-100">
+          <div className="bg-white rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.08)] max-w-md w-full overflow-hidden border border-gray-100">
             <div className="flex items-center justify-between p-6 border-b border-gray-100 bg-gray-50/50">
               <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
                 <TrendingUp className="h-5 w-5 text-amber-500" />

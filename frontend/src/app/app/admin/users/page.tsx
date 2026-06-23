@@ -129,7 +129,7 @@ export default function AdminUsersPage() {
         );
       case "LANDLORD":
         return (
-          <span className="inline-flex px-2.5 py-0.5 rounded-full text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-150 uppercase tracking-wider">
+          <span className="inline-flex px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-50 text-blue-700 border border-blue-100 uppercase tracking-wider">
             Chủ trọ
           </span>
         );
@@ -170,7 +170,7 @@ export default function AdminUsersPage() {
   if (authStatus === "unauthenticated" || session?.user?.role !== "ADMIN") {
     return (
       <div className="min-h-[85vh] bg-gray-50/50 py-12 flex items-center justify-center px-4">
-        <div className="max-w-md bg-white border border-gray-100 shadow-xl rounded-3xl p-8 text-center">
+        <div className="max-w-md bg-white border border-gray-100 shadow-[0_8px_32px_rgba(0,0,0,0.08)] rounded-3xl p-8 text-center">
           <ShieldAlert className="h-14 w-14 text-red-500 mx-auto mb-4 animate-pulse" />
           <h2 className="text-xl font-extrabold text-gray-800 mb-2">Quyền truy cập bị giới hạn</h2>
           <p className="text-gray-500 text-sm mb-6">
@@ -194,7 +194,7 @@ export default function AdminUsersPage() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
           <div>
-            <h1 className="text-3xl font-extrabold bg-gradient-to-r from-gray-900 via-blue-900 to-indigo-900 bg-clip-text text-transparent">
+            <h1 className="text-3xl font-extrabold text-gray-900">
               Quản lý người dùng hệ thống
             </h1>
             <p className="text-xs text-gray-400 font-medium mt-1">
@@ -212,7 +212,7 @@ export default function AdminUsersPage() {
 
         {/* Stats Grid */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          <div className="bg-white border border-gray-100 rounded-3xl shadow-xl shadow-gray-200/5 p-6 flex items-center justify-between">
+          <div className="bg-white border border-gray-100 rounded-3xl shadow-[0_4px_16px_rgba(0,0,0,0.06)] p-6 flex items-center justify-between">
             <div>
               <div className="text-sm text-gray-400 font-bold">Tổng thành viên</div>
               <div className="text-2xl font-extrabold text-gray-800 mt-1">{totalUsers}</div>
@@ -222,17 +222,17 @@ export default function AdminUsersPage() {
             </div>
           </div>
           
-          <div className="bg-white border border-gray-100 rounded-3xl shadow-xl shadow-gray-200/5 p-6 flex items-center justify-between">
+          <div className="bg-white border border-gray-100 rounded-3xl shadow-[0_4px_16px_rgba(0,0,0,0.06)] p-6 flex items-center justify-between">
             <div>
               <div className="text-sm text-gray-400 font-bold">Chủ cho thuê</div>
               <div className="text-2xl font-extrabold text-gray-800 mt-1">{landlordsCount}</div>
             </div>
-            <div className="h-12 w-12 bg-indigo-50 border border-indigo-100 text-indigo-600 rounded-2xl flex items-center justify-center">
+            <div className="h-12 w-12 bg-blue-50 border border-blue-100 text-blue-600 rounded-2xl flex items-center justify-center">
               <UserIcon className="h-6 w-6" />
             </div>
           </div>
 
-          <div className="bg-white border border-gray-100 rounded-3xl shadow-xl shadow-gray-200/5 p-6 flex items-center justify-between">
+          <div className="bg-white border border-gray-100 rounded-3xl shadow-[0_4px_16px_rgba(0,0,0,0.06)] p-6 flex items-center justify-between">
             <div>
               <div className="text-sm text-gray-400 font-bold">Người thuê phòng</div>
               <div className="text-2xl font-extrabold text-gray-800 mt-1">{tenantsCount}</div>
@@ -242,7 +242,7 @@ export default function AdminUsersPage() {
             </div>
           </div>
 
-          <div className="bg-white border border-gray-100 rounded-3xl shadow-xl shadow-gray-200/5 p-6 flex items-center justify-between">
+          <div className="bg-white border border-gray-100 rounded-3xl shadow-[0_4px_16px_rgba(0,0,0,0.06)] p-6 flex items-center justify-between">
             <div>
               <div className="text-sm text-gray-400 font-bold">Quản trị viên</div>
               <div className="text-2xl font-extrabold text-gray-800 mt-1">{adminsCount}</div>
@@ -286,7 +286,7 @@ export default function AdminUsersPage() {
         </div>
 
         {/* Users Table */}
-        <div className="bg-white border border-gray-100 rounded-3xl shadow-xl shadow-gray-200/20 overflow-hidden">
+        <div className="bg-white border border-gray-100 rounded-3xl shadow-[0_4px_16px_rgba(0,0,0,0.06)] overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
@@ -371,7 +371,7 @@ export default function AdminUsersPage() {
                         {session.user.id !== user.id && (
                           <Link
                             href={`/app/chat?userId=${user.id}`}
-                            className="p-2 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 rounded-xl shadow-sm transition-all active:scale-95"
+                            className="p-2 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-xl transition-all active:scale-95"
                             title="Gửi tin nhắn"
                           >
                             <MessageSquare className="h-4 w-4" />
@@ -403,7 +403,7 @@ export default function AdminUsersPage() {
               initial={{ opacity: 0, scale: 0.95, y: 15 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 15 }}
-              className="bg-white rounded-3xl shadow-2xl max-w-md w-full overflow-hidden max-h-[90vh] flex flex-col"
+              className="bg-white rounded-3xl shadow-[0_8px_32px_rgba(0,0,0,0.08)] max-w-md w-full overflow-hidden max-h-[90vh] flex flex-col"
             >
               {/* Header Modal */}
               <div className="p-6 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
@@ -493,7 +493,7 @@ export default function AdminUsersPage() {
                   <Link
                     href={`/app/chat?userId=${selectedUser.id}`}
                     onClick={() => setSelectedUser(null)}
-                    className="flex-1 px-5 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-2xl text-xs font-bold shadow-lg shadow-blue-500/10 hover:shadow-blue-500/20 active:scale-95 transition-all flex items-center justify-center gap-1.5"
+                    className="flex-1 px-5 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl text-xs font-bold active:scale-95 transition-colors flex items-center justify-center gap-1.5"
                   >
                     <MessageSquare className="h-4.5 w-4.5" />
                     <span>Nhắn tin</span>

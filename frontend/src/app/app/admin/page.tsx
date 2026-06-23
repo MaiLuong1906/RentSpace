@@ -80,7 +80,7 @@ export default function AdminDashboard() {
   if (authStatus === "unauthenticated" || session?.user?.role !== "ADMIN") {
     return (
       <div className="min-h-[85vh] bg-gray-50/50 py-12 flex items-center justify-center px-4">
-        <div className="max-w-md bg-white border border-gray-100 shadow-xl rounded-3xl p-8 text-center">
+        <div className="max-w-md bg-white border border-gray-100 shadow-[0_8px_32px_rgba(0,0,0,0.08)] rounded-3xl p-8 text-center">
           <ShieldAlert className="h-14 w-14 text-red-500 mx-auto mb-4 animate-pulse" />
           <h2 className="text-xl font-extrabold text-gray-800 mb-2">Quyền truy cập bị giới hạn</h2>
           <p className="text-gray-500 text-sm mb-6">
@@ -119,8 +119,8 @@ export default function AdminDashboard() {
 
           <div className="bg-white rounded-xl shadow-md p-6">
             <div className="flex items-center justify-between mb-4">
-              <div className="p-3 bg-purple-100 rounded-lg">
-                <Home className="h-6 w-6 text-purple-600" />
+              <div className="p-3 bg-blue-50 rounded-lg">
+                <Home className="h-6 w-6 text-blue-600" />
               </div>
               <span className="text-sm text-green-600 font-semibold">Đang duyệt</span>
             </div>
@@ -184,15 +184,15 @@ export default function AdminDashboard() {
             className="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-shadow flex flex-col justify-between"
           >
             <div className="flex items-center gap-4 mb-4">
-              <div className="p-3 bg-purple-100 rounded-lg flex-shrink-0">
-                <Home className="h-8 w-8 text-purple-600" />
+              <div className="p-3 bg-blue-50 rounded-lg flex-shrink-0">
+                <Home className="h-8 w-8 text-blue-600" />
               </div>
               <div>
                 <h3 className="text-lg font-semibold">Quản lý tin</h3>
                 <p className="text-xs text-gray-600">Kiểm duyệt bài viết phòng trọ</p>
               </div>
             </div>
-            <div className="text-sm text-purple-600 font-semibold mt-2">
+            <div className="text-sm text-blue-600 font-semibold mt-2">
               Xem tất cả →
             </div>
           </Link>

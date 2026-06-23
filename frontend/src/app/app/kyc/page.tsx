@@ -172,7 +172,7 @@ export default function KYCPage() {
           <motion.div 
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-white border border-emerald-100 rounded-3xl p-8 text-center shadow-xl shadow-emerald-500/5 relative overflow-hidden"
+            className="bg-white border border-emerald-100 rounded-3xl p-8 text-center shadow-[0_8px_32px_rgba(0,0,0,0.06)] relative overflow-hidden"
           >
             <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-emerald-400 to-teal-500" />
             <div className="bg-emerald-50 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 border border-emerald-100">
@@ -202,7 +202,7 @@ export default function KYCPage() {
           <motion.div 
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-white border border-amber-100 rounded-3xl p-8 text-center shadow-xl shadow-amber-500/5 relative overflow-hidden"
+            className="bg-white border border-amber-100 rounded-3xl p-8 text-center shadow-[0_8px_32px_rgba(0,0,0,0.06)] relative overflow-hidden"
           >
             <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-amber-400 to-orange-500" />
             <div className="bg-amber-50 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 border border-amber-100 animate-spin-slow">
@@ -231,7 +231,7 @@ export default function KYCPage() {
           <motion.div 
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-white border border-rose-100 rounded-3xl p-8 text-center shadow-xl shadow-rose-500/5 relative overflow-hidden"
+            className="bg-white border border-rose-100 rounded-3xl p-8 text-center shadow-[0_8px_32px_rgba(0,0,0,0.06)] relative overflow-hidden"
           >
             <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-rose-400 to-red-500" />
             <div className="bg-rose-50 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 border border-rose-100">
@@ -278,7 +278,7 @@ export default function KYCPage() {
   if (authStatus === "unauthenticated") {
     return (
       <div className="min-h-[85vh] bg-gray-50/50 py-12 flex items-center justify-center px-4">
-        <div className="max-w-md bg-white border border-gray-100 shadow-xl rounded-3xl p-8 text-center relative overflow-hidden">
+        <div className="max-w-md bg-white border border-gray-100 shadow-[0_8px_32px_rgba(0,0,0,0.08)] rounded-3xl p-8 text-center relative overflow-hidden">
           <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-red-400 to-rose-500" />
           <Shield className="h-14 w-14 text-red-500 mx-auto mb-4 animate-pulse" />
           <h2 className="text-xl font-extrabold text-gray-800 mb-2">Yêu cầu đăng nhập</h2>
@@ -306,7 +306,7 @@ export default function KYCPage() {
             <Shield className="h-7 w-7 text-blue-600" />
           </div>
           <div>
-            <h1 className="text-3xl font-extrabold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+            <h1 className="text-3xl font-extrabold text-gray-900">
               Xác thực danh tính (KYC)
             </h1>
             <p className="text-xs text-gray-400 font-semibold mt-0.5">Bảo vệ tài khoản, xác minh quyền đăng tin & giao dịch</p>
@@ -336,8 +336,8 @@ export default function KYCPage() {
                   <h3 className="text-xs font-extrabold text-gray-800 mb-1">Tin đăng chất lượng</h3>
                   <p className="text-[11px] text-gray-500 leading-relaxed">Tin đăng của tài khoản đã KYC được ưu tiên hiển thị ở vị trí hàng đầu.</p>
                 </div>
-                <div className="p-4 bg-purple-50/50 border border-purple-100 rounded-2xl">
-                  <Check className="h-5 w-5 text-purple-600 mb-2" />
+                <div className="p-4 bg-blue-50/50 border border-blue-100 rounded-2xl">
+                  <Check className="h-5 w-5 text-blue-600 mb-2" />
                   <h3 className="text-xs font-extrabold text-gray-800 mb-1">An toàn tuyệt đối</h3>
                   <p className="text-[11px] text-gray-500 leading-relaxed">Ngăn ngừa hành vi lừa đảo giả danh, tạo cộng đồng thuê trọ văn minh.</p>
                 </div>
@@ -350,7 +350,7 @@ export default function KYCPage() {
                 onClick={() => setKycMethod("ekyc")}
                 className={`flex-1 py-3 text-sm font-bold rounded-2xl transition-all duration-200 flex items-center justify-center gap-2 ${
                   kycMethod === "ekyc" 
-                    ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-500/10" 
+                    ? "bg-blue-600 text-white shadow-[0_2px_8px_rgba(37,99,235,0.15)]"
                     : "text-gray-500 hover:text-gray-800 hover:bg-gray-50"
                 }`}
               >
@@ -361,7 +361,7 @@ export default function KYCPage() {
                 onClick={() => setKycMethod("manual")}
                 className={`flex-1 py-3 text-sm font-bold rounded-2xl transition-all duration-200 flex items-center justify-center gap-2 ${
                   kycMethod === "manual" 
-                    ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-500/10" 
+                    ? "bg-blue-600 text-white shadow-[0_2px_8px_rgba(37,99,235,0.15)]"
                     : "text-gray-500 hover:text-gray-800 hover:bg-gray-50"
                 }`}
               >
@@ -417,7 +417,7 @@ export default function KYCPage() {
                   <button
                     onClick={() => handleStartEkyc(consentChecked)}
                     disabled={!consentChecked || loading || ekycLoading}
-                    className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3.5 rounded-2xl font-extrabold shadow-lg shadow-blue-500/20 hover:shadow-xl hover:scale-[1.01] active:scale-[0.99] disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed transition-all text-sm flex items-center justify-center gap-2"
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3.5 rounded-2xl font-extrabold disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors text-sm flex items-center justify-center gap-2"
                   >
                     <Camera className="h-4.5 w-4.5" />
                     <span>Bắt đầu quét eKYC ngay</span>
@@ -490,7 +490,7 @@ export default function KYCPage() {
                   <button
                     type="submit"
                     disabled={!selectedFile || !consentChecked || isSubmitting}
-                    className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3.5 rounded-2xl font-extrabold shadow-lg shadow-blue-500/20 hover:shadow-xl transition-all text-sm flex items-center justify-center gap-2"
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3.5 rounded-2xl font-extrabold transition-colors text-sm flex items-center justify-center gap-2"
                   >
                     {isSubmitting ? (
                       <>
@@ -521,7 +521,7 @@ export default function KYCPage() {
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="w-full max-w-2xl bg-white rounded-3xl overflow-hidden shadow-2xl relative flex flex-col max-h-[90vh]"
+              className="w-full max-w-2xl bg-white rounded-3xl overflow-hidden shadow-[0_8px_32px_rgba(0,0,0,0.08)] relative flex flex-col max-h-[90vh]"
             >
               
               {/* Dev Simulation Toolbar (localhost only) */}

@@ -86,14 +86,14 @@ export function CommentSection({ postId, currentUserId, setCommentCount }: Comme
           placeholder="Viết bình luận công khai..."
           value={commentText}
           onChange={(e) => setCommentText(e.target.value)}
-          className="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition"
+          className="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition"
           disabled={isSubmittingComment}
           maxLength={500}
         />
         <button
           type="submit"
           disabled={isSubmittingComment || !commentText.trim()}
-          className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl px-4 flex items-center justify-center transition disabled:opacity-50"
+          className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl px-4 flex items-center justify-center transition disabled:opacity-50"
         >
           {isSubmittingComment ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
         </button>
@@ -126,7 +126,7 @@ export function CommentSection({ postId, currentUserId, setCommentCount }: Comme
               </Link>
               <div className="flex-1 bg-gray-50 rounded-2xl px-3 py-2 border border-gray-100">
                 <div className="flex items-center justify-between gap-2 mb-0.5">
-                  <Link href={`/app/profile/${comment.author.id}`} className="font-semibold text-gray-900 text-xs hover:text-indigo-600 transition">
+                  <Link href={`/app/profile/${comment.author.id}`} className="font-semibold text-gray-900 text-xs hover:text-blue-600 transition">
                     {comment.author.name}
                   </Link>
                   <span className="text-[10px] text-gray-400">{commentTime}</span>
@@ -150,7 +150,7 @@ export function CommentSection({ postId, currentUserId, setCommentCount }: Comme
         {hasMoreComments && !isLoadingComments && (
           <button
             onClick={() => handleFetchComments(commentsPage + 1)}
-            className="w-full text-center text-xs font-semibold text-indigo-600 hover:text-indigo-700 py-1.5 border border-indigo-100 rounded-lg bg-indigo-50/30 flex items-center justify-center gap-1 hover:bg-indigo-50/60 transition"
+            className="w-full text-center text-xs font-semibold text-blue-600 hover:text-blue-700 py-1.5 border border-blue-100 rounded-lg bg-blue-50/30 flex items-center justify-center gap-1 hover:bg-blue-50/60 transition"
           >
             Xem thêm bình luận <ChevronDown size={14} />
           </button>

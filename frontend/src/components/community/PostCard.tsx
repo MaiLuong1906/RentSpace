@@ -135,14 +135,14 @@ export function PostCard({ post, currentUserId, onPostHidden }: PostCardProps) {
                 unoptimized
               />
             ) : (
-              <div className="w-11 h-11 rounded-full bg-indigo-50 text-indigo-600 font-semibold text-lg flex items-center justify-center">
+              <div className="w-11 h-11 rounded-full bg-blue-50 text-blue-600 font-semibold text-lg flex items-center justify-center">
                 {post.author.name.charAt(0).toUpperCase()}
               </div>
             )}
           </Link>
           <div>
             <div className="flex items-center gap-1.5">
-              <Link href={`/app/profile/${post.author.id}`} className="font-semibold text-gray-900 text-sm md:text-base hover:text-indigo-600 transition">
+              <Link href={`/app/profile/${post.author.id}`} className="font-semibold text-gray-900 text-sm md:text-base hover:text-blue-600 transition">
                 {post.author.name}
               </Link>
               {post.author.kycStatus === "VERIFIED" && (
@@ -169,7 +169,7 @@ export function PostCard({ post, currentUserId, onPostHidden }: PostCardProps) {
 
         {/* Display District / Location if available */}
         {post.district && (
-          <div className="mt-2 text-xs text-indigo-600 bg-indigo-50 border border-indigo-100 inline-flex items-center gap-1 px-2 py-0.5 rounded">
+          <div className="mt-2 text-xs text-blue-600 bg-blue-50 border border-blue-100 inline-flex items-center gap-1 px-2 py-0.5 rounded">
             📍 Khu vực: {post.district}
           </div>
         )}
@@ -204,7 +204,7 @@ export function PostCard({ post, currentUserId, onPostHidden }: PostCardProps) {
           </div>
           <Link 
             href={`/app/listings/${post.relatedListingId}`}
-            className="text-xs text-indigo-600 hover:text-indigo-700 font-medium flex items-center gap-1"
+            className="text-xs text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1"
           >
             Xem phòng trọ <ExternalLink size={12} />
           </Link>
@@ -229,9 +229,9 @@ export function PostCard({ post, currentUserId, onPostHidden }: PostCardProps) {
         <button
           onClick={handleToggleComments}
           className={`flex items-center gap-1.5 text-sm font-medium px-3 py-1.5 rounded-lg transition ${
-            showComments 
-              ? "text-indigo-600 bg-indigo-50" 
-              : "text-gray-500 hover:text-indigo-600 hover:bg-indigo-50"
+            showComments
+              ? "text-blue-600 bg-blue-50"
+              : "text-gray-500 hover:text-blue-600 hover:bg-blue-50"
           }`}
         >
           <MessageCircle size={18} />
@@ -266,7 +266,7 @@ export function PostCard({ post, currentUserId, onPostHidden }: PostCardProps) {
       {/* Report Modal */}
       {showReportModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl border border-gray-100 animate-in fade-in zoom-in duration-200">
+          <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-[0_8px_32px_rgba(0,0,0,0.08)] border border-gray-100 animate-in fade-in zoom-in duration-200">
             <h3 className="text-lg font-bold text-gray-900 mb-2">Báo cáo vi phạm</h3>
             <p className="text-xs text-gray-500 mb-4">
               Giúp RentSpace xây dựng một cộng đồng văn minh. Hãy cho chúng tôi biết lý do bạn muốn báo cáo bài viết này.
@@ -281,7 +281,7 @@ export function PostCard({ post, currentUserId, onPostHidden }: PostCardProps) {
                   placeholder="Nhập lý do cụ thể (ví dụ: Tin giả, Quấy rối, Spam, Ngôn từ kích động thù địch...)"
                   value={reportReason}
                   onChange={(e) => setReportReason(e.target.value)}
-                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none bg-gray-50/50"
+                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none bg-gray-50/50"
                   maxLength={250}
                 />
                 <p className="text-right text-[10px] text-gray-400 mt-1">{reportReason.length}/250</p>

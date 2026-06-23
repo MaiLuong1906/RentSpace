@@ -335,7 +335,7 @@ export default function SearchPage() {
         </div>
 
         {/* Dynamic Filters & Settings Panel */}
-        <div className="bg-white rounded-3xl border border-gray-100 shadow-xl shadow-gray-200/20 p-5 mb-8">
+        <div className="bg-white rounded-3xl border border-gray-100 shadow-[0_4px_16px_rgba(0,0,0,0.06)] p-5 mb-8">
           {searchMode === "standard" ? (
             /* Standard Search Input */
             <div className="flex flex-col md:flex-row gap-4">
@@ -621,7 +621,7 @@ export default function SearchPage() {
               ))}
             </div>
           ) : (
-            <div className="flex flex-col items-center justify-center py-20 bg-white border border-gray-100 rounded-3xl shadow-xl shadow-gray-200/5 h-[450px]">
+            <div className="flex flex-col items-center justify-center py-20 bg-white border border-gray-100 rounded-3xl shadow-[0_4px_16px_rgba(0,0,0,0.04)] h-[450px]">
               <Loader2 className="h-10 w-10 text-blue-600 animate-spin mb-4" />
               <p className="text-gray-500 text-sm font-semibold">Đang tìm kiếm phòng trọ phù hợp...</p>
               <p className="text-gray-400 text-xs mt-1 font-medium">Vui lòng đợi trong giây lát</p>
@@ -636,7 +636,7 @@ export default function SearchPage() {
                   <Link
                     key={listing.id}
                     href={`/app/listings/${listing.id}`}
-                    className="bg-white rounded-3xl border border-gray-100 shadow-lg shadow-gray-200/10 overflow-hidden hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between"
+                    className="bg-white rounded-3xl border border-gray-100 shadow-[0_4px_16px_rgba(0,0,0,0.06)] overflow-hidden hover:shadow-[0_8px_24px_rgba(0,0,0,0.08)] hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between"
                   >
                     <div className="relative h-48 bg-gray-200">
                       <img
@@ -841,7 +841,7 @@ export default function SearchPage() {
                   {/* Error Overlay for Map Loading Failures */}
                   {mapError && (
                     <div className="absolute inset-0 bg-slate-950/90 z-50 flex flex-col justify-center items-center p-6 text-center text-white backdrop-blur-md">
-                      <div className="max-w-md bg-slate-900 border border-white/10 p-6 rounded-3xl shadow-2xl">
+                      <div className="max-w-md bg-gray-900 border border-white/10 p-6 rounded-3xl">
                         <Info className="h-10 w-10 text-red-500 mx-auto mb-4 animate-pulse" />
                         <h4 className="text-sm font-extrabold text-red-400">Không Thể Tải Bản Đồ</h4>
                         <p className="text-xs text-white/70 leading-relaxed mt-2">
@@ -864,7 +864,7 @@ export default function SearchPage() {
 
         {/* Empty States */}
         {!isLoading && filteredListings.length === 0 && (
-          <div className="bg-white border border-gray-100 rounded-3xl p-16 text-center shadow-xl shadow-gray-200/5">
+          <div className="bg-white border border-gray-100 rounded-3xl p-16 text-center shadow-[0_4px_16px_rgba(0,0,0,0.04)]">
             <SearchIcon className="h-14 w-14 text-gray-300 mx-auto mb-4" />
             <h3 className="text-xl font-bold text-gray-700 mb-1">
               Không tìm thấy phòng trọ nào

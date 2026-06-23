@@ -207,7 +207,7 @@ export default function AdminListingsPage() {
   if (authStatus === "unauthenticated" || session?.user?.role !== "ADMIN") {
     return (
       <div className="min-h-[85vh] bg-gray-50/50 py-12 flex items-center justify-center px-4">
-        <div className="max-w-md bg-white border border-gray-100 shadow-xl rounded-3xl p-8 text-center">
+        <div className="max-w-md bg-white border border-gray-100 shadow-[0_8px_32px_rgba(0,0,0,0.08)] rounded-3xl p-8 text-center">
           <ShieldAlert className="h-14 w-14 text-red-500 mx-auto mb-4 animate-pulse" />
           <h2 className="text-xl font-extrabold text-gray-800 mb-2">Quyền truy cập bị giới hạn</h2>
           <p className="text-gray-500 text-sm mb-6">
@@ -231,7 +231,7 @@ export default function AdminListingsPage() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
           <div>
-            <h1 className="text-3xl font-extrabold bg-gradient-to-r from-gray-900 via-blue-900 to-indigo-900 bg-clip-text text-transparent">
+            <h1 className="text-3xl font-extrabold text-gray-900">
               Quản lý tin đăng hệ thống
             </h1>
             <p className="text-xs text-gray-400 font-medium mt-1">
@@ -279,7 +279,7 @@ export default function AdminListingsPage() {
         </div>
 
         {/* Listings Table */}
-        <div className="bg-white border border-gray-100 rounded-3xl shadow-xl shadow-gray-200/20 overflow-hidden">
+        <div className="bg-white border border-gray-100 rounded-3xl shadow-[0_4px_16px_rgba(0,0,0,0.06)] overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
@@ -462,7 +462,7 @@ export default function AdminListingsPage() {
               initial={{ opacity: 0, scale: 0.95, y: 15 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 15 }}
-              className="bg-white rounded-3xl shadow-2xl max-w-3xl w-full overflow-hidden max-h-[92vh] flex flex-col"
+              className="bg-white rounded-3xl shadow-[0_8px_32px_rgba(0,0,0,0.08)] max-w-3xl w-full overflow-hidden max-h-[92vh] flex flex-col"
             >
               {/* Header Modal */}
               <div className="p-6 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
@@ -548,7 +548,7 @@ export default function AdminListingsPage() {
                       <span className="inline-flex px-3 py-1.5 text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-100 rounded-xl">Wifi miễn phí</span>
                     )}
                     {selectedListing.hasParking && (
-                      <span className="inline-flex px-3 py-1.5 text-xs font-semibold bg-purple-50 text-purple-700 border border-purple-100 rounded-xl">Bãi đỗ xe</span>
+                      <span className="inline-flex px-3 py-1.5 text-xs font-semibold bg-gray-50 text-gray-600 border border-gray-200 rounded-xl">Bãi đỗ xe</span>
                     )}
                     {selectedListing.hasAirConditioner && (
                       <span className="inline-flex px-3 py-1.5 text-xs font-semibold bg-cyan-50 text-cyan-700 border border-cyan-100 rounded-xl">Điều hòa nhiệt độ</span>

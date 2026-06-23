@@ -116,7 +116,7 @@ export default function PublicProfilePage({ params }: { params: Promise<{ id: st
   return (
     <div className="min-h-screen bg-gray-50 pb-12">
       {/* Background Banner Decoration */}
-      <div className="h-48 w-full bg-gradient-to-r from-blue-600 to-indigo-700 relative">
+      <div className="h-48 w-full bg-blue-600 relative">
         <div className="absolute inset-0 bg-black/10"></div>
         <div className="max-w-6xl mx-auto px-4 h-full flex items-end">
           <button
@@ -131,7 +131,7 @@ export default function PublicProfilePage({ params }: { params: Promise<{ id: st
 
       <div className="max-w-6xl mx-auto px-4">
         {/* Main Info Card */}
-        <div className="bg-white rounded-2xl shadow-xl p-6 md:p-8 -mt-20 relative z-10 border border-gray-100 mb-8">
+        <div className="bg-white rounded-2xl shadow-[0_4px_24px_rgba(0,0,0,0.08)] p-6 md:p-8 -mt-20 relative z-10 border border-gray-100 mb-8">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div className="flex flex-col sm:flex-row items-center gap-6 text-center sm:text-left">
               {/* Avatar Container */}
@@ -164,7 +164,7 @@ export default function PublicProfilePage({ params }: { params: Promise<{ id: st
                     profile.role === "ADMIN" 
                       ? "bg-red-100 text-red-700" 
                       : isLandlord 
-                      ? "bg-purple-100 text-purple-700" 
+                      ? "bg-blue-100 text-blue-700"
                       : "bg-green-100 text-green-700"
                   }`}>
                     {displayRole}
@@ -226,7 +226,7 @@ export default function PublicProfilePage({ params }: { params: Promise<{ id: st
                     <Link
                       key={listing.id}
                       href={`/app/listings/${listing.id}`}
-                      className="bg-white rounded-2xl shadow-md overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border border-gray-100 flex flex-col"
+                      className="bg-white rounded-2xl shadow-[0_4px_16px_rgba(0,0,0,0.06)] overflow-hidden hover:shadow-[0_8px_24px_rgba(0,0,0,0.08)] hover:-translate-y-1 transition-all duration-300 border border-gray-100 flex flex-col"
                     >
                       <div className="relative h-48 bg-gray-200">
                         <img

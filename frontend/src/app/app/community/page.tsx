@@ -21,7 +21,7 @@ import { toast } from "sonner";
 type FilterType = "ALL" | "ROOMMATE" | "TIPS" | "REVIEW" | "QUESTION";
 
 const FILTER_ITEMS = [
-  { value: "ALL", label: "Tất cả tin", icon: BookOpen, color: "border-indigo-100 text-indigo-700 bg-indigo-50/50 hover:bg-indigo-50" },
+  { value: "ALL", label: "Tất cả tin", icon: BookOpen, color: "border-blue-100 text-blue-700 bg-blue-50/50 hover:bg-blue-50" },
   { value: "ROOMMATE", label: "Tìm ở ghép", icon: Users, color: "border-emerald-100 text-emerald-700 bg-emerald-50/50 hover:bg-emerald-50" },
   { value: "TIPS", label: "Kinh nghiệm", icon: Lightbulb, color: "border-amber-100 text-amber-700 bg-amber-50/50 hover:bg-amber-50" },
   { value: "REVIEW", label: "Đánh giá", icon: TrendingUp, color: "border-blue-100 text-blue-700 bg-blue-50/50 hover:bg-blue-50" },
@@ -113,7 +113,7 @@ export default function CommunityPage() {
           </div>
           <button
             onClick={handleOpenCreateModal}
-            className="flex items-center justify-center gap-2 px-5 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-bold shadow-lg shadow-indigo-100 hover:shadow-indigo-200 transition duration-200"
+            className="flex items-center justify-center gap-2 px-5 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-bold transition duration-200"
           >
             <PlusCircle size={20} />
             <span>Tạo bài viết mới</span>
@@ -137,7 +137,7 @@ export default function CommunityPage() {
                     onClick={() => handleFilterChange(item.value)}
                     className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-xs md:text-sm border transition whitespace-nowrap ${
                       isSelected
-                        ? "bg-indigo-600 border-indigo-600 text-white shadow-md shadow-indigo-100"
+                        ? "bg-blue-600 border-blue-600 text-white shadow-[0_2px_8px_rgba(37,99,235,0.12)]"
                         : "bg-white hover:bg-gray-50 border-gray-200 text-gray-700"
                     }`}
                   >
@@ -163,7 +163,7 @@ export default function CommunityPage() {
                 </p>
                 <button
                   onClick={handleOpenCreateModal}
-                  className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-semibold shadow-md shadow-indigo-100 transition"
+                  className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-semibold transition"
                 >
                   Đăng bài viết ngay
                 </button>
@@ -182,7 +182,7 @@ export default function CommunityPage() {
                 {/* Loading Skeleton during scroll */}
                 {isLoading && page > 0 && (
                   <div className="flex items-center justify-center py-4 text-gray-400 text-sm gap-2">
-                    <Loader2 size={16} className="animate-spin text-indigo-600" /> Đang tải thêm bài viết...
+                    <Loader2 size={16} className="animate-spin text-blue-600" /> Đang tải thêm bài viết...
                   </div>
                 )}
 
@@ -190,7 +190,7 @@ export default function CommunityPage() {
                 {hasMore && !isLoading && (
                   <button
                     onClick={handleLoadMore}
-                    className="w-full py-3 border border-indigo-100 rounded-2xl bg-indigo-50/20 hover:bg-indigo-50/50 text-indigo-600 hover:text-indigo-700 font-bold text-sm flex items-center justify-center gap-1.5 transition duration-200"
+                    className="w-full py-3 border border-blue-100 rounded-2xl bg-blue-50/20 hover:bg-blue-50/50 text-blue-600 hover:text-blue-700 font-bold text-sm flex items-center justify-center gap-1.5 transition duration-200"
                   >
                     Tải thêm bài viết <ArrowDown size={16} />
                   </button>
@@ -201,7 +201,7 @@ export default function CommunityPage() {
             {/* Main Loading Indicator */}
             {isLoading && page === 0 && (
               <div className="flex flex-col items-center justify-center py-24 text-gray-400 gap-3">
-                <Loader2 size={32} className="animate-spin text-indigo-600" />
+                <Loader2 size={32} className="animate-spin text-blue-600" />
                 <span className="text-sm font-medium">Đang tải bảng tin cộng đồng...</span>
               </div>
             )}
@@ -217,26 +217,26 @@ export default function CommunityPage() {
               </h3>
               <ul className="space-y-3 text-xs md:text-sm text-gray-600">
                 <li className="flex items-start gap-2">
-                  <span className="text-indigo-600 font-semibold">•</span>
+                  <span className="text-blue-600 font-semibold">•</span>
                   <span><strong>Tôn trọng lẫn nhau:</strong> Không sử dụng ngôn từ kích động, đe dọa hoặc quấy rối thành viên khác.</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="text-indigo-600 font-semibold">•</span>
+                  <span className="text-blue-600 font-semibold">•</span>
                   <span><strong>Thông tin chính xác:</strong> Đảm bảo thông tin tìm ở ghép hoặc chia sẻ kinh nghiệm là đúng sự thật.</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="text-indigo-600 font-semibold">•</span>
+                  <span className="text-blue-600 font-semibold">•</span>
                   <span><strong>Không Spam:</strong> Không đăng tải các nội dung quảng cáo trùng lặp hoặc lừa đảo.</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="text-indigo-600 font-semibold">•</span>
+                  <span className="text-blue-600 font-semibold">•</span>
                   <span><strong>Tự động kiểm duyệt:</strong> Bài viết nhận đủ 3 báo cáo vi phạm từ các thành viên khác sẽ tự động bị ẩn để quản trị viên phê duyệt lại.</span>
                 </li>
               </ul>
             </div>
 
             {/* Quick Tips Box */}
-            <div className="bg-indigo-900 text-indigo-100 rounded-3xl p-6 shadow-sm relative overflow-hidden">
+            <div className="bg-gray-900 text-gray-100 rounded-3xl p-6 shadow-sm relative overflow-hidden">
               <div className="absolute right-0 bottom-0 opacity-10 translate-x-4 translate-y-4">
                 <Lightbulb size={120} />
               </div>

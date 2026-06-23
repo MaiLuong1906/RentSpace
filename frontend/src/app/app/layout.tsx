@@ -236,7 +236,7 @@ export default function DashboardLayout({
                       {isUserMenuOpen && (
                         <div
                           id="user-dropdown-menu"
-                          className="absolute right-0 mt-2.5 w-60 bg-white border border-gray-150 rounded-2xl shadow-xl py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-150"
+                          className="absolute right-0 mt-2.5 w-60 bg-white border border-gray-150 rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.08)] py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-150"
                         >
                           {/* User Info Header */}
                           <div className="px-4.5 py-2.5 border-b border-gray-100">

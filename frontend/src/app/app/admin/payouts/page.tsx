@@ -309,7 +309,7 @@ export default function AdminPayoutsPage() {
       {/* Payout Processing Dialog Modal */}
       {selectedPayout && (
         <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 transition-all">
-          <div className="bg-white rounded-3xl w-full max-w-lg shadow-2xl border border-gray-100 overflow-hidden animate-in fade-in zoom-in duration-200">
+          <div className="bg-white rounded-3xl w-full max-w-lg shadow-[0_8px_32px_rgba(0,0,0,0.08)] border border-gray-100 overflow-hidden animate-in fade-in zoom-in duration-200">
             {/* Modal Header */}
             <div className="px-6 py-5 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
               <h3 className="font-extrabold text-gray-900 text-lg">Xử lý yêu cầu giải ngân #{selectedPayout.id}</h3>

@@ -46,3 +46,6 @@ CODING_RULES.md
 
 # Local file storage (ảnh upload trong môi trường dev - không commit lên Git)
 backend/uploads/
+
+# MCP config (chứa DB connection string với password)
+.mcp.json

@@ -302,7 +302,7 @@ export default function ProfilePage() {
             </div>
             <Link
               href="/app/kyc"
-              className="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl text-xs font-bold shadow-md shadow-blue-500/10 hover:shadow-lg active:scale-95 transition-all text-center"
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-colors text-center"
             >
               Xác thực tài khoản ngay
             </Link>
@@ -321,7 +321,7 @@ export default function ProfilePage() {
 
           <div className="grid md:grid-cols-3 gap-8">
             {/* Left Card Skeleton */}
-            <div className="bg-white border border-gray-100 shadow-xl shadow-gray-200/20 rounded-3xl p-8 flex flex-col items-center space-y-6">
+            <div className="bg-white border border-gray-100 shadow-[0_8px_32px_rgba(0,0,0,0.06)] rounded-3xl p-8 flex flex-col items-center space-y-6">
               <div className="w-32 h-32 rounded-full bg-gray-200 animate-pulse" />
               <div className="h-6 w-36 bg-gray-200 animate-pulse rounded-lg" />
               <div className="h-4 w-20 bg-gray-200 animate-pulse rounded-lg" />
@@ -329,7 +329,7 @@ export default function ProfilePage() {
             </div>
 
             {/* Right Card Skeleton */}
-            <div className="md:col-span-2 bg-white border border-gray-100 shadow-xl shadow-gray-200/20 rounded-3xl p-8 space-y-8">
+            <div className="md:col-span-2 bg-white border border-gray-100 shadow-[0_8px_32px_rgba(0,0,0,0.06)] rounded-3xl p-8 space-y-8">
               <div className="flex gap-4 border-b border-gray-100 pb-4">
                 <div className="h-8 w-24 bg-gray-200 animate-pulse rounded-lg" />
                 <div className="h-8 w-24 bg-gray-200 animate-pulse rounded-lg" />
@@ -356,7 +356,7 @@ export default function ProfilePage() {
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="max-w-md bg-white border border-gray-100 shadow-2xl rounded-3xl p-8 text-center"
+          className="max-w-md bg-white border border-gray-200 shadow-[0_8px_32px_rgba(0,0,0,0.08)] rounded-2xl p-8 text-center"
         >
           <div className="w-16 h-16 bg-red-50 border border-red-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
             <ShieldAlert className="h-8 w-8 text-red-600 animate-bounce" />
@@ -367,7 +367,7 @@ export default function ProfilePage() {
           </p>
           <button
             onClick={() => router.push("/auth/login")}
-            className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3.5 rounded-xl font-semibold shadow-lg shadow-blue-500/20 hover:shadow-xl hover:shadow-blue-500/30 transition-all active:scale-[0.98]"
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3.5 rounded-xl font-semibold transition-colors"
           >
             Đăng nhập ngay
           </button>
@@ -383,7 +383,7 @@ export default function ProfilePage() {
         <motion.h1
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
-          className="text-3xl font-extrabold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent mb-8"
+          className="text-3xl font-extrabold text-gray-900 mb-8"
         >
           Hồ sơ của tôi
         </motion.h1>
@@ -394,7 +394,7 @@ export default function ProfilePage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4 }}
-            className="bg-white border border-gray-100 shadow-xl shadow-gray-200/10 rounded-3xl p-8 flex flex-col items-center text-center"
+            className="bg-white border border-gray-100 shadow-[0_8px_32px_rgba(0,0,0,0.06)] rounded-3xl p-8 flex flex-col items-center text-center"
           >
             {/* Vòng tròn Avatar với hover trigger */}
             <div className="relative group mb-6">
@@ -438,7 +438,7 @@ export default function ProfilePage() {
             {/* Thông tin Cơ bản */}
             <h2 className="text-xl font-extrabold text-gray-800 mb-1">{profile?.fullName}</h2>
             <span className={`inline-block px-3 py-1 text-xs font-bold rounded-full mb-6 uppercase tracking-wider ${profile?.role === "LANDLORD"
-                ? "bg-indigo-50 text-indigo-700 border border-indigo-100"
+                ? "bg-blue-50 text-blue-700 border border-blue-100"
                 : profile?.role === "ADMIN"
                   ? "bg-red-50 text-red-700 border border-red-100"
                   : "bg-blue-50 text-blue-700 border border-blue-100"
@@ -457,7 +457,7 @@ export default function ProfilePage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: 0.1 }}
-            className="md:col-span-2 bg-white border border-gray-100 shadow-xl shadow-gray-200/10 rounded-3xl p-8"
+            className="md:col-span-2 bg-white border border-gray-100 shadow-[0_8px_32px_rgba(0,0,0,0.06)] rounded-3xl p-8"
           >
             {/* Header Tabs */}
             <div
@@ -652,7 +652,7 @@ export default function ProfilePage() {
                         <button
                           type="submit"
                           disabled={isSubmitting}
-                          className="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl text-xs font-bold shadow-md shadow-blue-500/10 hover:shadow-lg active:scale-95 transition-all flex items-center gap-1.5 disabled:opacity-50"
+                          className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5 disabled:opacity-50"
                         >
                           {isSubmitting ? (
                             <>
@@ -831,7 +831,7 @@ export default function ProfilePage() {
                         <button
                           type="submit"
                           disabled={isChangingPassword}
-                          className="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl text-xs font-bold shadow-md shadow-blue-500/10 hover:shadow-lg active:scale-95 transition-all flex items-center gap-1.5 disabled:opacity-50"
+                          className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5 disabled:opacity-50"
                         >
                           {isChangingPassword ? (
                             <>

@@ -158,7 +158,7 @@ export function CreatePostModal({ isOpen, onClose, onPostCreated, currentUserId 
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full border border-gray-100 flex flex-col max-h-[90vh] animate-in fade-in zoom-in duration-200">
+      <div className="bg-white rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.08)] max-w-2xl w-full border border-gray-100 flex flex-col max-h-[90vh] animate-in fade-in zoom-in duration-200">
         
         {/* Modal Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
@@ -185,7 +185,7 @@ export function CreatePostModal({ isOpen, onClose, onPostCreated, currentUserId 
                   onClick={() => setType(t.value)}
                   className={`px-3 py-2.5 rounded-xl border text-xs font-semibold text-left transition flex flex-col justify-between ${
                     type === t.value
-                      ? "border-indigo-600 bg-indigo-50 text-indigo-700 ring-2 ring-indigo-50"
+                      ? "border-blue-600 bg-blue-50 text-blue-700 ring-2 ring-blue-50"
                       : "border-gray-200 hover:border-gray-300 bg-white text-gray-700"
                   }`}
                 >
@@ -206,7 +206,7 @@ export function CreatePostModal({ isOpen, onClose, onPostCreated, currentUserId 
                 placeholder="Ví dụ: Sơn Trà, Cầu Giấy..."
                 value={district}
                 onChange={(e) => setDistrict(e.target.value)}
-                className="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl bg-gray-50/50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition"
+                className="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl bg-gray-50/50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition"
               />
             </div>
 
@@ -220,7 +220,7 @@ export function CreatePostModal({ isOpen, onClose, onPostCreated, currentUserId 
                   <select
                     value={selectedListingId || ""}
                     onChange={(e) => setSelectedListingId(e.target.value ? Number(e.target.value) : undefined)}
-                    className="w-full px-3 py-2 pr-10 text-sm border border-gray-200 rounded-xl bg-gray-50/50 appearance-none focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition cursor-pointer"
+                    className="w-full px-3 py-2 pr-10 text-sm border border-gray-200 rounded-xl bg-gray-50/50 appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition cursor-pointer"
                   >
                     <option value="">Không đính kèm phòng trọ</option>
                     {myListings.map((l) => (
@@ -244,7 +244,7 @@ export function CreatePostModal({ isOpen, onClose, onPostCreated, currentUserId 
               placeholder="Chia sẻ thông tin, nhu cầu ở ghép hoặc thắc mắc của bạn với cộng đồng tại đây..."
               value={content}
               onChange={(e) => setContent(e.target.value)}
-              className="w-full px-4 py-3 text-sm border border-gray-200 rounded-xl bg-gray-50/50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition resize-none"
+              className="w-full px-4 py-3 text-sm border border-gray-200 rounded-xl bg-gray-50/50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition resize-none"
               maxLength={1000}
             />
             <div className="flex justify-between items-center mt-1">
@@ -274,7 +274,7 @@ export function CreatePostModal({ isOpen, onClose, onPostCreated, currentUserId 
 
               {/* Upload Button */}
               {previews.length < 5 && (
-                <label className="w-20 h-20 rounded-xl border-2 border-dashed border-gray-200 hover:border-indigo-400 bg-gray-50/50 hover:bg-indigo-50/10 flex flex-col items-center justify-center gap-1 cursor-pointer transition flex-shrink-0">
+                <label className="w-20 h-20 rounded-xl border-2 border-dashed border-gray-200 hover:border-blue-400 bg-gray-50/50 hover:bg-blue-50/10 flex flex-col items-center justify-center gap-1 cursor-pointer transition flex-shrink-0">
                   <Plus size={18} className="text-gray-400" />
                   <span className="text-[10px] font-semibold text-gray-400">Chọn ảnh</span>
                   <input
@@ -294,7 +294,7 @@ export function CreatePostModal({ isOpen, onClose, onPostCreated, currentUserId 
         <div className="px-6 py-4 border-t border-gray-100 flex items-center justify-between bg-gray-50/50 rounded-b-2xl">
           <div className="text-xs text-gray-400">
             {isSubmitting ? (
-              <span className="font-medium text-indigo-600 flex items-center gap-1.5 animate-pulse">
+              <span className="font-medium text-blue-600 flex items-center gap-1.5 animate-pulse">
                 <Loader2 size={13} className="animate-spin" /> {submitStep}
               </span>
             ) : (
@@ -314,7 +314,7 @@ export function CreatePostModal({ isOpen, onClose, onPostCreated, currentUserId 
               type="button"
               onClick={handleSubmit}
               disabled={isSubmitting || !content.trim()}
-              className="px-5 py-2 text-sm font-semibold bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl shadow-lg shadow-indigo-100 transition disabled:opacity-50"
+              className="px-5 py-2 text-sm font-semibold bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition disabled:opacity-50"
             >
               Đăng bài ngay
             </button>

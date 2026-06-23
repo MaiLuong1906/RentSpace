@@ -226,7 +226,7 @@ export default function RoommateProfilePage() {
         <motion.div 
           initial={{ scale: 0.95, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
-          className="max-w-md bg-white border border-gray-150 shadow-2xl rounded-3xl p-8 text-center relative overflow-hidden"
+          className="max-w-md bg-white border border-gray-150 shadow-[0_8px_32px_rgba(0,0,0,0.08)] rounded-3xl p-8 text-center relative overflow-hidden"
         >
           <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-red-500 to-rose-500" />
           <div className="bg-red-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6 border border-red-100">
@@ -268,7 +268,7 @@ export default function RoommateProfilePage() {
         {/* Tiêu đề */}
         <div className="bg-white border border-gray-150 rounded-3xl p-6 sm:p-8 shadow-sm mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-extrabold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent flex items-center gap-2">
+            <h1 className="text-2xl font-extrabold text-gray-900 flex items-center gap-2">
               <Sparkles className="h-6 w-6 text-blue-600" />
               Thiết lập hồ sơ ở ghép
             </h1>
@@ -500,7 +500,7 @@ export default function RoommateProfilePage() {
           <button
             type="submit"
             disabled={submitting}
-            className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-4 rounded-2xl font-extrabold shadow-lg shadow-blue-500/25 hover:shadow-xl hover:scale-[1.01] active:scale-[0.99] transition-all text-sm flex items-center justify-center gap-2"
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-2xl font-extrabold transition-colors text-sm flex items-center justify-center gap-2 disabled:opacity-50"
           >
             {submitting ? (
               <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />

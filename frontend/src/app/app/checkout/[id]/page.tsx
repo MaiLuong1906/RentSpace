@@ -35,7 +35,7 @@ const PAYMENT_METHODS: {
     description: "Thẻ ATM, Visa, Master, QR Code",
     badge: "Phổ biến",
     badgeColor: "bg-blue-100 text-blue-700",
-    gradient: "from-blue-500 to-indigo-600",
+    gradient: "from-blue-500 to-blue-700",
     borderActive: "border-blue-500",
     bgActive: "bg-blue-50",
     svgContent: (
@@ -153,7 +153,7 @@ export default function CheckoutPage() {
   if (isLoading) {
     return (
       <div className="min-h-[80vh] flex items-center justify-center bg-gray-50/50 p-4">
-        <div className="max-w-md w-full text-center space-y-5 bg-white p-10 rounded-3xl shadow-xl border border-gray-100">
+        <div className="max-w-md w-full text-center space-y-5 bg-white p-10 rounded-3xl shadow-[0_8px_32px_rgba(0,0,0,0.06)] border border-gray-100">
           <div className="relative flex justify-center">
             <div className="absolute inset-0 m-auto w-16 h-16 rounded-full bg-emerald-50 animate-ping opacity-60" />
             <div className="relative p-4 bg-emerald-50 rounded-full text-emerald-600">
@@ -174,7 +174,7 @@ export default function CheckoutPage() {
   if (error) {
     return (
       <div className="min-h-[80vh] flex items-center justify-center bg-gray-50/50 p-4">
-        <div className="max-w-md w-full text-center space-y-5 bg-white p-10 rounded-3xl shadow-xl border border-red-50">
+        <div className="max-w-md w-full text-center space-y-5 bg-white p-10 rounded-3xl shadow-[0_8px_32px_rgba(0,0,0,0.06)] border border-red-50">
           <div className="flex justify-center">
             <div className="p-4 bg-red-50 rounded-full text-red-500">
               <AlertCircle className="h-8 w-8" />
@@ -200,7 +200,7 @@ export default function CheckoutPage() {
 
   // ── Main UI ──
   return (
-    <div className="min-h-[80vh] flex items-center justify-center bg-gradient-to-br from-slate-50 to-gray-100 p-4 py-10">
+    <div className="min-h-[80vh] flex items-center justify-center bg-gray-50 p-4 py-10">
       <div className="w-full max-w-lg space-y-5">
 
         {/* Header */}
@@ -304,7 +304,7 @@ export default function CheckoutPage() {
           onClick={handlePay}
           disabled={isPaying}
           className={`w-full flex items-center justify-center gap-3 py-4 rounded-2xl font-bold text-white text-base
-            bg-gradient-to-r ${selected.gradient} shadow-lg hover:shadow-xl hover:opacity-95
+            bg-gradient-to-r ${selected.gradient} hover:opacity-95
             transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed active:scale-[0.99]`}
         >
           {isPaying ? (
