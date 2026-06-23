@@ -9,6 +9,7 @@ import type {
   ListingStatus,
   PromoteListingResponse,
   PromotedListingStatusResponse,
+  GeoSearchRequest,
 } from "@/types/listing.types";
 import type { ApiResponse, PageResponse } from "@/types/api.types";
 
@@ -104,6 +105,12 @@ export const listingApi = {
   // POST /api/v1/listings/{id}/view — Ghi nhận lượt xem tin đăng
   trackListingView: async (id: string | number): Promise<ApiResponse<void>> => {
     const response = await apiClient.post(`/listings/${id}/view`);
+    return response.data;
+  },
+
+  // POST /api/v1/listings/search/geo — Tìm kiếm tin đăng theo vùng địa lý
+  searchGeo: async (data: GeoSearchRequest): Promise<ApiResponse<Listing[]>> => {
+    const response = await apiClient.post("/listings/search/geo", data);
     return response.data;
   },
 };

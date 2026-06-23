@@ -4,6 +4,7 @@ import com.rentspace.domain.listing.enums.ListingStatus;
 import com.rentspace.domain.listing.enums.RoomType;
 import com.rentspace.domain.user.User;
 import jakarta.persistence.*;
+import org.locationtech.jts.geom.Point;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -58,6 +59,9 @@ public class Listing {
 
     @Column(precision = 11, scale = 8)
     private BigDecimal longitude;
+
+    @Column(columnDefinition = "geometry(Point, 4326)")
+    private Point geom;
 
     // ===== Thông tin phòng =====
     @Column(name = "price_per_month", nullable = false, precision = 15, scale = 2)

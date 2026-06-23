@@ -126,3 +126,45 @@ export interface PromotedListingStatusResponse {
   expiresAt?: string;
 }
 
+export interface Coordinate {
+  lat: number;
+  lng: number;
+}
+
+export interface GeoSearchRequest {
+  polygon?: Coordinate[];
+  radiusKm?: number;
+  centerLat?: number;
+  centerLng?: number;
+  roomType?: string;
+  minPrice?: number;
+  maxPrice?: number;
+  minArea?: number;
+}
+
+export interface SearchListing {
+  id: string;
+  title: string;
+  description: string;
+  price: number;
+  address: string;
+  district: string;
+  city: string;
+  lat: number;
+  lng: number;
+  area: number;
+  roomType: "single" | "shared" | "apartment" | "house" | string;
+  images: string[];
+  amenities: string[];
+  landlordId: string;
+  landlordName: string;
+  landlordAvatar: string;
+  landlordVerified: boolean;
+  status: "available" | "rented";
+  createdAt: string;
+  rating: number;
+  reviewCount: number;
+  isPromoted?: boolean;
+}
+
+
