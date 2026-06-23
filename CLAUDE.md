@@ -34,7 +34,7 @@ Git workflow: `.gemini/rules/workflow.md`
 |---|---|
 | Sprint 0 — MoMo Payment | ✅ Done (PR #49) |
 | Sprint 1 — Payout System | ✅ Done (PR #50) |
-| Sprint 2 — Seller Pro Subscription | 🔄 Đang làm |
+| Sprint 2 — Seller Pro Subscription | ✅ Done |
 | Sprint 3 — Price Suggestion Engine | ⏳ Chưa bắt đầu |
 | Sprint 4 — Geo-Search & MapLibre | ⏳ Chưa bắt đầu |
 | Sprint 5 — Web Push & Email | ⏳ Chưa bắt đầu |
