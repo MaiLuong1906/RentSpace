@@ -122,8 +122,8 @@ function PaymentResultInner() {
   // ── Loading ──
   if (status === "loading") {
     return (
-      <div className="min-h-[80vh] flex items-center justify-center bg-gradient-to-br from-slate-50 to-gray-100 py-12 px-4">
-        <div className="max-w-md w-full bg-white rounded-3xl shadow-xl p-10 text-center space-y-5 border border-gray-100">
+      <div className="min-h-[80vh] flex items-center justify-center bg-gray-50 py-12 px-4">
+        <div className="max-w-md w-full bg-white rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.08)] p-10 text-center space-y-5 border border-gray-100">
           <div className="relative flex justify-center">
             <div className="absolute inset-0 m-auto w-16 h-16 rounded-full bg-blue-50 animate-ping opacity-70" />
             <div className="relative p-4 bg-blue-50 rounded-full text-blue-500">
@@ -143,13 +143,13 @@ function PaymentResultInner() {
   // ── Success ──
   if (status === "success") {
     return (
-      <div className="min-h-[80vh] flex items-center justify-center bg-gradient-to-br from-slate-50 to-gray-100 py-12 px-4">
-        <div className="max-w-md w-full bg-white rounded-3xl shadow-xl border border-emerald-100 overflow-hidden">
+      <div className="min-h-[80vh] flex items-center justify-center bg-gray-50 py-12 px-4">
+        <div className="max-w-md w-full bg-white rounded-3xl shadow-[0_8px_32px_rgba(0,0,0,0.08)] border border-emerald-100 overflow-hidden">
 
           {/* Header banner */}
           <div className={`px-6 py-8 text-center text-white relative overflow-hidden
             ${isSubscription
-              ? "bg-gradient-to-br from-indigo-500 to-purple-600"
+              ? "bg-blue-600"
               : isPromote
                 ? "bg-gradient-to-br from-amber-500 to-orange-600"
                 : gateway === "MOMO"
@@ -186,16 +186,16 @@ function PaymentResultInner() {
               <div className="flex justify-between py-2.5">
                 <span className="font-medium text-gray-700">Số tiền:</span>
                 <span className={`text-lg font-extrabold ${
-                  isSubscription ? "text-indigo-600" : isPromote ? "text-amber-600" : gateway === "MOMO" ? "text-pink-600" : "text-emerald-600"
+                  isSubscription ? "text-blue-600" : isPromote ? "text-amber-600" : gateway === "MOMO" ? "text-pink-600" : "text-emerald-600"
                 }`}>{formatPrice(amount)}</span>
               </div>
             </div>
 
             {/* Note box */}
             {isSubscription ? (
-              <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-4 flex gap-3">
-                <Sparkles className="h-4 w-4 text-indigo-600 shrink-0 mt-0.5" />
-                <p className="text-xs text-indigo-800 leading-relaxed">
+              <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 flex gap-3">
+                <Sparkles className="h-4 w-4 text-blue-600 shrink-0 mt-0.5" />
+                <p className="text-xs text-blue-800 leading-relaxed">
                   <strong>Kích hoạt gói Seller Pro thành công!</strong> Các đặc quyền giới hạn tin đăng mới và tăng tốc hiển thị của bạn đã sẵn sàng sử dụng.
                 </p>
               </div>
@@ -230,7 +230,7 @@ function PaymentResultInner() {
                 href={redirectTarget}
                 className={`w-full flex items-center justify-center gap-2 text-white py-3 rounded-xl font-bold transition-all shadow-lg
                   ${isSubscription
-                    ? "bg-indigo-600 hover:bg-indigo-700 shadow-indigo-100"
+                    ? "bg-blue-600 hover:bg-blue-700 shadow-blue-100"
                     : isPromote
                       ? "bg-amber-500 hover:bg-amber-600 shadow-amber-100"
                       : gateway === "MOMO"
@@ -255,8 +255,8 @@ function PaymentResultInner() {
   // ── Failed ──
   const responseCodeDisplay = vnpResponseCode ?? momoResultCode ?? "Lỗi không xác định";
   return (
-    <div className="min-h-[80vh] flex items-center justify-center bg-gradient-to-br from-slate-50 to-gray-100 py-12 px-4">
-      <div className="max-w-md w-full bg-white rounded-3xl shadow-xl border border-red-50 overflow-hidden">
+    <div className="min-h-[80vh] flex items-center justify-center bg-gray-50 py-12 px-4">
+      <div className="max-w-md w-full bg-white rounded-3xl shadow-[0_8px_32px_rgba(0,0,0,0.08)] border border-red-50 overflow-hidden">
         <div className="bg-gradient-to-br from-red-500 to-rose-600 px-6 py-8 text-center text-white relative overflow-hidden">
           <div className="absolute -right-6 -top-6 opacity-10">
             <XCircle size={130} />

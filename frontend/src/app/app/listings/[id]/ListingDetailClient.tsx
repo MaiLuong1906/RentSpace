@@ -390,7 +390,7 @@ export function ListingDetailClient({ listingId }: ListingDetailClientProps) {
       {/* Contact Modal */}
       {showContactModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6">
+          <div className="bg-white rounded-xl shadow-[0_8px_32px_rgba(0,0,0,0.08)] max-w-md w-full p-6">
             <h3 className="text-2xl font-bold mb-4">Liên hệ chủ trọ</h3>
             <p className="text-gray-600 mb-6">
               Gửi tin nhắn cho {listing.landlordName} về phòng trọ này
@@ -446,7 +446,7 @@ export function ListingDetailClient({ listingId }: ListingDetailClientProps) {
       {/* Deposit Modal */}
       {showDepositModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden border border-gray-150 transform transition-all scale-100">
+          <div className="bg-white rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.08)] max-w-lg w-full overflow-hidden border border-gray-150 transform transition-all scale-100">
             {/* Header */}
             <div className="bg-emerald-50 px-6 py-4 border-b border-emerald-100 flex items-center gap-3">
               <div className="p-2 bg-emerald-100 rounded-lg text-emerald-700">

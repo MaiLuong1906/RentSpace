@@ -113,7 +113,7 @@ function MessagesSkeleton() {
   return (
     <div className="h-[calc(100vh-4rem)] bg-gray-50 flex items-center justify-center">
       <div className="flex flex-col items-center gap-2 text-gray-400">
-        <Loader2 className="animate-spin text-indigo-600" size={24} />
+        <Loader2 className="animate-spin text-blue-600" size={24} />
         <span className="text-sm">Đang tải cuộc trò chuyện...</span>
       </div>
     </div>

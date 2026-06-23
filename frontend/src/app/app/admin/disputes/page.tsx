@@ -27,7 +27,7 @@ const STATUS_CONFIG: Record<DisputeResponse["status"], { label: string; bg: stri
   UNDER_REVIEW: { label: "Đang xem xét", bg: "bg-amber-50 border-amber-250", text: "text-amber-700", icon: <BadgeAlert className="h-4 w-4" /> },
   RESOLVED_TENANT: { label: "Hoàn tiền cho Người thuê", bg: "bg-emerald-50 border-emerald-200", text: "text-emerald-700", icon: <CheckCircle2 className="h-4 w-4" /> },
   RESOLVED_LANDLORD: { label: "Giải ngân cho Chủ nhà", bg: "bg-blue-50 border-blue-200", text: "text-blue-700", icon: <CheckCircle2 className="h-4 w-4" /> },
-  RESOLVED_PLATFORM: { label: "Phân quyết khác / Đóng", bg: "bg-purple-50 border-purple-200", text: "text-purple-700", icon: <CheckCircle2 className="h-4 w-4" /> },
+  RESOLVED_PLATFORM: { label: "Phân quyết khác / Đóng", bg: "bg-gray-50 border-gray-200", text: "text-gray-600", icon: <CheckCircle2 className="h-4 w-4" /> },
 };
 
 const REASON_LABELS: Record<DisputeResponse["reason"], string> = {
@@ -321,7 +321,7 @@ export default function AdminDisputesPage() {
         {/* Judge Modal */}
         {selectedDispute && (
           <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-3xl shadow-xl max-w-lg w-full overflow-hidden border border-gray-150 animate-in fade-in zoom-in-95 duration-150">
+            <div className="bg-white rounded-3xl shadow-[0_8px_32px_rgba(0,0,0,0.08)] max-w-lg w-full overflow-hidden border border-gray-150 animate-in fade-in zoom-in-95 duration-150">
               <div className="bg-amber-50 px-6 py-4 border-b border-amber-100 flex items-center justify-between text-amber-800">
                 <div className="flex items-center gap-2 font-black text-lg">
                   <Scale className="h-5 w-5 text-amber-600" />

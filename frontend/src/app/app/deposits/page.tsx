@@ -25,7 +25,7 @@ const STATUS_LABELS: Record<DepositTransaction["status"], { label: string; bg: s
   PAID: { label: "Đã đặt cọc (Escrow)", bg: "bg-emerald-50 border-emerald-250", text: "text-emerald-700", icon: <ShieldCheck className="h-4 w-4" /> },
   DISPUTED: { label: "Đang tranh chấp", bg: "bg-rose-50 border-rose-250", text: "text-rose-700", icon: <AlertTriangle className="h-4 w-4" /> },
   RELEASED: { label: "Đã giải ngân", bg: "bg-blue-50 border-blue-200", text: "text-blue-700", icon: <CheckCircle className="h-4 w-4" /> },
-  REFUNDED: { label: "Đã hoàn tiền", bg: "bg-purple-50 border-purple-200", text: "text-purple-700", icon: <ArrowRight className="h-4 w-4" /> },
+  REFUNDED: { label: "Đã hoàn tiền", bg: "bg-gray-50 border-gray-200", text: "text-gray-600", icon: <ArrowRight className="h-4 w-4" /> },
   CANCELLED: { label: "Đã hủy", bg: "bg-gray-150 border-gray-300", text: "text-gray-600", icon: <XCircleIcon /> },
 };
 
@@ -370,7 +370,7 @@ export default function DepositsPage() {
       {/* Dispute Modal */}
       {disputeId !== null && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-xl max-w-md w-full overflow-hidden border">
+          <div className="bg-white rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.08)] max-w-md w-full overflow-hidden border">
             <div className="bg-rose-50 px-6 py-4 border-b border-rose-100 flex items-center gap-2 text-rose-700">
               <AlertTriangle className="h-5 w-5" />
               <h3 className="text-lg font-bold">Yêu cầu khiếu nại tranh chấp</h3>

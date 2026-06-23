@@ -111,7 +111,7 @@ export function ReviewSection({ listingId }: ReviewSectionProps) {
         const categories = [
           { label: "🧹 Vệ sinh", avg: avgCleanliness, color: "bg-emerald-500" },
           { label: "🔒 An ninh", avg: avgSecurity, color: "bg-blue-500" },
-          { label: "🤝 Thái độ chủ trọ", avg: avgLandlord, color: "bg-purple-500" },
+          { label: "🤝 Thái độ chủ trọ", avg: avgLandlord, color: "bg-amber-500" },
         ].filter((c) => c.avg !== null);
 
         return (

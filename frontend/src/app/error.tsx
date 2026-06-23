@@ -16,13 +16,12 @@ export default function ErrorPage({ error, reset }: ErrorProps) {
   }, [error]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-red-50 via-white to-orange-50 flex items-center justify-center p-4">
-      <div className="max-w-md w-full text-center space-y-8 bg-white/80 backdrop-blur-md p-8 sm:p-10 rounded-2xl shadow-xl border border-gray-100 animate-in fade-in duration-300">
-        
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+      <div className="max-w-md w-full text-center space-y-8 bg-white p-8 sm:p-10 rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.06)] border border-gray-200 animate-in fade-in duration-300">
+
         {/* Animated Icon & Error Text */}
-        <div className="relative flex justify-center">
-          <div className="absolute inset-0 bg-red-400/10 blur-3xl rounded-full w-40 h-40 mx-auto"></div>
-          <div className="relative p-4 bg-red-50 rounded-full text-red-500">
+        <div className="flex justify-center">
+          <div className="p-4 bg-red-50 rounded-full text-red-500">
             <AlertTriangle className="h-12 w-12 animate-bounce" />
           </div>
         </div>

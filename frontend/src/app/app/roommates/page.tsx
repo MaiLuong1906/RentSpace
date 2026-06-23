@@ -124,7 +124,7 @@ export default function RoommateDashboard() {
   const getMatchScoreColor = (score: number) => {
     if (score >= 80) return "text-emerald-500 stroke-emerald-500 bg-emerald-50";
     if (score >= 60) return "text-amber-500 stroke-amber-500 bg-amber-50";
-    return "text-slate-500 stroke-slate-500 bg-slate-50";
+    return "text-gray-500 stroke-gray-500 bg-gray-50";
   };
 
   const getInitials = (name: string | undefined) => {
@@ -156,7 +156,7 @@ export default function RoommateDashboard() {
         <motion.div 
           initial={{ scale: 0.95, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
-          className="max-w-md bg-white border border-gray-150 shadow-2xl rounded-3xl p-8 text-center relative overflow-hidden"
+          className="max-w-md bg-white border border-gray-150 shadow-[0_8px_32px_rgba(0,0,0,0.08)] rounded-3xl p-8 text-center relative overflow-hidden"
         >
           <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-red-500 to-rose-500" />
           <div className="bg-red-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6 border border-red-100">
@@ -184,7 +184,7 @@ export default function RoommateDashboard() {
         {/* Header */}
         <div className="bg-white border border-gray-150 rounded-3xl p-6 sm:p-8 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="space-y-1">
-            <h1 className="text-2xl font-extrabold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent flex items-center gap-2">
+            <h1 className="text-2xl font-extrabold text-gray-900 flex items-center gap-2">
               <Sparkles className="h-6 w-6 text-blue-600 animate-pulse" />
               Tìm bạn ở ghép
             </h1>
@@ -219,7 +219,7 @@ export default function RoommateDashboard() {
             </p>
             <Link
               href="/app/roommates/profile"
-              className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-8 py-3.5 rounded-2xl font-extrabold shadow-lg shadow-blue-500/20 hover:shadow-xl hover:scale-105 active:scale-95 transition-all text-xs"
+              className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-8 py-3.5 rounded-2xl font-extrabold transition-colors text-xs"
             >
               <PlusCircle className="h-4.5 w-4.5" />
               <span>Tạo hồ sơ ngay</span>
@@ -288,8 +288,8 @@ export default function RoommateDashboard() {
               {suggestions.length === 0 ? (
                 /* TRỐNG GỢI Ý */
                 <div className="bg-white border border-gray-150 rounded-3xl p-12 text-center shadow-sm">
-                  <div className="w-16 h-16 bg-slate-50 border border-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                    <EyeOff className="h-8 w-8 text-slate-400" />
+                  <div className="w-16 h-16 bg-gray-50 border border-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <EyeOff className="h-8 w-8 text-gray-400" />
                   </div>
                   <h3 className="text-sm font-extrabold text-gray-800 mb-1">Chưa có gợi ý phù hợp</h3>
                   <p className="text-xs text-gray-400 max-w-sm mx-auto leading-relaxed">
@@ -359,7 +359,7 @@ export default function RoommateDashboard() {
                                   />
                                 </div>
                               ) : (
-                                <div className="w-12 h-12 rounded-full border border-blue-100 bg-gradient-to-tr from-blue-50 to-indigo-50 flex items-center justify-center flex-shrink-0 shadow-inner">
+                                <div className="w-12 h-12 rounded-full border border-blue-100 bg-blue-50 flex items-center justify-center flex-shrink-0">
                                   <span className="text-xs font-extrabold text-blue-600 uppercase">
                                     {getInitials(otherUser.fullName)}
                                   </span>

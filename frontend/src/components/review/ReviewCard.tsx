@@ -150,7 +150,7 @@ export function ReviewCard({ review, listingId, onDelete, canDelete, canEdit }: 
                   <span className="text-gray-400">🤝 Chủ trọ</span>
                   <div className="flex items-center gap-0.5">
                     {Array.from({ length: 5 }).map((_, i) => (
-                      <Star key={i} size={10} className={i < review.landlordRating! ? "fill-purple-400 text-purple-400" : "text-gray-200"} />
+                      <Star key={i} size={10} className={i < review.landlordRating! ? "fill-amber-400 text-amber-400" : "text-gray-200"} />
                     ))}
                   </div>
                 </div>

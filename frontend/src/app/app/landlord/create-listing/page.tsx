@@ -637,44 +637,40 @@ export default function CreateListingPage() {
 
       {/* Subscription Limit Upsell Modal */}
       <Dialog open={limitReached} onOpenChange={() => {}}>
-        <DialogContent className="sm:max-w-[420px] rounded-3xl overflow-hidden border border-slate-100 bg-white shadow-2xl p-0">
-          <div className="bg-gradient-to-br from-rose-500 to-red-600 px-6 py-8 text-white text-center relative overflow-hidden">
-            <div className="absolute -right-6 -top-6 opacity-10">
-              <AlertOctagon size={130} />
+        <DialogContent className="sm:max-w-[400px] rounded-2xl overflow-hidden border border-gray-200 bg-white shadow-[0_8px_32px_rgba(0,0,0,0.08)] p-0">
+          <div className="bg-red-600 px-6 py-7 text-white text-center">
+            <div className="inline-flex p-3 bg-white/20 rounded-full mb-3">
+              <AlertOctagon className="h-8 w-8 text-white" />
             </div>
-            <div className="inline-flex p-3 bg-white/20 backdrop-blur-md rounded-full mb-3 text-white ring-2 ring-white/30">
-              <AlertOctagon className="h-10 w-10 text-white animate-bounce" />
-            </div>
-            <DialogTitle className="text-xl font-bold tracking-tight">Đã Đạt Giới Hạn Đăng Tin</DialogTitle>
-            <DialogDescription className="text-rose-100/90 text-xs mt-1">
+            <DialogTitle className="text-lg font-bold tracking-tight">Đã Đạt Giới Hạn Đăng Tin</DialogTitle>
+            <DialogDescription className="text-red-100 text-xs mt-1">
               Bạn cần nâng cấp gói cước để tiếp tục sử dụng dịch vụ.
             </DialogDescription>
           </div>
 
-          <div className="p-6 space-y-6 text-center">
+          <div className="p-6 space-y-5 text-center">
             <div className="space-y-2">
-              <p className="text-sm text-slate-600 leading-relaxed">
-                Tài khoản của bạn hiện đang sử dụng gói <strong className="text-slate-900">{currentPlanName}</strong> và đã chạm mốc giới hạn tối đa <strong className="text-rose-600">{maxListingsCount} tin đăng hiển thị</strong>.
+              <p className="text-sm text-gray-600 leading-relaxed">
+                Tài khoản của bạn hiện đang sử dụng gói <strong className="text-gray-900">{currentPlanName}</strong> và đã chạm mốc giới hạn tối đa <strong className="text-red-600">{maxListingsCount} tin đăng hiển thị</strong>.
               </p>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-gray-400">
                 Hãy nâng cấp lên gói Seller Pro để có ngay hạn mức đăng tin lên tới 50 tin hiển thị cùng nhiều đặc quyền ưu tiên khác.
               </p>
             </div>
 
-            {/* Action buttons */}
-            <div className="flex flex-col gap-3 pt-2">
+            <div className="flex flex-col gap-3">
               <button
                 type="button"
                 onClick={() => router.push("/app/landlord/subscription")}
-                className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold shadow-md shadow-indigo-500/10 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-semibold transition-colors flex items-center justify-center gap-2"
               >
-                <ArrowUpCircle className="h-5 w-5" />
+                <ArrowUpCircle className="h-4 w-4" />
                 Nâng cấp gói cước ngay
               </button>
               <button
                 type="button"
                 onClick={() => router.push("/app/landlord/my-listings")}
-                className="w-full py-3 border border-slate-200 text-slate-650 rounded-xl font-semibold hover:bg-slate-50 transition-colors flex items-center justify-center gap-2 cursor-pointer"
+                className="w-full py-2.5 border border-gray-200 text-gray-600 rounded-xl text-sm font-medium hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
               >
                 <ArrowLeft className="h-4 w-4" />
                 Quay lại danh sách tin

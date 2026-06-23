@@ -213,22 +213,20 @@ export default function LandlordPayoutPage() {
 
             {payoutAccount ? (
               /* Verified Bank Card representation */
-              <div className="relative overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-indigo-950 text-white rounded-2xl p-5 shadow-xl border border-slate-700/50">
-                <div className="absolute top-0 right-0 transform translate-x-8 -translate-y-8 w-40 h-40 bg-blue-500/10 rounded-full blur-3xl pointer-events-none"></div>
-                
+              <div className="relative overflow-hidden bg-gray-900 text-white rounded-2xl p-5 border border-gray-700/50">
                 <div className="flex justify-between items-start mb-6">
                   <div>
-                    <span className="text-[10px] uppercase tracking-widest text-slate-400">Ngân hàng liên kết</span>
-                    <h4 className="font-extrabold text-base tracking-tight mt-0.5">{payoutAccount.bankCode}</h4>
+                    <span className="text-[10px] uppercase tracking-widest text-gray-400">Ngân hàng liên kết</span>
+                    <h4 className="font-bold text-base tracking-tight mt-0.5">{payoutAccount.bankCode}</h4>
                   </div>
-                  <div className="flex items-center gap-1 px-2.5 py-0.5 bg-green-500/20 backdrop-blur-md rounded-full text-[10px] font-semibold text-green-300 border border-green-500/30">
+                  <div className="flex items-center gap-1 px-2.5 py-0.5 bg-emerald-500/20 rounded-full text-[10px] font-semibold text-emerald-300 border border-emerald-500/30">
                     <CheckCircle2 className="h-3 w-3" />
                     Đã liên kết
                   </div>
                 </div>
 
                 <div className="mb-5">
-                  <span className="text-[10px] text-slate-400 tracking-wider">SỐ TÀI KHOẢN</span>
+                  <span className="text-[10px] text-gray-400 tracking-wider">SỐ TÀI KHOẢN</span>
                   <div className="text-lg font-mono tracking-wider mt-0.5">
                     {payoutAccount.accountNumber}
                   </div>
@@ -236,12 +234,12 @@ export default function LandlordPayoutPage() {
 
                 <div className="flex justify-between items-end">
                   <div>
-                    <span className="text-xs text-slate-400 tracking-wider">CHỦ TÀI KHOẢN</span>
+                    <span className="text-xs text-gray-400 tracking-wider">CHỦ TÀI KHOẢN</span>
                     <div className="font-bold tracking-wide uppercase mt-1">{payoutAccount.accountName}</div>
                   </div>
-                  <div className="text-xs text-slate-400">
-                    {payoutAccount.bankName.length > 25 
-                      ? payoutAccount.bankName.substring(0, 25) + "..." 
+                  <div className="text-xs text-gray-400">
+                    {payoutAccount.bankName.length > 25
+                      ? payoutAccount.bankName.substring(0, 25) + "..."
                       : payoutAccount.bankName}
                   </div>
                 </div>
@@ -375,8 +373,8 @@ export default function LandlordPayoutPage() {
                           <td className="px-4 py-3.5">
                             {p.status === "COMPLETED" ? (
                               <div className="text-xs">
-                                <div className="font-bold text-slate-800">Ref: {p.bankRef || "N/A"}</div>
-                                <div className="text-slate-500 mt-0.5">{p.note || "Đã giải ngân"}</div>
+                                <div className="font-bold text-gray-800">Ref: {p.bankRef || "N/A"}</div>
+                                <div className="text-gray-500 mt-0.5">{p.note || "Đã giải ngân"}</div>
                               </div>
                             ) : p.status === "FAILED" ? (
                               <div className="text-xs text-red-600">

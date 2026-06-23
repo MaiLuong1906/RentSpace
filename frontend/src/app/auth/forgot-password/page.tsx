@@ -181,7 +181,7 @@ export default function ForgotPasswordPage() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="backdrop-blur-md bg-white/80 border border-white/20 shadow-2xl rounded-3xl p-8 overflow-hidden relative"
+        className="bg-white border border-gray-200 shadow-[0_8px_32px_rgba(0,0,0,0.06)] rounded-2xl p-8 overflow-hidden relative"
       >
         <AnimatePresence mode="wait">
           {step === 1 ? (
@@ -193,7 +193,7 @@ export default function ForgotPasswordPage() {
               exit={{ opacity: 0, x: 100 }}
               transition={{ duration: 0.3 }}
             >
-              <h1 className="text-3xl font-extrabold text-center bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent mb-2">
+              <h1 className="text-3xl font-extrabold text-center text-gray-900 mb-2">
                 Quên mật khẩu?
               </h1>
               <p className="text-gray-500 text-center text-sm mb-8">
@@ -223,7 +223,7 @@ export default function ForgotPasswordPage() {
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3.5 rounded-xl font-semibold shadow-lg shadow-blue-500/20 hover:shadow-xl hover:shadow-blue-500/30 active:scale-[0.98] transition-all disabled:opacity-50 disabled:pointer-events-none flex items-center justify-center gap-2"
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3.5 rounded-xl font-semibold transition-colors disabled:opacity-50 disabled:pointer-events-none flex items-center justify-center gap-2"
                 >
                   {isLoading ? (
                     <>
@@ -262,7 +262,7 @@ export default function ForgotPasswordPage() {
                 <KeyRound className="h-7 w-7 text-blue-600 animate-bounce" />
               </div>
 
-              <h1 className="text-2xl font-extrabold text-center bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent mb-2">
+              <h1 className="text-2xl font-extrabold text-center text-gray-900 mb-2">
                 Đặt lại mật khẩu
               </h1>
               <p className="text-gray-500 text-center text-xs mb-1">
@@ -379,7 +379,7 @@ export default function ForgotPasswordPage() {
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3.5 rounded-xl font-semibold shadow-lg shadow-blue-500/20 hover:shadow-xl hover:shadow-blue-500/30 active:scale-[0.98] transition-all disabled:opacity-50 disabled:pointer-events-none flex items-center justify-center gap-2"
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3.5 rounded-xl font-semibold transition-colors disabled:opacity-50 disabled:pointer-events-none flex items-center justify-center gap-2"
                 >
                   {isLoading ? (
                     <>

@@ -54,7 +54,7 @@ export function ReportModal({ listingId, listingTitle, onClose }: ReportModalPro
     >
       {/* Modal */}
       <div
-        className="bg-white rounded-2xl shadow-2xl w-full max-w-md"
+        className="bg-white rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.08)] w-full max-w-md"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}

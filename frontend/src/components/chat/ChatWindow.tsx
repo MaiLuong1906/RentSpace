@@ -134,7 +134,7 @@ export function ChatWindow({ activeConversationId, sessionUserId }: ChatWindowPr
             </div>
           </Link>
           <div>
-            <Link href={`/app/profile/${selectedConv.otherParticipantId}`} className="hover:text-indigo-600 transition">
+            <Link href={`/app/profile/${selectedConv.otherParticipantId}`} className="hover:text-blue-600 transition">
               <h2 className="font-semibold text-gray-950 text-sm">
                 {selectedConv.otherParticipantName}
               </h2>
@@ -152,7 +152,7 @@ export function ChatWindow({ activeConversationId, sessionUserId }: ChatWindowPr
 
         <Link 
           href={`/app/profile/${selectedConv.otherParticipantId}`}
-          className="p-2 hover:bg-gray-100 rounded-lg text-gray-500 hover:text-indigo-600 transition"
+          className="p-2 hover:bg-gray-100 rounded-lg text-gray-500 hover:text-blue-600 transition"
           title="Xem trang cá nhân"
         >
           <User className="h-5 w-5" />
