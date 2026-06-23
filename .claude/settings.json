@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(./mvnw*)",
+      "Bash(mvn*)",
+      "Bash(npm run*)",
+      "Bash(npm install*)",
+      "Bash(npx*)",
+      "Bash(git status*)",
+      "Bash(git log*)",
+      "Bash(git diff*)",
+      "Bash(git branch*)",
+      "Bash(docker compose*)",
+      "Bash(docker ps*)",
+      "Bash(docker logs*)",
+      "Bash(find *)",
+      "Bash(ls*)",
+      "Bash(cat *pom.xml*)",
+      "Bash(cat *package.json*)"
+    ],
+    "deny": []
+  }
+}
