@@ -10,6 +10,7 @@ import type { CreateListingRequest } from "@/types/listing.types";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { PriceSuggestionWidget } from "@/components/shared/PriceSuggestionWidget";
+import { FRONTEND_TO_BACKEND_ROOM_TYPE } from "@/lib/constants/roomTypes";
 
 import Map, { Marker } from "react-map-gl/maplibre";
 import maplibregl from "maplibre-gl";
@@ -89,14 +90,6 @@ const CITY_COORDS: Record<string, { lat: number; lng: number }> = {
   "Đà Nẵng": { lat: 16.0544, lng: 108.2022 },
   "Hà Nội": { lat: 21.0285, lng: 105.8542 },
   "Hồ Chí Minh": { lat: 10.7769, lng: 106.7009 }
-};
-
-const FRONTEND_TO_BACKEND_ROOM_TYPE: Record<string, string> = {
-  single: "PHONG_TRO",
-  shared: "NGAN_GIAN",
-  apartment: "CHUNG_CU",
-  studio: "CHUNG_CU_MINI",
-  house: "NHA_NGUYEN_CAN",
 };
 
 export default function CreateListingPage() {

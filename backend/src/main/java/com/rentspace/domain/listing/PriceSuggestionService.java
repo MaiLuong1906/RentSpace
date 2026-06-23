@@ -42,9 +42,9 @@ public class PriceSuggestionService {
             log.info("Dữ liệu quận/huyện {} quá ít (count={}), chuyển sang tìm kiếm fallback cấp thành phố", district, benchmark.getSampleCount());
         }
 
-        // 2. Fallback: Tìm dữ liệu đại diện cấp Thành phố
+        // 2. Fallback: Tìm benchmark tốt nhất trong thành phố, loại trừ quận vừa tìm thất bại
         Optional<PriceBenchmark> cityBenchmarkOpt = priceBenchmarkRepository
-                .findFirstByCityAndRoomTypeAndAreaBucketOrderBySampleCountDesc(city, roomType, areaBucket);
+                .findBestCityFallback(city, roomType, areaBucket, district);
 
         if (cityBenchmarkOpt.isPresent()) {
             PriceBenchmark cityBenchmark = cityBenchmarkOpt.get();

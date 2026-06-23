@@ -8,6 +8,7 @@ import { listingApi } from "@/lib/api/listing.api";
 import type { CreateListingRequest, ListingImage } from "@/types/listing.types";
 import { toast } from "sonner";
 import { PriceSuggestionWidget } from "@/components/shared/PriceSuggestionWidget";
+import { FRONTEND_TO_BACKEND_ROOM_TYPE, BACKEND_TO_FRONTEND_ROOM_TYPE } from "@/lib/constants/roomTypes";
 
 import Map, { Marker } from "react-map-gl/maplibre";
 import maplibregl from "maplibre-gl";
@@ -37,22 +38,6 @@ const osmStyle = {
 };
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-
-const FRONTEND_TO_BACKEND_ROOM_TYPE: Record<string, string> = {
-  single: "PHONG_TRO",
-  shared: "NGAN_GIAN",
-  apartment: "CHUNG_CU",
-  studio: "CHUNG_CU_MINI",
-  house: "NHA_NGUYEN_CAN",
-};
-
-const BACKEND_TO_FRONTEND_ROOM_TYPE: Record<string, string> = {
-  PHONG_TRO: "single",
-  NGAN_GIAN: "shared",
-  CHUNG_CU: "apartment",
-  CHUNG_CU_MINI: "studio",
-  NHA_NGUYEN_CAN: "house",
-};
 
 export default function EditListingPage() {
   const router = useRouter();
@@ -499,6 +484,7 @@ export default function EditListingPage() {
                   <option value="shared">Phòng ở ghép</option>
                   <option value="apartment">Căn hộ</option>
                   <option value="studio">Studio</option>
+                  <option value="house">Nhà nguyên căn</option>
                 </select>
               </div>
 
