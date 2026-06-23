@@ -2,7 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { listingApi } from "@/lib/api/listing.api";
-import type { ListingSearchParams, NearbySearchParams } from "@/types/listing.types";
+import type { ListingSearchParams, NearbySearchParams, GeoSearchRequest } from "@/types/listing.types";
 
 export function useListings(params: ListingSearchParams) {
   return useQuery({
@@ -32,6 +32,15 @@ export function useNearbyListings(params: NearbySearchParams) {
     queryKey: ["listings-nearby", params],
     queryFn: () => listingApi.findNearby(params),
     enabled: typeof params.lat === "number" && typeof params.lng === "number",
+    staleTime: 1000 * 60 * 2, // 2 phút
+  });
+}
+
+export function useGeoSearchListings(params: GeoSearchRequest, enabled: boolean = true) {
+  return useQuery({
+    queryKey: ["listings-geo", params],
+    queryFn: () => listingApi.searchGeo(params),
+    enabled: enabled,
     staleTime: 1000 * 60 * 2, // 2 phút
   });
 }

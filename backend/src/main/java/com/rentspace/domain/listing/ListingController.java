@@ -72,6 +72,16 @@ public class ListingController {
         return ResponseEntity.ok(ApiResponse.success(result));
     }
 
+    // ===== POST /api/v1/listings/search/geo =====
+    @PostMapping("/search/geo")
+    @Operation(summary = "Tìm kiếm tin đăng theo vùng địa lý (Đa giác/Bán kính)")
+    public ResponseEntity<ApiResponse<List<ListingResponse>>> searchGeo(
+            @Valid @RequestBody GeoSearchRequest request) {
+        List<ListingResponse> result = listingService.searchGeo(request);
+        return ResponseEntity.ok(ApiResponse.success(result));
+    }
+
+
     // ===== GET /api/v1/listings/my =====
     @GetMapping("/my")
     @Operation(summary = "Danh sách tin của chủ trọ đang đăng nhập (có thể lọc theo trạng thái)")

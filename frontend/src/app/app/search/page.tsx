@@ -13,13 +13,13 @@ import {
   Navigation,
   Compass,
   Locate,
-  ChevronRight,
   Info
 } from "lucide-react";
-import { useListings, useNearbyListings } from "@/hooks/useListings";
+import { useListings, useGeoSearchListings } from "@/hooks/useListings";
 import { toast } from "sonner";
 import { formatPrice, getRoomTypeLabel } from "@/lib/mockData";
-import { ListingCardSkeleton } from "@/components/listing";
+import { ListingCardSkeleton, MapGeoSearch } from "@/components/listing";
+import type { Coordinate, SearchListing } from "@/types/listing.types";
 
 const CITY_DISTRICTS: Record<string, string[]> = {
   "Đà Nẵng": ["Hải Châu", "Thanh Khê", "Sơn Trà", "Liên Chiểu", "Ngũ Hành Sơn", "Cẩm Lệ", "Hòa Vang"],
@@ -27,62 +27,16 @@ const CITY_DISTRICTS: Record<string, string[]> = {
   "Hồ Chí Minh": ["Quận 1", "Quận 3", "Quận 4", "Quận 5", "Quận 6", "Quận 7", "Quận 8", "Quận 10", "Quận 11", "Quận 12", "Bình Thạnh", "Gò Vấp", "Tân Bình", "Tân Phú", "Bình Tân", "Thủ Đức", "Phú Nhuận"],
 };
 
-// Import React Map GL and MapLibre GL (OpenStreetMap, no token needed)
-import Map, { Marker, Popup, NavigationControl } from "react-map-gl/maplibre";
-import type { ViewStateChangeEvent } from "react-map-gl/maplibre";
-import maplibregl from "maplibre-gl";
-import "maplibre-gl/dist/maplibre-gl.css";
-
-const osmStyle = {
-  version: 8 as const,
-  sources: {
-    "osm-tiles": {
-      type: "raster" as const,
-      tiles: [
-        "https://basemaps.cartocdn.com/rastertiles/voyager_labels_under/{z}/{x}/{y}.png",
-      ],
-      tileSize: 256,
-      attribution: "© OpenStreetMap contributors, © CARTO",
-    },
-  },
-  layers: [
-    {
-      id: "osm-tiles-layer",
-      type: "raster" as const,
-      source: "osm-tiles",
-      minzoom: 0,
-      maxzoom: 19,
-    },
-  ],
-};
-
 type ViewMode = "list" | "map";
 type SearchMode = "standard" | "nearby";
 
-interface SearchListing {
-  id: string;
-  title: string;
-  description: string;
-  price: number;
-  address: string;
-  district: string;
-  city: string;
-  lat: number;
-  lng: number;
-  area: number;
-  roomType: "single" | "shared" | "apartment" | "house";
-  images: string[];
-  amenities: string[];
-  landlordId: string;
-  landlordName: string;
-  landlordAvatar: string;
-  landlordVerified: boolean;
-  status: "available" | "rented";
-  createdAt: string;
-  rating: number;
-  reviewCount: number;
-  isPromoted?: boolean;
-}
+const BACKEND_TO_FRONTEND_ROOM_TYPE: Record<string, string> = {
+  PHONG_TRO: "single",
+  NGAN_GIAN: "shared",
+  CHUNG_CU: "apartment",
+  CHUNG_CU_MINI: "studio",
+  NHA_NGUYEN_CAN: "house",
+};
 
 export default function SearchPage() {
   // Search Mode & View Mode
@@ -103,17 +57,29 @@ export default function SearchPage() {
   });
 
   // Nearby/GPS Search State
-  const [userCoords, setUserCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const [userCoords, setUserCoords] = useState<Coordinate | null>(null);
   const [gpsLoading, setGpsLoading] = useState(false);
   const [radius, setRadius] = useState<number>(2.0); // Bán kính tìm kiếm (km)
   const [selectedListing, setSelectedListing] = useState<SearchListing | null>(null);
-  const [mapViewport, setMapViewport] = useState({
-    latitude: 16.0544, // Mặc định Đà Nẵng
-    longitude: 108.2022,
-    zoom: 13,
-  });
+  const [polygon, setPolygon] = useState<Coordinate[]>([]);
 
-  const [mapError, setMapError] = useState<string | null>(null);
+  const isGeoQueryActive = polygon.length >= 3 || (searchMode === "nearby" && !!userCoords);
+
+  const geoSearchParams = useMemo(() => {
+    const hasPolygon = polygon.length >= 3;
+    const isNearby = searchMode === "nearby" && !!userCoords;
+    
+    return {
+      polygon: hasPolygon ? polygon : undefined,
+      centerLat: isNearby ? userCoords.lat : undefined,
+      centerLng: isNearby ? userCoords.lng : undefined,
+      radiusKm: isNearby ? radius : undefined,
+      roomType: filters.roomType || undefined,
+      minPrice: filters.minPrice ? Number(filters.minPrice) : undefined,
+      maxPrice: filters.maxPrice ? Number(filters.maxPrice) : undefined,
+      minArea: filters.minArea ? Number(filters.minArea) : undefined,
+    };
+  }, [polygon, searchMode, userCoords, radius, filters]);
 
   // Fetch standard listings
   const { data: standardResponse, isLoading: standardLoading } = useListings({
@@ -125,21 +91,19 @@ export default function SearchPage() {
     size: 50,
   });
 
-  // Fetch nearby listings (only enabled when in nearby mode and coordinates are available)
-  const { data: nearbyResponse, isLoading: nearbyLoading } = useNearbyListings({
-    lat: userCoords?.lat || 0,
-    lng: userCoords?.lng || 0,
-    radius: radius,
-    limit: 50,
-  });
+  // Fetch geo-search listings
+  const { data: geoResponse, isLoading: geoLoading } = useGeoSearchListings(
+    geoSearchParams,
+    isGeoQueryActive
+  );
 
-  const isLoading = searchMode === "standard" ? standardLoading : nearbyLoading;
+  const isLoading = isGeoQueryActive ? geoLoading : (searchMode === "standard" ? standardLoading : false);
 
   // Transform listings to unified UI representation
   const transformedListings = useMemo(() => {
-    const rawListings = searchMode === "standard" 
-      ? (standardResponse?.data?.content || []) 
-      : (nearbyResponse?.data || []);
+    const rawListings = isGeoQueryActive
+      ? (geoResponse?.data || [])
+      : (standardResponse?.data?.content || []);
 
     return rawListings.map((l) => {
       const amenitiesList: string[] = [];
@@ -160,7 +124,7 @@ export default function SearchPage() {
         lat: l.latitude ? Number(l.latitude) : 16.0544,
         lng: l.longitude ? Number(l.longitude) : 108.2022,
         area: l.areaM2 || 0,
-        roomType: "single" as const,
+        roomType: l.roomType ? (BACKEND_TO_FRONTEND_ROOM_TYPE[l.roomType] || "single") : "single",
         images: l.images && l.images.length > 0
           ? l.images.map((img) => img.imageUrl)
           : ["https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800&h=600&fit=crop"],
@@ -176,7 +140,7 @@ export default function SearchPage() {
         isPromoted: l.isPromoted || false,
       };
     });
-  }, [standardResponse, nearbyResponse, searchMode]);
+  }, [standardResponse, geoResponse, isGeoQueryActive]);
 
   // Client-side local filtering for fields not natively handled by API
   const filteredListings = useMemo(() => {
@@ -201,18 +165,17 @@ export default function SearchPage() {
     });
   }, [transformedListings, filters]);
 
-  // Extract unique amenities list
   const allAmenities = useMemo(() => {
     return Array.from(new Set(transformedListings.flatMap((l) => l.amenities)));
   }, [transformedListings]);
 
   const toggleAmenity = (amenity: string) => {
-    setFilters({
-      ...filters,
-      amenities: filters.amenities.includes(amenity)
-        ? filters.amenities.filter((a) => a !== amenity)
-        : [...filters.amenities, amenity],
-    });
+    setFilters((prev) => ({
+      ...prev,
+      amenities: prev.amenities.includes(amenity)
+        ? prev.amenities.filter((a) => a !== amenity)
+        : [...prev.amenities, amenity],
+    }));
   };
 
   const resetFilters = () => {
@@ -226,6 +189,7 @@ export default function SearchPage() {
       minArea: "",
       amenities: [],
     });
+    setPolygon([]);
   };
 
   // Get User Current Location
@@ -243,11 +207,6 @@ export default function SearchPage() {
           lng: position.coords.longitude,
         };
         setUserCoords(coords);
-        setMapViewport({
-          latitude: coords.lat,
-          longitude: coords.lng,
-          zoom: 14,
-        });
         setGpsLoading(false);
         toast.success("Đã lấy được vị trí GPS hiện tại!");
       },
@@ -259,11 +218,6 @@ export default function SearchPage() {
         // Fallback to default Da Nang center for simulation/testing
         const fallbackCoords = { lat: 16.0544, lng: 108.2022 };
         setUserCoords(fallbackCoords);
-        setMapViewport({
-          latitude: fallbackCoords.lat,
-          longitude: fallbackCoords.lng,
-          zoom: 14,
-        });
       }
     );
   };
@@ -274,23 +228,7 @@ export default function SearchPage() {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       requestUserLocation();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchMode]);
-
-  // Adjust viewport based on search mode / listings center
-  useEffect(() => {
-    if (filteredListings.length > 0 && searchMode === "standard") {
-      // Find average coordinates of listings
-      const avgLat = filteredListings.reduce((sum, l) => sum + l.lat, 0) / filteredListings.length;
-      const avgLng = filteredListings.reduce((sum, l) => sum + l.lng, 0) / filteredListings.length;
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setMapViewport((prev) => ({
-        ...prev,
-        latitude: avgLat,
-        longitude: avgLng,
-      }));
-    }
-  }, [filteredListings, searchMode]);
+  }, [searchMode, userCoords]);
 
   return (
     <div className="min-h-screen bg-gray-50/50">
@@ -321,7 +259,7 @@ export default function SearchPage() {
               <span>Tìm theo khu vực</span>
             </button>
             <button
-              onClick={() => setSearchMode("nearby")}
+              onClick={() => { setSearchMode("nearby"); setPolygon([]); }}
               className={`px-5 py-2.5 rounded-xl text-xs font-bold transition-all ${
                 searchMode === "nearby"
                   ? "bg-blue-600 text-white shadow-md shadow-blue-500/10"
@@ -697,19 +635,27 @@ export default function SearchPage() {
             {viewMode === "map" && (
               <div className="grid lg:grid-cols-3 gap-6">
                 
-                {/* Listings List (1 Column) */}
+                {/* Map Component (2 Columns) - Placed Left */}
+                <div className="lg:col-span-2 bg-gray-100 border border-gray-200 rounded-3xl h-[600px] relative overflow-hidden shadow-inner">
+                  <MapGeoSearch
+                    listings={filteredListings}
+                    selectedListing={selectedListing}
+                    onSelectListing={setSelectedListing}
+                    polygon={polygon}
+                    onPolygonChange={setPolygon}
+                    userCoords={userCoords}
+                    radiusKm={radius}
+                    searchMode={searchMode}
+                  />
+                </div>
+
+                {/* Listings List (1 Column) - Placed Right */}
                 <div className="space-y-4 max-h-[600px] overflow-y-auto lg:col-span-1 pr-2">
                   {filteredListings.map((listing) => (
                     <div
                       key={listing.id}
                       onClick={() => {
                         setSelectedListing(listing);
-                        setMapViewport((prev) => ({
-                          ...prev,
-                          latitude: listing.lat,
-                          longitude: listing.lng,
-                          zoom: 15,
-                        }));
                       }}
                       className={`bg-white rounded-2xl shadow-md overflow-hidden hover:shadow-lg transition-all cursor-pointer flex border ${
                         selectedListing?.id === listing.id ? "border-blue-600 ring-2 ring-blue-500/10" : "border-gray-100"
@@ -752,111 +698,6 @@ export default function SearchPage() {
                   )}
                 </div>
 
-                {/* Map Component (2 Columns) */}
-                <div className="lg:col-span-2 bg-gray-100 border border-gray-200 rounded-3xl h-[600px] relative overflow-hidden shadow-inner">
-                  {/* Interactive Map */}
-                  <Map
-                    {...mapViewport}
-                    onMove={(evt: ViewStateChangeEvent) => setMapViewport(evt.viewState)}
-                    style={{ width: "100%", height: "100%" }}
-                    mapLib={maplibregl}
-                    mapStyle={osmStyle}
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    onError={(e: any) => {
-                      console.error("Map error:", e);
-                      setMapError("Không thể tải bản đồ.");
-                    }}
-                  >
-                    <NavigationControl position="top-right" />
-
-                    {/* User Current Location Marker */}
-                    {userCoords && (
-                      <Marker latitude={userCoords.lat} longitude={userCoords.lng}>
-                        <div className="relative flex items-center justify-center">
-                          <span className="absolute inline-flex h-8 w-8 rounded-full bg-blue-500/20 opacity-35 animate-ping"></span>
-                          <span className="relative rounded-full h-4.5 w-4.5 bg-blue-600 border-2 border-white shadow-md flex items-center justify-center">
-                            <Navigation className="h-2 w-2 text-white fill-white rotate-45" />
-                          </span>
-                        </div>
-                      </Marker>
-                    )}
-
-                    {/* Listing Markers */}
-                    {filteredListings.map((listing) => (
-                      <Marker
-                        key={listing.id}
-                        latitude={listing.lat}
-                        longitude={listing.lng}
-                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                        onClick={(e: any) => {
-                          e.originalEvent.stopPropagation();
-                          setSelectedListing(listing);
-                        }}
-                      >
-                        <button
-                          className={`px-2 py-1 rounded-lg font-extrabold text-[10px] shadow-md border active:scale-95 transition-all ${
-                            selectedListing?.id === listing.id
-                              ? "bg-blue-600 text-white border-blue-600"
-                              : "bg-white text-blue-700 border-blue-100 hover:bg-blue-50"
-                          }`}
-                        >
-                          {formatPrice(listing.price).replace("đ", "").replace(".000.000", "M").replace(".000", "k")}
-                        </button>
-                      </Marker>
-                    ))}
-
-                    {/* Selected Listing Popup Info */}
-                    {selectedListing && (
-                      <Popup
-                        latitude={selectedListing.lat}
-                        longitude={selectedListing.lng}
-                        anchor="bottom"
-                        onClose={() => setSelectedListing(null)}
-                        closeOnClick={false}
-                        className="z-40"
-                      >
-                        <Link href={`/app/listings/${selectedListing.id}`} className="block w-48 p-1">
-                          <img
-                            src={selectedListing.images[0]}
-                            alt={selectedListing.title}
-                            className="w-full h-24 object-cover rounded-lg mb-2"
-                          />
-                          <h5 className="font-extrabold text-xs text-gray-900 line-clamp-1 mb-0.5">
-                            {selectedListing.title}
-                          </h5>
-                          <p className="text-blue-600 font-extrabold text-xs">
-                            {formatPrice(selectedListing.price)}/tháng
-                          </p>
-                          <div className="flex justify-between items-center text-[10px] text-gray-400 font-semibold mt-1">
-                            <span>{selectedListing.area} m²</span>
-                            <span className="text-blue-650 flex items-center gap-0.5 text-xs">
-                              Chi tiết <ChevronRight className="h-3 w-3" />
-                            </span>
-                          </div>
-                        </Link>
-                      </Popup>
-                    )}
-                  </Map>
-
-                  {/* Error Overlay for Map Loading Failures */}
-                  {mapError && (
-                    <div className="absolute inset-0 bg-slate-950/90 z-50 flex flex-col justify-center items-center p-6 text-center text-white backdrop-blur-md">
-                      <div className="max-w-md bg-gray-900 border border-white/10 p-6 rounded-3xl">
-                        <Info className="h-10 w-10 text-red-500 mx-auto mb-4 animate-pulse" />
-                        <h4 className="text-sm font-extrabold text-red-400">Không Thể Tải Bản Đồ</h4>
-                        <p className="text-xs text-white/70 leading-relaxed mt-2">
-                          Đã xảy ra sự cố khi tải dữ liệu bản đồ. Vui lòng kiểm tra lại kết nối mạng của bạn hoặc thử tải lại trang.
-                        </p>
-                        <button
-                          onClick={() => setMapError(null)}
-                          className="mt-5 px-4 py-2 bg-blue-600 hover:bg-blue-500 active:scale-95 text-white text-xs font-bold rounded-xl transition-all shadow-md"
-                        >
-                          Thử tải lại bản đồ
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </div>
               </div>
             )}
           </>

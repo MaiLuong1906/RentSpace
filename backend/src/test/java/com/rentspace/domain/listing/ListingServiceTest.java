@@ -4,6 +4,7 @@ import com.rentspace.common.exception.BusinessException;
 import com.rentspace.common.exception.ResourceNotFoundException;
 import com.rentspace.domain.listing.dto.*;
 import com.rentspace.domain.listing.enums.ListingStatus;
+import com.rentspace.domain.listing.enums.RoomType;
 import com.rentspace.domain.review.ReviewRepository;
 import com.rentspace.domain.user.User;
 import com.rentspace.domain.user.UserRepository;
@@ -200,6 +201,68 @@ class ListingServiceTest {
             assertEquals(1, result.size());
             assertEquals(5.0, result.get(0).getAverageRating());
             assertEquals(1, result.get(0).getReviewCount());
+        }
+
+        @Test
+        @DisplayName("Tìm kiếm địa lý bằng Đa giác (Polygon) — chuyển đổi WKT chính xác và trả về kết quả")
+        void searchGeo_withPolygon_shouldQueryWithWktAndReturnEnrichedList() {
+            // Given
+            GeoSearchRequest request = new GeoSearchRequest();
+            CoordinateDTO p1 = new CoordinateDTO(BigDecimal.valueOf(21.0), BigDecimal.valueOf(105.0));
+            CoordinateDTO p2 = new CoordinateDTO(BigDecimal.valueOf(21.0), BigDecimal.valueOf(106.0));
+            CoordinateDTO p3 = new CoordinateDTO(BigDecimal.valueOf(22.0), BigDecimal.valueOf(106.0));
+            request.setPolygon(List.of(p1, p2, p3));
+            request.setRoomType(RoomType.PHONG_TRO);
+
+            String expectedWkt = "POLYGON((106.0 21.0, 106.0 22.0, 105.0 21.0))"; // Wait: lng1 lat1, lng2 lat2, lng3 lat3, lng1 lat1
+            // Let's verify how the code appends: coord.getLng() + " " + coord.getLat()
+            // p1: lng=105.0, lat=21.0 -> "105.0 21.0"
+            // p2: lng=106.0, lat=21.0 -> "106.0 21.0"
+            // p3: lng=106.0, lat=22.0 -> "106.0 22.0"
+            // expected: POLYGON((105.0 21.0, 106.0 21.0, 106.0 22.0, 105.0 21.0))
+            String expectedRealWkt = "POLYGON((105.0 21.0, 106.0 21.0, 106.0 22.0, 105.0 21.0))";
+
+            when(listingRepository.searchGeo(
+                    eq(expectedRealWkt), any(), any(), any(), eq("PHONG_TRO"), any(), any(), any()
+            )).thenReturn(Collections.singletonList(listing));
+
+            when(listingMapper.toResponse(any(Listing.class))).thenReturn(listingResponse);
+            when(reviewRepository.getAverageRatingAndCountForListingIds(anyList()))
+                    .thenReturn(Collections.singletonList(new Object[]{10L, 4.0, 2L}));
+
+            // When
+            List<ListingResponse> result = listingService.searchGeo(request);
+
+            // Then
+            assertNotNull(result);
+            assertEquals(1, result.size());
+            assertEquals(4.0, result.get(0).getAverageRating());
+            assertEquals(2, result.get(0).getReviewCount());
+        }
+
+        @Test
+        @DisplayName("Tìm kiếm địa lý bằng Bán kính — chuyển đổi mét chính xác và trả về kết quả")
+        void searchGeo_withRadius_shouldQueryWithMetersAndReturnList() {
+            // Given
+            GeoSearchRequest request = new GeoSearchRequest();
+            request.setRadiusKm(5.0);
+            request.setCenterLat(BigDecimal.valueOf(21.0285));
+            request.setCenterLng(BigDecimal.valueOf(105.8542));
+
+            when(listingRepository.searchGeo(
+                    isNull(), eq(BigDecimal.valueOf(21.0285)), eq(BigDecimal.valueOf(105.8542)), eq(5000.0), isNull(), any(), any(), any()
+            )).thenReturn(Collections.singletonList(listing));
+
+            when(listingMapper.toResponse(any(Listing.class))).thenReturn(listingResponse);
+            when(reviewRepository.getAverageRatingAndCountForListingIds(anyList()))
+                    .thenReturn(Collections.emptyList());
+
+            // When
+            List<ListingResponse> result = listingService.searchGeo(request);
+
+            // Then
+            assertNotNull(result);
+            assertEquals(1, result.size());
         }
     }
 

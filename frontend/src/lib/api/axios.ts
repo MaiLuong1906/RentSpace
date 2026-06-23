@@ -43,7 +43,7 @@ apiClient.interceptors.response.use(
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
       // TODO: Implement token refresh logic
-      window.location.href = "/login";
+      window.location.href = "/auth/login";
     }
 
     return Promise.reject(error);

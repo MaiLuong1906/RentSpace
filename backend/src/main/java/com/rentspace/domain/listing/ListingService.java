@@ -65,6 +65,47 @@ public class ListingService {
         return enrichListWithRatingAndPromotion(new java.util.ArrayList<>(list));
     }
 
+    // ===== POST /api/v1/listings/search/geo =====
+    public List<ListingResponse> searchGeo(GeoSearchRequest request) {
+        String wktPolygon = null;
+        if (request.getPolygon() != null && request.getPolygon().size() >= 3) {
+            StringBuilder sb = new StringBuilder("POLYGON((");
+            List<CoordinateDTO> coords = request.getPolygon();
+            for (CoordinateDTO coord : coords) {
+                sb.append(coord.getLng()).append(" ").append(coord.getLat()).append(", ");
+            }
+            // Khép kín đa giác bằng cách lặp lại tọa độ đầu tiên
+            CoordinateDTO first = coords.get(0);
+            sb.append(first.getLng()).append(" ").append(first.getLat());
+            sb.append("))");
+            wktPolygon = sb.toString();
+        }
+
+        Double radiusMeters = null;
+        if (request.getRadiusKm() != null && request.getCenterLat() != null && request.getCenterLng() != null) {
+            radiusMeters = request.getRadiusKm() * 1000.0;
+        }
+
+        String roomTypeStr = request.getRoomType() != null ? request.getRoomType().name() : null;
+
+        List<Listing> listings = listingRepository.searchGeo(
+                wktPolygon,
+                request.getCenterLat(),
+                request.getCenterLng(),
+                radiusMeters,
+                roomTypeStr,
+                request.getMinPrice(),
+                request.getMaxPrice(),
+                request.getMinArea()
+        );
+
+        List<ListingResponse> responses = new java.util.ArrayList<>(
+                listings.stream().map(listingMapper::toResponse).toList()
+        );
+        return enrichListWithRatingAndPromotion(responses);
+    }
+
+
     // ===== GET /api/v1/listings/my =====
     public Page<ListingResponse> getMyListings(String email, ListingStatus status, Pageable pageable) {
         Page<ListingResponse> page;

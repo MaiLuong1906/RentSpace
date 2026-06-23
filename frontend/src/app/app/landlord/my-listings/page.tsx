@@ -22,6 +22,14 @@ function getRoomTypeLabel(type: string): string {
   return map[type] || type;
 }
 
+const BACKEND_TO_FRONTEND_ROOM_TYPE: Record<string, string> = {
+  PHONG_TRO: "single",
+  NGAN_GIAN: "shared",
+  CHUNG_CU: "apartment",
+  CHUNG_CU_MINI: "studio",
+  NHA_NGUYEN_CAN: "house",
+};
+
 export default function MyListingsPage() {
   const queryClient = useQueryClient();
   const [statusFilter, setStatusFilter] = useState<ListingStatus | "ALL">("ALL");
@@ -81,7 +89,7 @@ export default function MyListingsPage() {
     title: l.title,
     district: l.district || "Chưa rõ",
     area: l.areaM2 || 0,
-    roomType: "single", // fallback
+    roomType: l.roomType ? (BACKEND_TO_FRONTEND_ROOM_TYPE[l.roomType] || "single") : "single",
     price: l.pricePerMonth,
     images: l.images && l.images.length > 0
       ? l.images.map((img) => img.imageUrl)

@@ -10,7 +10,7 @@ export default auth((req) => {
   const isProtectedRoute = protectedRoutes.some((route) => pathname.startsWith(route));
 
   if (isProtectedRoute && !token) {
-    return NextResponse.redirect(new URL("/login", req.url));
+    return NextResponse.redirect(new URL("/auth/login", req.url));
   }
 
   // Phân quyền Role: Admin routes — chỉ ADMIN
