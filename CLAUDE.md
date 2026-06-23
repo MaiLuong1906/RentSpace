@@ -87,6 +87,14 @@ Kế hoạch chi tiết: `PHASE3_CODING_PLAN.md`
 
 ---
 
+## Quy tắc commit
+
+- **KHÔNG** thêm `Co-Authored-By: Claude ...` vào commit message
+- Commit chỉ ghi tên tác giả duy nhất là user (Leon)
+- Commit message bằng tiếng Anh, theo Conventional Commits
+
+---
+
 ## Pre-push checklist
 
 ```bash
