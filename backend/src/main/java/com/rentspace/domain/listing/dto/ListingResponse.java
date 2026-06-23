@@ -1,6 +1,7 @@
 package com.rentspace.domain.listing.dto;
 
 import com.rentspace.domain.listing.enums.ListingStatus;
+import com.rentspace.domain.listing.enums.RoomType;
 import lombok.Builder;
 import lombok.Data;
 
@@ -37,6 +38,8 @@ public class ListingResponse {
     private Boolean hasWashingMachine;
     private Boolean allowPets;
 
+    private RoomType roomType;
+
     private ListingStatus status;
     private List<ListingImageResponse> images;
 
@@ -49,3 +52,4 @@ public class ListingResponse {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }
+

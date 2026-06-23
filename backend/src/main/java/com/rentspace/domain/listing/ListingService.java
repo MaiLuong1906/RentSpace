@@ -4,6 +4,7 @@ import com.rentspace.common.exception.BusinessException;
 import com.rentspace.common.exception.ResourceNotFoundException;
 import com.rentspace.domain.listing.dto.*;
 import com.rentspace.domain.listing.enums.ListingStatus;
+import com.rentspace.domain.listing.enums.RoomType;
 import com.rentspace.domain.user.User;
 import com.rentspace.domain.user.UserRepository;
 import com.rentspace.domain.user.enums.KycStatus;
@@ -135,6 +136,7 @@ public class ListingService {
                 .hasAirConditioner(Boolean.TRUE.equals(request.getHasAirConditioner()))
                 .hasWashingMachine(Boolean.TRUE.equals(request.getHasWashingMachine()))
                 .allowPets(Boolean.TRUE.equals(request.getAllowPets()))
+                .roomType(request.getRoomType() != null ? request.getRoomType() : RoomType.PHONG_TRO)
                 .status(ListingStatus.PENDING)
                 .build();
 
@@ -165,6 +167,9 @@ public class ListingService {
         listing.setHasAirConditioner(Boolean.TRUE.equals(request.getHasAirConditioner()));
         listing.setHasWashingMachine(Boolean.TRUE.equals(request.getHasWashingMachine()));
         listing.setAllowPets(Boolean.TRUE.equals(request.getAllowPets()));
+        if (request.getRoomType() != null) {
+            listing.setRoomType(request.getRoomType());
+        }
 
         return listingMapper.toResponse(listingRepository.save(listing));
     }

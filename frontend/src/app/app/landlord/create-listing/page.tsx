@@ -9,6 +9,7 @@ import { getCurrentSubscription } from "@/lib/api/subscription.api";
 import type { CreateListingRequest } from "@/types/listing.types";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { PriceSuggestionWidget } from "@/components/shared/PriceSuggestionWidget";
 
 import Map, { Marker } from "react-map-gl/maplibre";
 import maplibregl from "maplibre-gl";
@@ -88,6 +89,14 @@ const CITY_COORDS: Record<string, { lat: number; lng: number }> = {
   "Đà Nẵng": { lat: 16.0544, lng: 108.2022 },
   "Hà Nội": { lat: 21.0285, lng: 105.8542 },
   "Hồ Chí Minh": { lat: 10.7769, lng: 106.7009 }
+};
+
+const FRONTEND_TO_BACKEND_ROOM_TYPE: Record<string, string> = {
+  single: "PHONG_TRO",
+  shared: "NGAN_GIAN",
+  apartment: "CHUNG_CU",
+  studio: "CHUNG_CU_MINI",
+  house: "NHA_NGUYEN_CAN",
 };
 
 export default function CreateListingPage() {
@@ -284,6 +293,7 @@ export default function CreateListingPage() {
           hasAirConditioner: formData.amenities.includes("Điều hòa"),
           hasWashingMachine: formData.amenities.includes("Máy giặt"),
           allowPets: false,
+          roomType: FRONTEND_TO_BACKEND_ROOM_TYPE[formData.roomType] || "PHONG_TRO",
         };
 
         const response = await listingApi.createListing(payload);
@@ -467,6 +477,16 @@ export default function CreateListingPage() {
                   <option value="apartment">Căn hộ</option>
                   <option value="studio">Studio</option>
                 </select>
+              </div>
+
+              <div className="mt-6 pt-4 border-t border-gray-100">
+                <PriceSuggestionWidget
+                  city={formData.city}
+                  district={formData.district}
+                  roomType={formData.roomType}
+                  area={Number(formData.area)}
+                  currentPrice={Number(formData.price)}
+                />
               </div>
             </div>
           </div>
