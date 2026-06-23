@@ -350,3 +350,22 @@ hotfix/<mo-ta>              # hotfix/critical-auth-bypass
  */
 public List<ListingDTO> searchNearby(double lat, double lon, double radiusKm) { ... }
 ```
+
+---
+
+## 6. Quy Tắc Viết Code Đầy Đủ (Full Output Enforcement)
+
+Khi triển khai các phần code quan trọng, đặc biệt là theo yêu cầu của người dùng, **CẤM CẮT XÉN CODE** hoặc sử dụng các placeholder để viết ngắn lại. 
+
+### Các patterns bị cấm tuyệt đối:
+- Dùng `// ...`, `// rest of code`, `// implement ở đây`, `// TODO` để bỏ qua các đoạn code trong file.
+- Viết `// tương tự như trên`, `// lặp lại pattern` hoặc thay logic lặp bằng chú thích ngắn gọn.
+- Ghi câu văn như: "tôi cung cấp khung xương, bạn tự điền logic", "phần còn lại tương tự".
+
+### Quy trình thực hiện:
+1. **Lên danh sách đầy đủ** các deliverables (file, function, tests, class).
+2. **Triển khai hoàn chỉnh** từng file/phần từ đầu đến cuối, không viết bản phác thảo hay cắt xén.
+3. Nếu response quá dài và có nguy cơ chạm giới hạn token của model:
+   - Dừng lại tại một vị trí tự nhiên (hết class, hết hàm, hết file).
+   - In thông báo: `[TẠM DỪNG — X/Y hoàn thành. Gửi "tiếp tục" để tiếp tục từ: <tên phần tiếp theo>]`
+   - Đợi người dùng gửi "tiếp tục" rồi viết tiếp chính xác từ điểm đã dừng.

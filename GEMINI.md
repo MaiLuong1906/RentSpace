@@ -44,6 +44,25 @@ trigger: always_on
 
 ---
 
+## 📅 Giai Đoạn Hiện Tại — Phase 3
+
+**Branch hiện tại:** `feature/subscription-monthly-reset`
+
+| Sprint | Trạng thái |
+|---|---|
+| Sprint 0 — MoMo Payment | ✅ Done (PR #49) |
+| Sprint 1 — Payout System | ✅ Done (PR #50) |
+| Sprint 2 — Seller Pro Subscription | 🔄 Đang làm |
+| Sprint 3 — Price Suggestion Engine | ⏳ Chưa bắt đầu |
+| Sprint 4 — Geo-Search & MapLibre | ⏳ Chưa bắt đầu |
+| Sprint 5 — Web Push & Email | ⏳ Chưa bắt đầu |
+| Sprint 6 — SEO Scale (SSG/ISR) | ⏳ Chưa bắt đầu |
+| Sprint 7 — Analytics & Redis | ⏳ Chưa bắt đầu |
+
+Kế hoạch chi tiết: `PHASE3_CODING_PLAN.md`
+
+---
+
 ## ⚡ Quy Trình Làm Việc Chuẩn (Developer Workflow)
 
 ```
@@ -67,23 +86,41 @@ Trước khi push code, AI Agent và Developer **PHẢI** thực hiện:
 3. **Tuyệt đối không push** nếu còn lỗi compilation hoặc linting (errors).
 
 ### 🛠️ Lưu Ý Kỹ Thuật Quan Trọng (Critical Technical Notes)
+
+#### **Backend:**
 - **Database Testing**: LUÔN LUÔN dùng `@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)` khi sử dụng `@DataJpaTest` để tránh lỗi do Spring cố gắng tìm DB nhúng (H2). Dự án sử dụng PostgreSQL cho cả testing.
 - **Ambiguity Fix**: Tránh nhầm lẫn giữa `com.rentspace.domain.user.User` và class `User` của thư viện khác (như Spring Security). Trong các file Test hoặc Logic phức tạp, LUÔN LUÔN dùng **Fully Qualified Name** (tên đầy đủ package) để tránh lỗi biên dịch trên môi trường CI.
 - **JSONB Mapping**: Khi mapping cột kiểu `jsonb` từ Postgres vào Java Entity, LUÔN LUÔN dùng `@JdbcTypeCode(SqlTypes.JSON)` để tránh lỗi cast dữ liệu.
-- **Flyway Rules**: Tuyệt đối **KHÔNG chỉnh sửa nội dung** các file migration đã push (merged). Nếu cần thay đổi schema, hãy tạo file migration mới (VD: `V20`).
+- **Flyway Rules**: Tuyệt đối **KHÔNG chỉnh sửa nội dung** các file migration đã push (merged). Nếu cần thay đổi schema, hãy tạo file migration mới (VD: `V27`).
+- **Geo query**: `ST_DWithin` phải dùng native query (Hibernate Spatial không hỗ trợ qua JPQL).
+
+#### **Frontend:**
+- **Next.js 16**: Có breaking changes — đọc `frontend/AGENTS.md` trước khi viết code.
+- **Framer Motion v12**: Import từ `"framer-motion"`, KHÔNG phải `"motion/react"`.
+- **Tailwind v4**: Dùng `@tailwindcss/postcss`, không dùng plugin `tailwindcss` cũ trong postcss config.
+- **Viewport stability**: Luôn dùng `min-h-[100dvh]` thay vì `h-screen` để tránh bị nhảy layout trên iOS Safari viewport.
 - **Frontend Types**: Tuyệt đối **KHÔNG dùng `any`**. Luôn định nghĩa Interface/Type trong thư mục `src/types`. Nếu là Entity mới, hãy cập nhật vào `phase2.types.ts`.
 
 ---
 
 ## 🚨 Quy Tắc Tuyệt Đối (Non-Negotiable Rules)
 
-1. **KHÔNG BAO GIỜ** commit secret, password, API key lên Git
-2. **KHÔNG BAO GIỜ** disable Spring Security hoặc bỏ qua JWT validation
-3. **KHÔNG BAO GIỜ** viết raw SQL khi JPA/JPQL có thể xử lý được
-4. **KHÔNG BAO GIỜ** dùng `@Transactional` ở tầng Controller
-5. **LUÔN LUÔN** validate input ở tầng Service và dùng `@Valid` ở Controller
-6. **LUÔN LUÔN** trả response theo chuẩn `ApiResponse<T>` wrapper
-7. **LUÔN LUÔN** tạo Flyway migration khi thay đổi schema database
+1. **KHÔNG BAO GIỜ** commit secret, password, API key lên Git.
+2. **KHÔNG BAO GIỜ** disable Spring Security hoặc bỏ qua JWT validation.
+3. **KHÔNG BAO GIỜ** viết raw SQL khi JPA/JPQL có thể xử lý được.
+4. **KHÔNG BAO GIỜ** dùng `@Transactional` ở tầng Controller.
+5. **LUÔN LUÔN** validate input ở tầng Service và dùng `@Valid` ở Controller.
+6. **LUÔN LUÔN** trả response theo chuẩn `ApiResponse<T>` wrapper.
+7. **LUÔN LUÔN** tạo Flyway migration khi thay đổi schema database (hiện tại đến V26, Phase 3: V23-V29).
+8. **KHÔNG BAO GIỜ** viết code cắt ngắn bằng các placeholder (như `// ...` hay `// TODO`) khi người dùng yêu cầu implementation đầy đủ.
+
+---
+
+## 📝 Quy Tắc Commit
+
+- **KHÔNG** thêm `Co-Authored-By: Claude ...` hoặc các thông tin AI tự động khác vào commit message.
+- Commit chỉ ghi tên tác giả duy nhất là user (Leon).
+- Commit message bằng tiếng Anh, tuân thủ chặt chẽ Conventional Commits.
 
 ---
 
