@@ -4,6 +4,7 @@ import com.rentspace.domain.listing.dto.PriceSuggestionResponse;
 import com.rentspace.domain.listing.enums.RoomType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,6 +18,7 @@ public class PriceSuggestionService {
 
     private final PriceBenchmarkRepository priceBenchmarkRepository;
 
+    @Cacheable(value = "priceBenchmarks", key = "#city + ':' + #district + ':' + #roomType + ':' + #area")
     public PriceSuggestionResponse getPriceSuggestion(String city, String district, RoomType roomType, Double area) {
         log.info("Yêu cầu gợi ý giá thuê: city={}, district={}, roomType={}, area={}", city, district, roomType, area);
 
