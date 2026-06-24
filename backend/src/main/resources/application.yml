@@ -92,6 +92,7 @@ app:
     expiration-ms: 900000 # 15 phút
     refresh-expiration-ms: 604800000 # 7 ngày
   frontend-url: ${FRONTEND_URL:http://localhost:3000}
+  site-url: ${SITE_URL:https://rentspace.vn}
 
   # ===== Web Push (Sprint 5) =====
   # Tạo VAPID keys bằng: npx web-push generate-vapid-keys

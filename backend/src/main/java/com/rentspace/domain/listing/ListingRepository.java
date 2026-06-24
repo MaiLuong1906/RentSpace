@@ -119,4 +119,19 @@ public interface ListingRepository extends JpaRepository<Listing, Long> {
 
     // Đếm số tin đăng của Landlord trong chu kỳ gói cước (từ startDate) trừ trạng thái DELETED
     long countByLandlordIdAndStatusNotAndCreatedAtGreaterThanEqual(Long landlordId, ListingStatus status, java.time.LocalDateTime startDate);
+
+    // Lấy danh sách tất cả listing ACTIVE cho sitemap (chỉ cần id + updatedAt)
+    @Query("SELECT l.id AS id, l.updatedAt AS updatedAt FROM Listing l WHERE l.status = 'ACTIVE' ORDER BY l.updatedAt DESC")
+    List<ListingSitemapProjection> findAllForSitemap();
+
+    // Lấy các cặp (city, district) phân biệt từ listing ACTIVE cho sitemap khu vực
+    @Query(value = """
+            SELECT DISTINCT city, district
+            FROM listings
+            WHERE status = 'ACTIVE'
+              AND city IS NOT NULL
+              AND district IS NOT NULL
+            ORDER BY city, district
+            """, nativeQuery = true)
+    List<Object[]> findDistinctCityDistrict();
 }
