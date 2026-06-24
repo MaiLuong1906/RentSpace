@@ -36,6 +36,8 @@ public class SecurityConfig {
             "/api/v1/listings/*/view",      // Public - ghi nhận lượt xem (cho phép cả ẩn danh)
             "/api/v1/listings/search/geo",  // Public - tìm kiếm địa lý không gian (cho phép cả ẩn danh)
             "/api/v1/subscriptions/plans",  // Public - xem gói cước
+            "/api/v1/seo/pages",            // Public - frontend đọc SEO metadata cho ISR pages
+            "/sitemap.xml",                 // Public - Google/Bing bot crawl
             "/uploads/**",                  // Static files (ảnh upload local)
             "/swagger-ui/**",
             "/swagger-ui.html",
