@@ -3,6 +3,7 @@ package com.rentspace.domain.notification;
 import com.rentspace.common.exception.ResourceNotFoundException;
 import com.rentspace.domain.notification.dto.NotificationResponse;
 import com.rentspace.domain.notification.enums.NotificationType;
+import com.rentspace.domain.notification.webpush.WebPushService;
 import com.rentspace.domain.user.User;
 import com.rentspace.domain.user.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -37,6 +38,9 @@ class NotificationServiceImplTest {
 
     @Mock
     private SimpMessagingTemplate messagingTemplate;
+
+    @Mock
+    private WebPushService webPushService;
 
     @InjectMocks
     private NotificationServiceImpl notificationService;

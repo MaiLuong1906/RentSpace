@@ -93,6 +93,13 @@ app:
     refresh-expiration-ms: 604800000 # 7 ngày
   frontend-url: ${FRONTEND_URL:http://localhost:3000}
 
+  # ===== Web Push (Sprint 5) =====
+  # Tạo VAPID keys bằng: npx web-push generate-vapid-keys
+  webpush:
+    public-key: ${VAPID_PUBLIC_KEY}
+    private-key: ${VAPID_PRIVATE_KEY}
+    subject: ${VAPID_SUBJECT:mailto:admin@rentspace.vn}
+
 # ===== AWS S3 =====
 aws:
   s3:
