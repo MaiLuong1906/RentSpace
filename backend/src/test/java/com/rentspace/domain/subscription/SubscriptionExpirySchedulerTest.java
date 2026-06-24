@@ -1,5 +1,8 @@
 package com.rentspace.domain.subscription;
 
+import com.rentspace.domain.listing.Listing;
+import com.rentspace.domain.listing.ListingRepository;
+import com.rentspace.domain.listing.enums.ListingStatus;
 import com.rentspace.domain.notification.NotificationService;
 import com.rentspace.domain.notification.enums.NotificationType;
 import com.rentspace.domain.subscription.enums.PlanName;
@@ -34,12 +37,17 @@ class SubscriptionExpirySchedulerTest {
     @Mock
     private EmailService emailService;
 
+    @Mock
+    private ListingRepository listingRepository;
+
     @InjectMocks
     private SubscriptionExpiryScheduler subscriptionExpiryScheduler;
 
     private User user;
     private SubscriptionPlan proPlan;
+    private SubscriptionPlan freePlan;
     private UserSubscription expiredSub;
+    private UserSubscription freeSubStub;
 
     @BeforeEach
     void setUp() {
@@ -53,6 +61,14 @@ class SubscriptionExpirySchedulerTest {
                 .id(2)
                 .name(PlanName.SELLER_PRO_MONTHLY)
                 .displayName("Seller Pro (Tháng)")
+                .maxListings(50)
+                .build();
+
+        freePlan = SubscriptionPlan.builder()
+                .id(1)
+                .name(PlanName.FREE)
+                .displayName("Miễn phí")
+                .maxListings(10)
                 .build();
 
         expiredSub = UserSubscription.builder()
@@ -61,6 +77,13 @@ class SubscriptionExpirySchedulerTest {
                 .plan(proPlan)
                 .status(SubscriptionStatus.ACTIVE)
                 .expiresAt(LocalDateTime.now().minusDays(1))
+                .build();
+
+        freeSubStub = UserSubscription.builder()
+                .id(101L)
+                .user(user)
+                .plan(freePlan)
+                .status(SubscriptionStatus.ACTIVE)
                 .build();
     }
 
@@ -83,6 +106,10 @@ class SubscriptionExpirySchedulerTest {
     void checkExpiredSubscriptions_HasExpired_ShouldUpdateAndNotify() {
         when(userSubscriptionRepository.findAllByStatusAndExpiresAtBefore(eq(SubscriptionStatus.ACTIVE), any(LocalDateTime.class)))
                 .thenReturn(List.of(expiredSub));
+        when(subscriptionService.getOrCreateDefaultFreeSubscription(user))
+                .thenReturn(freeSubStub);
+        when(listingRepository.findByLandlordIdAndStatusOrderByCreatedAtDesc(user.getId(), ListingStatus.ACTIVE))
+                .thenReturn(Collections.emptyList());
 
         subscriptionExpiryScheduler.checkExpiredSubscriptions();
 
