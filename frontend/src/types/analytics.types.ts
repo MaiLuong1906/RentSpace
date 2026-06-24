@@ -9,3 +9,31 @@ export interface LandlordAnalyticsResponse {
   totalDeposits: number;
   viewsOverTime: DailyViewCount[];
 }
+
+export interface ConversionFunnelDto {
+  totalViews: number;
+  totalChats: number;
+  totalDeposits: number;
+  successfulDeals: number;
+}
+
+export interface MonthlyRevenueDto {
+  year: number;
+  month: number;
+  revenue: number;
+  depositCount: number;
+}
+
+export interface AdminFinancialSummaryDto {
+  totalRevenue: number;
+  totalTransactions: number;
+  activeLandlords: number;
+  platformFee: number;
+}
+
+export interface TopLandlordDto {
+  landlordId: number;
+  displayName: string;
+  revenue: number;
+  dealCount: number;
+}

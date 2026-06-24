@@ -18,6 +18,8 @@ public interface ConversationRepository extends JpaRepository<Conversation, Long
 
     long countByLandlordIdAndCreatedAtAfter(Long landlordId, java.time.LocalDateTime since);
 
+    long countByLandlordIdAndCreatedAtBetween(Long landlordId, java.time.LocalDateTime from, java.time.LocalDateTime to);
+
     @Query("SELECT c FROM Conversation c WHERE (c.tenant.id = :tenantId AND c.landlord.id = :landlordId) OR (c.tenant.id = :landlordId AND c.landlord.id = :tenantId)")
     Optional<Conversation> findConversationBetween(@Param("tenantId") Long tenantId, @Param("landlordId") Long landlordId);
 

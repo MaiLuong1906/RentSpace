@@ -38,5 +38,54 @@ public interface DepositTransactionRepository extends JpaRepository<DepositTrans
     long sumNetAmountByLandlordIdAndReleasedAtAfter(@Param("landlordId") Long landlordId, @Param("startDate") java.time.LocalDateTime startDate);
 
     long countByLandlordIdAndPaidAtAfter(Long landlordId, java.time.LocalDateTime since);
+
+    long countByLandlordIdAndPaidAtBetween(Long landlordId, java.time.LocalDateTime from, java.time.LocalDateTime to);
+
+    long countByLandlordIdAndStatusAndReleasedAtBetween(Long landlordId, DepositStatus status,
+                                                         java.time.LocalDateTime from, java.time.LocalDateTime to);
+
+    @Query("""
+            SELECT EXTRACT(YEAR FROM d.paidAt) AS year,
+                   EXTRACT(MONTH FROM d.paidAt) AS month,
+                   COUNT(d) AS depositCount,
+                   SUM(CASE WHEN d.status = com.rentspace.domain.deposit.enums.DepositStatus.RELEASED THEN d.netAmount ELSE 0L END) AS revenue
+            FROM DepositTransaction d
+            WHERE d.landlord.id = :landlordId
+              AND EXTRACT(YEAR FROM d.paidAt) = :year
+              AND d.paidAt IS NOT NULL
+            GROUP BY EXTRACT(YEAR FROM d.paidAt), EXTRACT(MONTH FROM d.paidAt)
+            ORDER BY EXTRACT(MONTH FROM d.paidAt)
+            """)
+    List<Object[]> findMonthlyStatsByLandlord(@Param("landlordId") Long landlordId, @Param("year") int year);
+
+    @Query(value = """
+            SELECT
+                COALESCE(SUM(net_amount), 0)   AS total_revenue,
+                COUNT(*)                        AS total_transactions,
+                COUNT(DISTINCT landlord_id)     AS active_landlords,
+                COALESCE(SUM(platform_fee), 0)  AS platform_fee
+            FROM deposit_transactions
+            WHERE status = 'RELEASED'
+              AND released_at BETWEEN :from AND :to
+            """, nativeQuery = true)
+    List<Object[]> findAdminSummary(@Param("from") java.time.LocalDateTime from, @Param("to") java.time.LocalDateTime to);
+
+    @Query(value = """
+            SELECT
+                dt.landlord_id,
+                u.full_name,
+                SUM(dt.net_amount) AS revenue,
+                COUNT(dt.id)       AS deal_count
+            FROM deposit_transactions dt
+            JOIN users u ON u.id = dt.landlord_id
+            WHERE dt.status = 'RELEASED'
+              AND dt.released_at BETWEEN :from AND :to
+            GROUP BY dt.landlord_id, u.full_name
+            ORDER BY revenue DESC
+            LIMIT :limitCount
+            """, nativeQuery = true)
+    List<Object[]> findTopLandlords(@Param("from") java.time.LocalDateTime from,
+                                    @Param("to") java.time.LocalDateTime to,
+                                    @Param("limitCount") int limitCount);
 }
 

@@ -12,6 +12,7 @@ import com.rentspace.domain.user.enums.Role;
 import com.rentspace.infrastructure.storage.StorageService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -47,6 +48,7 @@ public class ListingService {
     private final SubscriptionService subscriptionService;
 
     // ===== GET /api/v1/listings =====
+    // Không cache Page<> vì Spring Data Page không serialize/deserialize tốt với Redis JSON serializer
     public Page<ListingResponse> search(String city, String district,
                                         BigDecimal minPrice, BigDecimal maxPrice,
                                         BigDecimal minArea, Pageable pageable) {
@@ -143,6 +145,7 @@ public class ListingService {
 
     // ===== POST /api/v1/listings =====
     @Transactional
+    @CacheEvict(value = "searchResults", allEntries = true)
     @EnforceSubscriptionLimit
     public ListingResponse create(String email, CreateListingRequest request) {
         User landlord = userRepository.findByEmail(email)
@@ -188,6 +191,7 @@ public class ListingService {
 
     // ===== PUT /api/v1/listings/{id} =====
     @Transactional
+    @CacheEvict(value = "searchResults", allEntries = true)
     public ListingResponse update(Long id, String email, CreateListingRequest request) {
         Listing listing = findOwnedListing(id, email);
 
@@ -236,6 +240,7 @@ public class ListingService {
 
     // ===== DELETE /api/v1/listings/{id} (Soft Delete) =====
     @Transactional
+    @CacheEvict(value = "searchResults", allEntries = true)
     public void delete(Long id, String email, boolean isAdmin) {
         Listing listing = listingRepository.findByIdAndStatusNot(id, ListingStatus.DELETED)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy tin đăng: " + id));
