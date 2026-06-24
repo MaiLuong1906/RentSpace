@@ -21,27 +21,39 @@ com.rentspace/
 ├── exception/           # Custom exceptions + GlobalExceptionHandler
 ├── aspect/              # AOP (SubscriptionLimitAspect hiện tại)
 ├── scheduler/           # @Scheduled jobs
-└── domain/              # Bounded contexts Phase 3
-    ├── payment/         # MoMo + VNPay gateway (Sprint 0 ✅)
-    ├── payout/          # Payout service (Sprint 1 ✅)
-    └── subscription/    # Subscription guard + service (Sprint 2 🔄)
+└── domain/              # Bounded contexts Phase 3 (tất cả ✅)
+    ├── payment/         # MoMo + VNPay gateway
+    ├── payout/          # Payout service + AES-256 encrypted bank accounts
+    ├── subscription/    # SubscriptionService, SubscriptionLimitAspect, ExpiryScheduler
+    ├── listing/         # PriceSuggestionService, PriceBenchmarkScheduler, GeoSearch
+    ├── notification/    # WebPushService, EmailService (Thymeleaf templates)
+    ├── seo/             # SeoPageService, SitemapService
+    └── analytics/       # LandlordAnalyticsService, materialized view refresh
 ```
 
 ---
 
 ## Flyway migrations
 
-Hiện tại đến **V22**. Phase 3 plan:
+Phase 3 hoàn thành tại **V31**. Phase 4 bắt đầu từ **V32**.
 
-| Migration | Nội dung | Sprint |
-|---|---|---|
-| V23 | `payment_method_detail` JSONB trên `deposit_transactions` | 0 ✅ |
-| V24 | `landlord_payout_accounts` + `payouts` | 1 ✅ |
-| V25 | `price_benchmarks` + `listings.room_type` | 3 |
-| V26 | `subscription_plans` + `user_subscriptions` | 2 🔄 |
-| V27 | `web_push_subscriptions` | 5 |
-| V28 | `seo_pages` | 6 |
-| V29 | Materialized view `landlord_analytics_daily` | 7 |
+| Migration | Nội dung | Sprint | Trạng thái |
+|---|---|---|---|
+| V23 | `payment_method_detail` JSONB trên `deposit_transactions` | P3-S0 | ✅ |
+| V24 | `landlord_payout_accounts` + `payouts` | P3-S1 | ✅ |
+| V25 | Thêm cột `processed_by` vào `payouts` (audit) | P3-S1 | ✅ |
+| V26 | `subscription_plans` + `user_subscriptions` | P3-S2 | ✅ |
+| V27 | `listings.room_type` + `price_benchmarks` | P3-S3 | ✅ |
+| V28 | PostGIS extension + cột `geom` geometry trên `listings` | P3-S4 | ✅ |
+| V29 | `web_push_subscriptions` | P3-S5 | ✅ |
+| V30 | `seo_pages` | P3-S6 | ✅ |
+| V31 | Materialized view `landlord_analytics_daily` | P3-S7 | ✅ |
+| **V32+** | **Phase 4 bắt đầu tại đây** | P4 | ⏳ |
+
+**Lưu ý schema kế thừa quan trọng cho Phase 4:**
+- `V8` có bảng `reviews(listing_id, tenant_id)` — one-directional. Phase 4 cần tạo bảng `transaction_reviews` riêng (bidirectional, theo deposit), không được ALTER bảng cũ.
+- `V14` đã thêm `ekyc_*` columns vào `users`. Phase 4 tạo bảng `user_verifications` riêng — coexist được, nhưng `user_verifications` là source of truth mới.
+- `V17` có bảng `rental_contracts(contract_url)`. Phase 4 tạo bảng `contracts` mới với state machine đầy đủ — hai bảng tồn tại song song.
 
 **KHÔNG** sửa file migration đã chạy. Tạo file mới nếu cần thay đổi.
 
