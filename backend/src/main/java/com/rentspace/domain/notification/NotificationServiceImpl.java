@@ -1,6 +1,8 @@
 package com.rentspace.domain.notification;
 
 import com.rentspace.common.exception.ResourceNotFoundException;
+import com.rentspace.domain.notification.webpush.WebPushService;
+import com.rentspace.domain.notification.webpush.dto.WebPushPayload;
 import org.springframework.security.access.AccessDeniedException;
 import com.rentspace.domain.notification.dto.NotificationResponse;
 import com.rentspace.domain.notification.enums.NotificationType;
@@ -27,6 +29,7 @@ public class NotificationServiceImpl implements NotificationService {
     private final NotificationRepository notificationRepository;
     private final UserRepository userRepository;
     private final SimpMessagingTemplate messagingTemplate;
+    private final WebPushService webPushService;
 
     @Override
     @Transactional
@@ -53,6 +56,14 @@ public class NotificationServiceImpl implements NotificationService {
         } catch (Exception e) {
             log.error("Lỗi khi gửi real-time notification qua WebSocket: {}", e.getMessage());
         }
+
+        // Gửi Web Push bất đồng bộ — fire-and-forget, không block HTTP thread
+        WebPushPayload pushPayload = WebPushPayload.builder()
+                .title(title)
+                .content(content)
+                .url("/app/notifications")
+                .build();
+        webPushService.sendToUser(user.getId(), pushPayload);
 
         return response;
     }

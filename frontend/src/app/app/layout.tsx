@@ -26,6 +26,7 @@ import { authApi } from "@/lib/api/auth.api";
 import { useChat } from "@/hooks/useChat";
 import { useChatStore } from "@/store/chatStore";
 import { NotificationDropdown } from "@/components/notification";
+import { WebPushBanner } from "@/components/notification/WebPushBanner";
 
 const getShortName = (fullName?: string | null, email?: string | null) => {
   if (!fullName) {
@@ -506,6 +507,8 @@ export default function DashboardLayout({
       <main>
         {children}
       </main>
+
+      <WebPushBanner />
     </div>
   );
 }

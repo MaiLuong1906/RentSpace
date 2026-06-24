@@ -20,9 +20,15 @@ spring:
       password: ${REDIS_PASSWORD:}
   mail:
     host: localhost
-    port: 25
+    port: 1025
     username: test@example.com
     password: testpassword
+    properties:
+      mail:
+        smtp:
+          auth: false
+          starttls:
+            enable: false
 
 aws:
   s3:
@@ -36,3 +42,7 @@ aws:
 app:
   jwt:
     secret: ${JWT_SECRET:VmVyeVNlY3JldEtleUZvclJlbnRTcGFjZUFwcGxpY2F0aW9uMjAyNjEyMzQ1Njc4OTA=}
+  webpush:
+    public-key: BNweh91arBwyGpfg10JQ-mZWQNCtKSFguAxp9J2NuDmdyCvNKsNnLMO_FwJqo2SrSDQVvl_Nk420EEJnD5bd8DM
+    private-key: b7N9HQLnABNdwwoSdbJQchAMKVbN6zHStZ4ao61lR68
+    subject: mailto:admin@rentspace.vn

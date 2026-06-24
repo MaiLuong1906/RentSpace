@@ -24,6 +24,8 @@
         <mapstruct.version>1.5.5.Final</mapstruct.version>
         <aws-sdk.version>2.25.40</aws-sdk.version>
         <openpdf.version>2.0.2</openpdf.version>
+        <webpush.version>5.1.1</webpush.version>
+        <bouncycastle.version>1.76</bouncycastle.version>
     </properties>
 
     <dependencyManagement>
@@ -126,6 +128,25 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-mail</artifactId>
+        </dependency>
+
+        <!-- ===== Thymeleaf — render HTML template cho email ===== -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-thymeleaf</artifactId>
+        </dependency>
+
+        <!-- ===== Web Push — gửi notification đến browser (Sprint 5) ===== -->
+        <dependency>
+            <groupId>nl.martijndwars</groupId>
+            <artifactId>web-push</artifactId>
+            <version>${webpush.version}</version>
+        </dependency>
+        <!-- BouncyCastle — bắt buộc cho web-push ECDH trên Java 21, pin version cụ thể -->
+        <dependency>
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bcprov-jdk18on</artifactId>
+            <version>${bouncycastle.version}</version>
         </dependency>
 
         <!-- ===== AWS S3 — File Storage ===== -->
