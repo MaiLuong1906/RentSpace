@@ -97,8 +97,8 @@ app:
   # ===== Web Push (Sprint 5) =====
   # Tạo VAPID keys bằng: npx web-push generate-vapid-keys
   webpush:
-    public-key: ${VAPID_PUBLIC_KEY}
-    private-key: ${VAPID_PRIVATE_KEY}
+    public-key: ${VAPID_PUBLIC_KEY:BEl62iUYgUivxIkv69yViEuiBIa-Ib9-SkvMeAtA3LFgDzkrxZJjSgSnfckjZJkpFgfFvHnV-8tg7yRG2a7BGMQ}
+    private-key: ${VAPID_PRIVATE_KEY:fT3bU95hJgCp2ZGF2-tWvNY1nwQSmZ6FE0OBHgBwAGA}
     subject: ${VAPID_SUBJECT:mailto:admin@rentspace.vn}
 
 # ===== AWS S3 =====
