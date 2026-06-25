@@ -27,7 +27,7 @@ public class VerificationController {
     private final VerificationService verificationService;
 
     @PostMapping(value = "/submit-id", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @PreAuthorize("hasAnyRole('USER', 'LANDLORD', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('TENANT', 'LANDLORD', 'ADMIN')")
     @Operation(summary = "Bước 1–2: Upload ảnh CCCD 2 mặt")
     public ResponseEntity<ApiResponse<VerificationInitResponse>> submitIdCard(
             @AuthenticationPrincipal UserDetails userDetails,
@@ -43,7 +43,7 @@ public class VerificationController {
     }
 
     @PostMapping(value = "/submit-face", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @PreAuthorize("hasAnyRole('USER', 'LANDLORD', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('TENANT', 'LANDLORD', 'ADMIN')")
     @Operation(summary = "Bước 3: Upload selfie để khớp khuôn mặt")
     public ResponseEntity<ApiResponse<VerificationResult>> submitSelfie(
             @AuthenticationPrincipal UserDetails userDetails,
@@ -61,7 +61,7 @@ public class VerificationController {
     }
 
     @GetMapping("/status")
-    @PreAuthorize("hasAnyRole('USER', 'LANDLORD', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('TENANT', 'LANDLORD', 'ADMIN')")
     @Operation(summary = "Xem trạng thái xác minh danh tính của bản thân")
     public ResponseEntity<ApiResponse<VerificationStatusDto>> getStatus(
             @AuthenticationPrincipal UserDetails userDetails) {

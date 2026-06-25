@@ -43,7 +43,7 @@ public class VerificationServiceImpl implements VerificationService {
     private double faceMatchThreshold;
 
     @Override
-    @Transactional
+    @Transactional(noRollbackFor = BusinessException.class)
     public VerificationInitResponse submitIdCard(String userEmail, MultipartFile front, MultipartFile back) {
         User user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy người dùng: " + userEmail));

@@ -69,6 +69,9 @@ class DepositServiceTest {
     private com.rentspace.domain.contract.RentalContractService rentalContractService;
 
     @Mock
+    private com.rentspace.domain.contract.ContractService contractService;
+
+    @Mock
     private com.rentspace.domain.payout.PayoutService payoutService;
 
     private DepositService depositService;
@@ -125,6 +128,7 @@ class DepositServiceTest {
                 emailService,
                 disputeRepository,
                 rentalContractService,
+                contractService,
                 payoutService
         );
 
