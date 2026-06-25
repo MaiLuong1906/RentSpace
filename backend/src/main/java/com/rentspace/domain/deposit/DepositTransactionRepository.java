@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
@@ -57,6 +58,22 @@ public interface DepositTransactionRepository extends JpaRepository<DepositTrans
             ORDER BY EXTRACT(MONTH FROM d.paidAt)
             """)
     List<Object[]> findMonthlyStatsByLandlord(@Param("landlordId") Long landlordId, @Param("year") int year);
+
+    /** Các deposit RELEASED/REFUNDED của user trong vòng 30 ngày — để xác định ai cần viết review */
+    @Query("""
+            SELECT d FROM DepositTransaction d
+            WHERE (d.tenant.id = :userId OR d.landlord.id = :userId)
+              AND (d.status = com.rentspace.domain.deposit.enums.DepositStatus.RELEASED
+                   OR d.status = com.rentspace.domain.deposit.enums.DepositStatus.REFUNDED)
+              AND (
+                  (d.releasedAt IS NOT NULL AND d.releasedAt >= :cutoff)
+                  OR (d.refundedAt IS NOT NULL AND d.refundedAt >= :cutoff)
+              )
+            """)
+    List<DepositTransaction> findCompletedDepositsForUser(
+            @Param("userId") Long userId,
+            @Param("cutoff") LocalDateTime cutoff
+    );
 
     @Query(value = """
             SELECT

@@ -49,6 +49,7 @@ public class DepositService {
     private final com.rentspace.infrastructure.email.EmailService emailService;
     private final DepositDisputeRepository disputeRepository;
     private final com.rentspace.domain.contract.RentalContractService rentalContractService;
+    private final com.rentspace.domain.contract.ContractService contractService;
     private final com.rentspace.domain.payout.PayoutService payoutService;
 
     private static final double PLATFORM_FEE_PERCENT = 0.02; // 2%
@@ -162,6 +163,12 @@ public class DepositService {
                 );
             } catch (Exception e) {
                 log.error("Failed to send payment success notifications", e);
+            }
+            // Phase 4: Tự động tạo hợp đồng kỹ thuật số khi deposit PAID
+            try {
+                contractService.generateContract(depositId);
+            } catch (Exception e) {
+                log.error("Không tạo được hợp đồng cho deposit {}: {}", depositId, e.getMessage());
             }
         } else {
             transaction.setStatus(DepositStatus.CANCELLED);
@@ -290,6 +297,12 @@ public class DepositService {
                 );
             } catch (Exception e) {
                 log.error("Failed to send payment success notifications for MoMo", e);
+            }
+            // Phase 4: Tự động tạo hợp đồng kỹ thuật số khi deposit PAID (MoMo)
+            try {
+                contractService.generateContract(depositId);
+            } catch (Exception e) {
+                log.error("Không tạo được hợp đồng cho deposit {} (MoMo): {}", depositId, e.getMessage());
             }
         } else {
             transaction.setStatus(DepositStatus.CANCELLED);
@@ -474,6 +487,7 @@ public class DepositService {
                     "Người thuê đã xác nhận nhận phòng thành công cho tin đăng \"" + transaction.getListing().getTitle() + "\". Tiền cọc đã được giải ngân.",
                     com.rentspace.domain.notification.enums.NotificationType.DEPOSIT
             );
+            sendReviewReminders(transaction);
         } catch (Exception e) {
             log.error("Failed to send release notification", e);
         }
@@ -559,6 +573,7 @@ public class DepositService {
             transaction.setStatus(DepositStatus.REFUNDED);
             transaction.setRefundedAt(LocalDateTime.now());
             logEvent(transaction, "DISPUTE_RESOLVED_REFUND", admin, "Admin giải quyết tranh chấp: Hoàn trả tiền cọc cho người thuê. Lý do: " + resolutionNote);
+            try { sendReviewReminders(transaction); } catch (Exception e) { log.error("Failed to send review reminders after refund", e); }
         } else if (resolution == DisputeStatus.RESOLVED_LANDLORD) {
             transaction.setStatus(DepositStatus.RELEASED);
             transaction.setReleasedAt(LocalDateTime.now());
@@ -567,7 +582,8 @@ public class DepositService {
             payoutService.createPayoutRequest(transaction);
 
             logEvent(transaction, "DISPUTE_RESOLVED_RELEASE", admin, "Admin giải quyết tranh chấp: Giải ngân tiền cọc cho chủ nhà. Lý do: " + resolutionNote);
-            
+            try { sendReviewReminders(transaction); } catch (Exception e) { log.error("Failed to send review reminders after dispute release", e); }
+
             // Generate and save contract PDF
             try {
                 rentalContractService.generateAndSaveContract(transaction);
@@ -641,6 +657,7 @@ public class DepositService {
                         "Hệ thống tự động giải ngân cọc cho tin đăng \"" + transaction.getListing().getTitle() + "\" do quá thời hạn chờ.",
                         com.rentspace.domain.notification.enums.NotificationType.DEPOSIT
                 );
+                sendReviewReminders(transaction);
             } catch (Exception e) {
                 log.error("Failed to send auto-release notification for transaction {}", transaction.getId(), e);
             }
@@ -693,6 +710,22 @@ public class DepositService {
                 .weeklyNetAmount(weeklyNetAmount)
                 .monthlyNetAmount(monthlyNetAmount)
                 .build();
+    }
+
+    private void sendReviewReminders(DepositTransaction transaction) {
+        String listingTitle = transaction.getListing().getTitle();
+        notificationService.createAndSendNotification(
+                transaction.getTenant(),
+                "Chia sẻ trải nghiệm thuê trọ",
+                "Giao dịch đặt cọc cho \"" + listingTitle + "\" đã hoàn tất. Hãy đánh giá chủ trọ để giúp cộng đồng RentSpace!",
+                com.rentspace.domain.notification.enums.NotificationType.DEPOSIT
+        );
+        notificationService.createAndSendNotification(
+                transaction.getLandlord(),
+                "Đánh giá người thuê",
+                "Giao dịch đặt cọc cho \"" + listingTitle + "\" đã hoàn tất. Hãy đánh giá người thuê để tăng uy tín của bạn!",
+                com.rentspace.domain.notification.enums.NotificationType.DEPOSIT
+        );
     }
 
     private void logEvent(DepositTransaction transaction, String eventType, User actor, String description) {

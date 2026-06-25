@@ -136,6 +136,13 @@
             <artifactId>spring-boot-starter-thymeleaf</artifactId>
         </dependency>
 
+        <!-- ===== Flying Saucer — render HTML → PDF cho hợp đồng (Phase 4 Sprint 2-3) ===== -->
+        <dependency>
+            <groupId>org.xhtmlrenderer</groupId>
+            <artifactId>flying-saucer-pdf</artifactId>
+            <version>9.4.0</version>
+        </dependency>
+
         <!-- ===== Web Push — gửi notification đến browser (Sprint 5) ===== -->
         <dependency>
             <groupId>nl.martijndwars</groupId>
