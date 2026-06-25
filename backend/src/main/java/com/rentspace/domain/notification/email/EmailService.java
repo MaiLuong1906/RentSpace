@@ -13,4 +13,6 @@ public interface EmailService {
     void sendDisputeAlertEmail(String toEmail, DisputeEmailDto data);
 
     void sendSubscriptionExpiryWarningEmail(String toEmail, SubscriptionEmailDto data);
+
+    void sendContractSignedEmail(String toEmail, String recipientName, byte[] pdfBytes);
 }

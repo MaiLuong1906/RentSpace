@@ -16,6 +16,7 @@ public class ListingResponse {
     private Long landlordId;
     private String landlordName;
     private String landlordAvatar;
+    private Boolean landlordIsVerified;
 
     private String title;
     private String description;

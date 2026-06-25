@@ -5,8 +5,13 @@ import com.rentspace.common.exception.ResourceNotFoundException;
 import com.rentspace.domain.contract.dto.ContractResponse;
 import com.rentspace.domain.deposit.DepositTransaction;
 import com.rentspace.domain.deposit.DepositTransactionRepository;
+import com.rentspace.domain.notification.NotificationService;
+import com.rentspace.domain.notification.email.EmailService;
+import com.rentspace.domain.notification.enums.NotificationType;
 import com.rentspace.domain.user.User;
 import com.rentspace.domain.user.UserRepository;
+import com.rentspace.domain.verification.UserVerificationRepository;
+import com.rentspace.domain.verification.VerificationStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -28,7 +33,10 @@ public class ContractServiceImpl implements ContractService {
     private final ContractRepository contractRepository;
     private final DepositTransactionRepository depositRepository;
     private final UserRepository userRepository;
+    private final UserVerificationRepository verificationRepository;
     private final ContractTemplateService templateService;
+    private final NotificationService notificationService;
+    private final EmailService emailService;
 
     @Value("${app.contract.sign-deadline-days:7}")
     private int signDeadlineDays;
@@ -58,17 +66,31 @@ public class ContractServiceImpl implements ContractService {
 
         String snapshot = templateService.buildContentSnapshot(vars);
 
+        // Bắt đầu ở DRAFT — sau 24h scheduler tự chuyển sang PENDING_SIGNATURES
         Contract contract = Contract.builder()
                 .deposit(deposit)
                 .landlord(deposit.getLandlord())
                 .tenant(deposit.getTenant())
                 .contentSnapshot(snapshot)
-                .status(ContractStatus.PENDING_SIGNATURES)
-                .expiresAt(Instant.now().plus(signDeadlineDays, ChronoUnit.DAYS))
+                .status(ContractStatus.DRAFT)
+                .expiresAt(Instant.now().plus(signDeadlineDays + 1L, ChronoUnit.DAYS))
                 .build();
 
         contract = contractRepository.save(contract);
-        log.info("Hợp đồng tạo thành công: id={}, depositId={}", contract.getId(), depositId);
+        log.info("Hợp đồng tạo thành công (DRAFT): id={}, depositId={}", contract.getId(), depositId);
+
+        notificationService.createAndSendNotification(
+                deposit.getLandlord(),
+                "Hợp đồng thuê phòng đã được tạo",
+                String.format("Hợp đồng cho phòng \"%s\" đã được tạo. Vui lòng xem xét trong vòng 24h trước khi chuyển sang giai đoạn ký.", deposit.getListing().getTitle()),
+                NotificationType.SYSTEM);
+
+        notificationService.createAndSendNotification(
+                deposit.getTenant(),
+                "Hợp đồng thuê phòng đã được tạo",
+                String.format("Hợp đồng cho phòng \"%s\" đã được tạo. Vui lòng xem xét trong vòng 24h trước khi chuyển sang giai đoạn ký.", deposit.getListing().getTitle()),
+                NotificationType.SYSTEM);
+
         return toResponse(contract);
     }
 
@@ -78,6 +100,18 @@ public class ContractServiceImpl implements ContractService {
         Contract contract = findContractById(contractId);
         User user = findUser(userEmail);
 
+        // Bắt buộc VERIFIED trước khi ký
+        boolean isVerified = verificationRepository.findByUserId(user.getId())
+                .map(v -> v.getStatus() == VerificationStatus.VERIFIED)
+                .orElse(false);
+        if (!isVerified) {
+            throw new BusinessException(
+                    "Bạn cần xác minh danh tính trước khi ký hợp đồng. Vào Cài đặt → Xác minh danh tính để hoàn tất.");
+        }
+
+        if (contract.getStatus() == ContractStatus.DRAFT) {
+            throw new BusinessException("Hợp đồng đang trong giai đoạn xem xét (24h). Vui lòng chờ đến khi chuyển sang trạng thái chờ ký.");
+        }
         if (contract.getStatus() == ContractStatus.FULLY_SIGNED) {
             throw new BusinessException("Hợp đồng đã được ký đầy đủ.");
         }
@@ -97,16 +131,29 @@ public class ContractServiceImpl implements ContractService {
                 throw new BusinessException("Bạn đã ký hợp đồng này rồi.");
             }
             contract.setLandlordSignedAt(Instant.now());
+            // Thông báo cho tenant biết landlord đã ký
+            notificationService.createAndSendNotification(
+                    contract.getTenant(),
+                    "Chủ nhà đã ký hợp đồng",
+                    String.format("Chủ nhà %s đã ký hợp đồng. Đang chờ chữ ký của bạn để hoàn tất.", contract.getLandlord().getFullName()),
+                    NotificationType.SYSTEM);
         } else {
             if (contract.getTenantSignedAt() != null) {
                 throw new BusinessException("Bạn đã ký hợp đồng này rồi.");
             }
             contract.setTenantSignedAt(Instant.now());
+            // Thông báo cho landlord biết tenant đã ký
+            notificationService.createAndSendNotification(
+                    contract.getLandlord(),
+                    "Người thuê đã ký hợp đồng",
+                    String.format("Người thuê %s đã ký hợp đồng. Đang chờ chữ ký của bạn để hoàn tất.", contract.getTenant().getFullName()),
+                    NotificationType.SYSTEM);
         }
 
         if (contract.getLandlordSignedAt() != null && contract.getTenantSignedAt() != null) {
             contract.setStatus(ContractStatus.FULLY_SIGNED);
             log.info("Hợp đồng FULLY_SIGNED: id={}", contractId);
+            onFullySigned(contract);
         }
 
         contract = contractRepository.save(contract);
@@ -145,10 +192,40 @@ public class ContractServiceImpl implements ContractService {
         contract.setStatus(ContractStatus.CANCELLED);
         contract.setCancellationReason(reason);
         contractRepository.save(contract);
+
+        notificationService.createAndSendNotification(
+                contract.getLandlord(), "Hợp đồng đã bị hủy",
+                "Admin đã hủy hợp đồng. Lý do: " + reason, NotificationType.SYSTEM);
+        notificationService.createAndSendNotification(
+                contract.getTenant(), "Hợp đồng đã bị hủy",
+                "Admin đã hủy hợp đồng. Lý do: " + reason, NotificationType.SYSTEM);
+
         log.info("Admin hủy hợp đồng id={}, reason={}", contractId, reason);
     }
 
     // ===== Helpers =====
+
+    /** Gửi notification + email PDF khi hợp đồng FULLY_SIGNED */
+    private void onFullySigned(Contract contract) {
+        String title = "Hợp đồng đã được ký đầy đủ";
+        String content = String.format(
+                "Hợp đồng thuê phòng \"%s\" đã được cả hai bên ký. File PDF đính kèm qua email.",
+                contract.getDeposit().getListing().getTitle());
+
+        notificationService.createAndSendNotification(contract.getLandlord(), title, content, NotificationType.SYSTEM);
+        notificationService.createAndSendNotification(contract.getTenant(),   title, content, NotificationType.SYSTEM);
+
+        // Gửi email kèm PDF — async, không ảnh hưởng transaction chính
+        try {
+            byte[] pdf = templateService.renderPdf(contract.getContentSnapshot());
+            emailService.sendContractSignedEmail(contract.getLandlord().getEmail(),
+                    contract.getLandlord().getFullName(), pdf);
+            emailService.sendContractSignedEmail(contract.getTenant().getEmail(),
+                    contract.getTenant().getFullName(), pdf);
+        } catch (Exception e) {
+            log.error("Không thể gửi email PDF hợp đồng id={}: {}", contract.getId(), e.getMessage());
+        }
+    }
 
     private Contract findContractById(Long id) {
         if (id == null) throw new ResourceNotFoundException("Không tìm thấy hợp đồng: id null");
@@ -188,7 +265,8 @@ public class ContractServiceImpl implements ContractService {
                 .landlordSignedAt(c.getLandlordSignedAt())
                 .tenantSignedAt(c.getTenantSignedAt())
                 .expiresAt(c.getExpiresAt())
-                .pdfUrl(c.getPdfUrl())
+                // pdfUrl luôn trỏ về endpoint download on-demand (MVP, không cần file storage)
+                .pdfUrl("/api/v1/contracts/" + c.getId() + "/pdf")
                 .cancellationReason(c.getCancellationReason())
                 .createdAt(c.getCreatedAt())
                 .build();

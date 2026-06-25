@@ -7,6 +7,7 @@ import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
@@ -79,6 +80,28 @@ public class EmailServiceImpl implements EmailService {
         send(toEmail,
                 "[RentSpace] Gói " + data.getPlanName() + " sắp hết hạn (" + data.getDaysRemaining() + " ngày)",
                 "email/subscription-expiry-warning", ctx);
+    }
+
+    @Override
+    @Async
+    public void sendContractSignedEmail(String toEmail, String recipientName, byte[] pdfBytes) {
+        try {
+            Context ctx = new Context();
+            ctx.setVariable("recipientName", recipientName);
+            String htmlBody = templateEngine.process("email/contract-signed", ctx);
+
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, ENCODING);
+            helper.setFrom("noreply@rentspace.vn", SENDER_NAME);
+            helper.setTo(toEmail);
+            helper.setSubject("[RentSpace] Hợp đồng thuê nhà đã được ký đầy đủ");
+            helper.setText(htmlBody, true);
+            helper.addAttachment("hop-dong-thue-nha.pdf", new ByteArrayResource(pdfBytes), "application/pdf");
+            mailSender.send(message);
+            log.info("Đã gửi email hợp đồng kèm PDF đến {}", toEmail);
+        } catch (MessagingException | java.io.UnsupportedEncodingException e) {
+            log.error("Lỗi khi gửi email hợp đồng đến {}: {}", toEmail, e.getMessage());
+        }
     }
 
     private void send(String toEmail, String subject, String templateName, Context ctx) {

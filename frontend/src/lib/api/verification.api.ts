@@ -1,6 +1,7 @@
 import apiClient from "./axios";
 import { ApiResponse } from "@/types/api.types";
 import {
+  AdminVerificationItem,
   VerificationInitResponse,
   VerificationResult,
   VerificationStatusDto,
@@ -41,10 +42,39 @@ export const verificationApi = {
 
   /** Xem trạng thái xác minh của bản thân */
   getStatus: async (): Promise<ApiResponse<VerificationStatusDto>> => {
-    const res =
-      await apiClient.get<ApiResponse<VerificationStatusDto>>(
-        "/verification/status"
-      );
+    const res = await apiClient.get<ApiResponse<VerificationStatusDto>>(
+      "/verification/status"
+    );
+    return res.data;
+  },
+
+  // ── Admin endpoints ──────────────────────────────────────────────────────
+
+  /** [ADMIN] Danh sách hồ sơ đang chờ xét duyệt thủ công (PROCESSING) */
+  getAdminPendingList: async (): Promise<ApiResponse<AdminVerificationItem[]>> => {
+    const res = await apiClient.get<ApiResponse<AdminVerificationItem[]>>(
+      "/admin/verifications/pending"
+    );
+    return res.data;
+  },
+
+  /** [ADMIN] Phê duyệt hồ sơ xác minh */
+  adminApprove: async (verificationId: number, adminNote?: string): Promise<ApiResponse<void>> => {
+    const res = await apiClient.post<ApiResponse<void>>(
+      `/admin/verifications/${verificationId}/approve`,
+      null,
+      { params: adminNote ? { adminNote } : {} }
+    );
+    return res.data;
+  },
+
+  /** [ADMIN] Từ chối hồ sơ xác minh kèm lý do */
+  adminReject: async (verificationId: number, reason: string): Promise<ApiResponse<void>> => {
+    const res = await apiClient.post<ApiResponse<void>>(
+      `/admin/verifications/${verificationId}/reject`,
+      null,
+      { params: { reason } }
+    );
     return res.data;
   },
 };
