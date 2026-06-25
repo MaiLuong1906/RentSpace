@@ -19,4 +19,7 @@ public class UserProfileResponse {
     private KycStatus kycStatus;
     private Boolean isEmailVerified;
     private LocalDateTime createdAt;
+    // Phase 4: trạng thái xác minh từ bảng user_verifications (source of truth mới)
+    private Boolean isVerified;
+    private String verificationStatus;
 }

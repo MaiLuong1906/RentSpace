@@ -2,6 +2,9 @@
 
 import Link from "next/link";
 import Image from "next/image";
+import { useQuery } from "@tanstack/react-query";
+import { VerificationBanner } from "@/components/trust/VerificationBanner";
+import { verificationApi } from "@/lib/api/verification.api";
 import {
   Search,
   MapPin,
@@ -29,8 +32,17 @@ export default function HomePage() {
     apiResponse?.data?.totalElements ??
     0;
 
+  const { data: verifyData } = useQuery({
+    queryKey: ["verification-status"],
+    queryFn: verificationApi.getStatus,
+    retry: false,
+  });
+  const verificationStatus = verifyData?.data?.status ?? "NOT_STARTED";
+  const isVerified = verificationStatus === "VERIFIED";
+
   return (
     <div className="min-h-[100dvh] bg-[#FAFAFA]">
+      <VerificationBanner isVerified={isVerified} verificationStatus={verificationStatus} />
       {/* ── Hero Search ── */}
       <section className="bg-white border-b border-gray-100 py-12 md:py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
