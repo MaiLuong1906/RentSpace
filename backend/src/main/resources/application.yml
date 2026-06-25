@@ -94,6 +94,14 @@ app:
   frontend-url: ${FRONTEND_URL:http://localhost:3000}
   site-url: ${SITE_URL:https://rentspace.vn}
 
+  # ===== eKYC (Phase 4 Sprint 0) =====
+  ekyc:
+    provider: ${EKYC_PROVIDER:FPT_AI}
+    api-key: ${EKYC_API_KEY:none}
+    api-base-url: ${EKYC_API_BASE_URL:https://api.fpt.ai/vision/idencard/v2}
+    confidence-threshold: 70.0
+    face-match-threshold: 70.0
+
   # ===== Web Push (Sprint 5) =====
   # Tạo VAPID keys bằng: npx web-push generate-vapid-keys
   webpush:

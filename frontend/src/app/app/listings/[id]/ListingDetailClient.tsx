@@ -29,6 +29,7 @@ import { toast } from "sonner";
 import { ListingDetailSkeleton } from "@/components/listing";
 import { useSession } from "next-auth/react";
 import { depositApi } from "@/lib/api/deposit.api";
+import { VerifiedBadge } from "@/components/trust/VerifiedBadge";
 
 interface ListingDetailClientProps {
   listingId: string;
@@ -330,12 +331,14 @@ export function ListingDetailClient({ listingId }: ListingDetailClientProps) {
                   </div>
                 )}
                 <div>
-                  <div className="font-semibold text-lg">{listing.landlordName}</div>
-                  <div className="text-sm text-gray-600">Chủ trọ</div>
-                  <div className="flex items-center gap-1 text-green-600 text-sm mt-1">
-                    <CheckCircle className="h-4 w-4" />
-                    <span>Đã xác minh</span>
+                  <div className="flex items-center gap-1.5 font-semibold text-lg">
+                    {listing.landlordName}
+                    <VerifiedBadge isVerified={listing.landlordIsVerified} size="sm" />
                   </div>
+                  <div className="text-sm text-gray-600">Chủ trọ</div>
+                  {listing.landlordIsVerified && (
+                    <VerifiedBadge isVerified size="md" className="mt-1" />
+                  )}
                 </div>
               </div>
 

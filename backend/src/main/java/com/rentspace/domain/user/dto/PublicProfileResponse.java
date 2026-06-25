@@ -18,4 +18,6 @@ public class PublicProfileResponse {
     private String avatarUrl;
     private Role role;
     private LocalDateTime createdAt;
+    // Phase 4: hiển thị Verified badge trên listing card, chat header
+    private Boolean isVerified;
 }

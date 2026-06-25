@@ -26,6 +26,8 @@ export interface Listing {
   landlordId: number;
   landlordName: string;
   landlordAvatar?: string;
+  /** Phase 4: true nếu chủ trọ đã xác minh danh tính qua FPT.AI eKYC */
+  landlordIsVerified?: boolean;
 
   title: string;
   description?: string;

@@ -5,6 +5,9 @@ import com.rentspace.common.exception.ResourceNotFoundException;
 import com.rentspace.domain.user.dto.PublicProfileResponse;
 import com.rentspace.domain.user.dto.UpdateProfileRequest;
 import com.rentspace.domain.user.dto.UserProfileResponse;
+import com.rentspace.domain.verification.UserVerification;
+import com.rentspace.domain.verification.UserVerificationRepository;
+import com.rentspace.domain.verification.VerificationStatus;
 import com.rentspace.infrastructure.storage.StorageService;
 
 import java.util.List;
@@ -25,6 +28,7 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final StorageService storageService;
+    private final UserVerificationRepository verificationRepository;
 
     // ===== GET /api/v1/users/me =====
     public UserProfileResponse getProfileByEmail(String email) {
@@ -114,6 +118,10 @@ public class UserService {
 
     // ===== Private Mappers =====
     private UserProfileResponse mapToUserProfileResponse(User user) {
+        UserVerification verification = verificationRepository.findByUserId(user.getId()).orElse(null);
+        boolean isVerified = verification != null && verification.getStatus() == VerificationStatus.VERIFIED;
+        String verificationStatus = verification != null ? verification.getStatus().name() : "NOT_STARTED";
+
         return UserProfileResponse.builder()
                 .id(user.getId())
                 .email(user.getEmail())
@@ -124,16 +132,23 @@ public class UserService {
                 .kycStatus(user.getKycStatus())
                 .isEmailVerified(user.getIsEmailVerified())
                 .createdAt(user.getCreatedAt())
+                .isVerified(isVerified)
+                .verificationStatus(verificationStatus)
                 .build();
     }
 
     private PublicProfileResponse mapToPublicProfileResponse(User user) {
+        boolean isVerified = verificationRepository.findByUserId(user.getId())
+                .map(v -> v.getStatus() == VerificationStatus.VERIFIED)
+                .orElse(false);
+
         return PublicProfileResponse.builder()
                 .id(user.getId())
                 .fullName(user.getFullName())
                 .avatarUrl(user.getAvatarUrl())
                 .role(user.getRole())
                 .createdAt(user.getCreatedAt())
+                .isVerified(isVerified)
                 .build();
     }
 }

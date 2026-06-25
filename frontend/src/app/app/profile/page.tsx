@@ -4,12 +4,13 @@ import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
-import { User, Mail, Phone, Calendar, ShieldCheck, ShieldAlert, ShieldEllipsis, ShieldX, KeyRound, Bell, Edit2, Camera, Lock, Eye, EyeOff } from "lucide-react";
+import { User, Mail, Phone, Calendar, ShieldCheck, ShieldAlert, ShieldEllipsis, ShieldX, KeyRound, Bell, Edit2, Camera, Lock, Eye, EyeOff, Clock } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { userApi } from "@/lib/api/user.api";
 import { authApi } from "@/lib/api/auth.api";
 import { kycApi } from "@/lib/api/kyc.api";
+import { VerifiedBadge } from "@/components/trust/VerifiedBadge";
 
 interface UserProfile {
   id: number;
@@ -22,6 +23,8 @@ interface UserProfile {
   cccdImageUrl?: string | null;
   isEmailVerified: boolean;
   createdAt: string;
+  isVerified?: boolean;
+  verificationStatus?: "NOT_STARTED" | "PENDING" | "PROCESSING" | "VERIFIED" | "REJECTED";
 }
 
 export default function ProfilePage() {
@@ -446,9 +449,29 @@ export default function ProfilePage() {
               {profile?.role === "LANDLORD" ? "Chủ cho thuê" : profile?.role === "ADMIN" ? "Quản trị viên" : "Người thuê phòng"}
             </span>
 
-            {/* Trạng thái xác thực danh tính KYC */}
+            {/* Trạng thái xác thực danh tính KYC (hệ thống cũ) */}
             <div className="w-full pt-6 border-t border-gray-100 flex justify-center">
               {profile && renderKycBadge(profile.kycStatus)}
+            </div>
+
+            {/* Phase 4: Xác minh danh tính FPT.AI */}
+            <div className="w-full mt-3 flex flex-col items-center gap-2">
+              {profile?.isVerified ? (
+                <VerifiedBadge isVerified size="lg" />
+              ) : profile?.verificationStatus === "PROCESSING" ? (
+                <span className="inline-flex items-center gap-1.5 rounded-md border border-amber-200 bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-700">
+                  <Clock className="h-3.5 w-3.5 shrink-0" />
+                  Hồ sơ đang xét duyệt
+                </span>
+              ) : (
+                <Link
+                  href="/app/profile/verify"
+                  className="inline-flex items-center gap-1.5 rounded-md border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-600 hover:border-blue-300 hover:text-blue-600"
+                >
+                  <ShieldAlert className="h-3.5 w-3.5 shrink-0" />
+                  Xác minh danh tính ngay
+                </Link>
+              )}
             </div>
           </motion.div>
 

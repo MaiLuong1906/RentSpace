@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
+import { VerifiedBadge } from "@/components/trust/VerifiedBadge";
 import {
   Search,
   MapPin,

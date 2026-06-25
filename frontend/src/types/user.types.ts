@@ -8,6 +8,9 @@ export interface User {
   kycStatus: "PENDING" | "SUBMITTED" | "VERIFIED" | "REJECTED";
   isEmailVerified: boolean;
   createdAt: string;
+  /** Phase 4: xác minh danh tính qua FPT.AI eKYC */
+  isVerified?: boolean;
+  verificationStatus?: "NOT_STARTED" | "PENDING" | "PROCESSING" | "VERIFIED" | "REJECTED";
 }
 
 export interface RegisterRequest {
