@@ -29,6 +29,9 @@ public interface ContractRepository extends JpaRepository<Contract, Long> {
     /** Hợp đồng đã hết hạn nhưng chưa chuyển trạng thái EXPIRED */
     List<Contract> findAllByStatusAndExpiresAtBefore(ContractStatus status, Instant now);
 
+    /** DRAFT quá 24h → chuyển sang PENDING_SIGNATURES */
+    List<Contract> findAllByStatusAndCreatedAtBefore(ContractStatus status, Instant before);
+
     /** Hợp đồng sắp hết hạn (để gửi reminder) */
     @Query("""
         SELECT c FROM Contract c

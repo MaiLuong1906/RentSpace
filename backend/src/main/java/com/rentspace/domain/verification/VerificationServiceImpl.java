@@ -6,6 +6,7 @@ import com.rentspace.domain.notification.NotificationService;
 import com.rentspace.domain.notification.enums.NotificationType;
 import com.rentspace.domain.user.User;
 import com.rentspace.domain.user.UserRepository;
+import com.rentspace.domain.user.enums.Role;
 import com.rentspace.domain.verification.dto.AdminVerificationItem;
 import com.rentspace.domain.verification.dto.VerificationInitResponse;
 import com.rentspace.domain.verification.dto.VerificationResult;
@@ -308,8 +309,14 @@ public class VerificationServiceImpl implements VerificationService {
     }
 
     private void notifyAdminPendingReview(User user) {
-        log.warn("Admin review cần thiết cho verification — userId={}, email={}",
-                user.getId(), user.getEmail());
+        String content = String.format(
+                "Hồ sơ xác minh danh tính của %s (%s) cần được xét duyệt thủ công.",
+                user.getFullName(), user.getEmail());
+        userRepository.findByRole(Role.ADMIN).forEach(admin ->
+                notificationService.createAndSendNotification(
+                        admin, "Có hồ sơ xác minh cần xét duyệt", content, NotificationType.KYC));
+        log.warn("Đã gửi alert xét duyệt verification tới {} admin — userId={}",
+                userRepository.findByRole(Role.ADMIN).size(), user.getId());
     }
 
     private String maskId(String id) {

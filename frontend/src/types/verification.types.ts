@@ -23,3 +23,16 @@ export interface VerificationResult {
   status: VerificationStatus;
   message: string;
 }
+
+export interface AdminVerificationItem {
+  id: number;
+  userId: number;
+  userEmail: string;
+  userFullName: string;
+  status: VerificationStatus;
+  maskedId?: string;
+  fullName?: string;
+  confidence?: number;
+  rejectionReason?: string;
+  createdAt: string;
+}
