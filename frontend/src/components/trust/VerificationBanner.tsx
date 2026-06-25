@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { ShieldAlert, X, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
@@ -19,20 +19,17 @@ export function VerificationBanner({
   verificationStatus,
 }: VerificationBannerProps) {
   const prefersReduced = useReducedMotion();
-  const [visible, setVisible] = useState(false);
+  const [dismissed, setDismissed] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return !!localStorage.getItem(DISMISSED_KEY);
+  });
 
-  useEffect(() => {
-    if (isVerified) return;
-    const dismissed = localStorage.getItem(DISMISSED_KEY);
-    setVisible(!dismissed);
-  }, [isVerified]);
+  const visible = !isVerified && !dismissed;
 
   const dismiss = () => {
     localStorage.setItem(DISMISSED_KEY, "1");
-    setVisible(false);
+    setDismissed(true);
   };
-
-  if (isVerified) return null;
 
   const isProcessing = verificationStatus === "PROCESSING";
 
