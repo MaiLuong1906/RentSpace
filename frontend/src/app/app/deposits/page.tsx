@@ -3,19 +3,22 @@
 import React, { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { depositApi } from "@/lib/api/deposit.api";
+import { transactionReviewApi } from "@/lib/api/transaction-review.api";
 import { DepositTransaction } from "@/types/phase2.types";
-import { 
-  ShieldCheck, 
-  Loader2, 
-  AlertTriangle, 
-  Calendar, 
-  User, 
-  CreditCard, 
-  FileText, 
+import { ReviewModal } from "@/components/reviews/ReviewModal";
+import {
+  ShieldCheck,
+  Loader2,
+  AlertTriangle,
+  Calendar,
+  User,
+  CreditCard,
+  FileText,
   CheckCircle,
   HelpCircle,
   Clock,
-  ArrowRight
+  ArrowRight,
+  Star
 } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
@@ -56,6 +59,10 @@ export default function DepositsPage() {
   const [disputeDesc, setDisputeDesc] = useState("");
   const [isSubmittingDispute, setIsSubmittingDispute] = useState(false);
 
+  // Review modal state
+  const [reviewModal, setReviewModal] = useState<{ depositId: number; revieweeName: string } | null>(null);
+  const [pendingReviewIds, setPendingReviewIds] = useState<Set<number>>(new Set());
+
   const fetchDeposits = async () => {
     setIsLoading(true);
     try {
@@ -76,9 +83,21 @@ export default function DepositsPage() {
     }
   };
 
+  const fetchPendingReviews = async () => {
+    try {
+      const res = await transactionReviewApi.getMyPending();
+      if (res.success && res.data) {
+        setPendingReviewIds(new Set(res.data.map((p) => p.depositId)));
+      }
+    } catch {
+      // không hiển thị lỗi cho người dùng — feature phụ
+    }
+  };
+
   useEffect(() => {
     if (authStatus === "authenticated") {
       setTimeout(() => fetchDeposits(), 0);
+      setTimeout(() => fetchPendingReviews(), 0);
     } else if (authStatus === "unauthenticated") {
       setTimeout(() => setIsLoading(false), 0);
     }
@@ -342,29 +361,57 @@ export default function DepositsPage() {
                     </>
                   )}
 
-                  {/* Default / other states action */}
-                  {item.status === "RELEASED" && (
-                    <a
-                      href={item.contractUrl || "#"}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      onClick={(e) => {
-                        if (!item.contractUrl) {
-                          e.preventDefault();
-                          toast.error("Không tìm thấy hợp đồng của giao dịch này.");
-                        }
-                      }}
-                      className="w-full border border-gray-350 text-gray-750 py-2 rounded-xl text-xs font-bold hover:bg-gray-100 transition-colors cursor-pointer flex items-center justify-center gap-1.5"
+                  {/* Phase 4: Link đến trang hợp đồng kỹ thuật số mới */}
+                  {(item.status === "PAID" || item.status === "RELEASED") && (
+                    <Link
+                      href={`/app/contracts/${item.id}`}
+                      className="w-full border border-gray-200 text-gray-700 py-2 rounded-xl text-xs font-bold hover:bg-gray-50 transition-colors flex items-center justify-center gap-1.5"
                     >
                       <FileText className="h-3.5 w-3.5" />
-                      <span>Xem hợp đồng thuê PDF</span>
-                    </a>
+                      <span>Xem hợp đồng kỹ thuật số</span>
+                    </Link>
+                  )}
+
+                  {/* Nút đánh giá — chỉ hiện khi RELEASED và chưa review */}
+                  {item.status === "RELEASED" && pendingReviewIds.has(item.id) && (
+                    <button
+                      onClick={() => setReviewModal({
+                        depositId: item.id,
+                        revieweeName: isTenant
+                          ? (item.landlordName || `Chủ trọ #${item.landlordId}`)
+                          : (item.tenantName || `Người thuê #${item.tenantId}`)
+                      })}
+                      className="w-full flex items-center justify-center gap-1.5 border border-amber-300 bg-amber-50 text-amber-700 py-2 rounded-xl text-xs font-bold hover:bg-amber-100 transition-colors"
+                    >
+                      <Star className="h-3.5 w-3.5" />
+                      <span>Đánh giá</span>
+                    </button>
                   )}
                 </div>
               </div>
             );
           })}
         </div>
+      )}
+
+      {/* Review Modal */}
+      {reviewModal && (
+        <ReviewModal
+          open={true}
+          depositId={reviewModal.depositId}
+          revieweeName={reviewModal.revieweeName}
+          onClose={() => {
+            setReviewModal(null);
+          }}
+          onSuccess={() => {
+            setPendingReviewIds((prev) => {
+              const next = new Set(prev);
+              next.delete(reviewModal.depositId);
+              return next;
+            });
+            setReviewModal(null);
+          }}
+        />
       )}
 
       {/* Dispute Modal */}

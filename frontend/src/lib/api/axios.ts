@@ -42,7 +42,15 @@ apiClient.interceptors.response.use(
 
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
-      // TODO: Implement token refresh logic
+
+      // Thử refresh session qua NextAuth trước khi redirect
+      const refreshed = await getDeduplicatedSession();
+      if (refreshed?.accessToken) {
+        originalRequest.headers.Authorization = `Bearer ${refreshed.accessToken}`;
+        return apiClient(originalRequest);
+      }
+
+      // Token không còn hợp lệ → về login
       window.location.href = "/auth/login";
     }
 

@@ -21,6 +21,7 @@ import { toast } from "sonner";
 import { formatPrice, getRoomTypeLabel } from "@/lib/mockData";
 import { userApi } from "@/lib/api/user.api";
 import { useListings } from "@/hooks/useListings";
+import { ReviewList } from "@/components/reviews/ReviewList";
 
 interface PublicProfile {
   id: number;
@@ -273,24 +274,17 @@ export default function PublicProfilePage({ params }: { params: Promise<{ id: st
                 )}
               </div>
             ) : (
-              <div className="bg-white rounded-2xl p-8 border border-gray-100 shadow-sm">
-                <h3 className="text-lg font-bold mb-4 text-gray-900">Đánh giá từ người thuê</h3>
-                <p className="text-gray-500 text-sm text-center py-8">
-                  Tính năng xem đánh giá theo chủ nhà đang được phát triển.
-                </p>
+              <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+                <ReviewList userId={userId} />
               </div>
             )}
           </div>
         ) : (
           /* Tenant Profile view */
-          <div className="bg-white rounded-2xl p-8 border border-gray-100 shadow-sm text-center max-w-2xl mx-auto">
-            <User className="h-16 w-16 text-blue-100 bg-blue-50 p-3 rounded-full mx-auto mb-4" />
-            <h3 className="text-xl font-bold text-gray-900 mb-2">Tài khoản người tìm phòng</h3>
-            <p className="text-gray-600 mb-6 leading-relaxed">
-              Đây là tài khoản Người thuê (Tenant). Theo chính sách bảo mật của RentSpace, các thông tin tìm kiếm phòng trọ và hợp đồng cá nhân sẽ được ẩn đi để tôn trọng quyền riêng tư.
-            </p>
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-full text-xs font-semibold">
-              ✓ Đã hoàn tất KYC người dùng
+          <div className="space-y-6">
+            <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+              <h3 className="text-base font-bold text-gray-900 mb-4">Đánh giá từ chủ trọ</h3>
+              <ReviewList userId={userId} />
             </div>
           </div>
         )}
