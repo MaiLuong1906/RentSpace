@@ -147,6 +147,18 @@ export interface GeoSearchRequest {
   minArea?: number;
 }
 
+// --- Lightweight DTO cho Recommendation cards (khớp ListingSummaryDto.java) ---
+export interface ListingSummary {
+  id: number;
+  title: string;
+  district?: string;
+  city: string;
+  pricePerMonth: number;
+  areaM2?: number;
+  roomType: string;
+  thumbnail?: string;
+}
+
 export interface SearchListing {
   id: string;
   title: string;

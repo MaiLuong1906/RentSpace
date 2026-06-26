@@ -137,4 +137,29 @@ public interface ListingRepository extends JpaRepository<Listing, Long> {
             ORDER BY city, district
             """, nativeQuery = true)
     List<Object[]> findDistinctCityDistrict();
+
+    // Content-based: cùng city/district/roomType, giá ±30%, sắp xếp gần giá nhất trước
+    @Query(value = """
+            SELECT l.id FROM listings l
+            WHERE l.city = :city
+              AND l.district = :district
+              AND l.room_type = :roomType
+              AND l.price_per_month BETWEEN :minPrice AND :maxPrice
+              AND l.id != :listingId
+              AND l.status = 'ACTIVE'
+            ORDER BY ABS(l.price_per_month - :price) ASC, l.created_at DESC
+            LIMIT :limit
+            """, nativeQuery = true)
+    List<Long> findSimilarByContent(@Param("city") String city,
+                                    @Param("district") String district,
+                                    @Param("roomType") String roomType,
+                                    @Param("minPrice") java.math.BigDecimal minPrice,
+                                    @Param("maxPrice") java.math.BigDecimal maxPrice,
+                                    @Param("price") java.math.BigDecimal price,
+                                    @Param("listingId") Long listingId,
+                                    @Param("limit") int limit);
+
+    // Load listings kèm ảnh theo danh sách IDs (tránh N+1 query)
+    @Query("SELECT DISTINCT l FROM Listing l LEFT JOIN FETCH l.images WHERE l.id IN :ids AND l.status = 'ACTIVE'")
+    List<Listing> findByIdInWithImages(@Param("ids") List<Long> ids);
 }

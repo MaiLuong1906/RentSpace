@@ -1,32 +1,23 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { useQuery } from "@tanstack/react-query";
 import { VerificationBanner } from "@/components/trust/VerificationBanner";
 import { verificationApi } from "@/lib/api/verification.api";
 import {
   Search,
-  MapPin,
-  Star,
-  Loader2,
   Users,
   MessageCircle,
   TrendingUp,
   ArrowRight,
-  Zap,
 } from "lucide-react";
 import { useListings } from "@/hooks/useListings";
-
-function formatPrice(price: number): string {
-  return new Intl.NumberFormat("vi-VN").format(price) + "đ";
-}
+import { ForYouSection } from "@/components/recommendation/ForYouSection";
 
 const DISTRICTS = ["Hải Châu", "Thanh Khê", "Sơn Trà", "Liên Chiểu"];
 
 export default function HomePage() {
-  const { data: apiResponse, isLoading } = useListings({ size: 6 });
-  const featuredListings = apiResponse?.data?.content || [];
+  const { data: apiResponse } = useListings({ size: 1 });
   const totalListings =
     apiResponse?.data?.page?.totalElements ??
     apiResponse?.data?.totalElements ??
@@ -110,125 +101,8 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ── Featured Listings ── */}
-      <section className="py-12 md:py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between mb-8">
-            <div>
-              <h2 className="text-2xl font-bold tracking-tight text-gray-900">
-                Phòng trọ nổi bật
-              </h2>
-              <p className="text-sm text-gray-500 mt-1">
-                Các phòng trọ được đánh giá cao nhất
-              </p>
-            </div>
-            <Link
-              href="/app/search"
-              className="flex items-center gap-1.5 text-sm text-blue-600 hover:text-blue-700 font-semibold transition-colors"
-            >
-              Xem tất cả
-              <ArrowRight className="h-4 w-4" />
-            </Link>
-          </div>
-
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {isLoading ? (
-              <div className="col-span-3 flex justify-center py-16">
-                <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
-              </div>
-            ) : featuredListings.length === 0 ? (
-              <div className="col-span-3 text-center py-16 text-gray-400 text-sm">
-                Chưa có tin đăng nào. Hãy là người đầu tiên đăng tin!
-              </div>
-            ) : (
-              featuredListings.map((listing) => (
-                <Link
-                  key={listing.id}
-                  href={`/app/listings/${listing.id}`}
-                  className="bg-white border border-gray-200 rounded-2xl overflow-hidden hover:shadow-[0_4px_16px_rgba(0,0,0,0.06)] hover:border-gray-300 transition-all block"
-                >
-                  <div className="relative h-44 bg-gray-100">
-                    {listing.isPromoted && (
-                      <div className="absolute top-3 left-3 z-10 flex items-center gap-1 bg-amber-500 text-white px-2.5 py-1 rounded-full text-xs font-semibold">
-                        <Zap className="h-3 w-3" />
-                        Nổi bật
-                      </div>
-                    )}
-                    <Image
-                      src={
-                        listing.images?.[0]?.imageUrl ||
-                        "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800&h=600&fit=crop"
-                      }
-                      alt={listing.title}
-                      fill
-                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                      className="object-cover"
-                    />
-                    <div className="absolute top-3 right-3 z-10 bg-white/95 backdrop-blur-sm px-2.5 py-1 rounded-full text-xs font-semibold text-blue-600">
-                      {formatPrice(listing.pricePerMonth)}/tháng
-                    </div>
-                  </div>
-
-                  <div className="p-4">
-                    <h3 className="font-semibold text-gray-900 mb-1.5 line-clamp-1">
-                      {listing.title}
-                    </h3>
-
-                    <div className="flex items-center gap-1 text-gray-500 text-sm mb-2">
-                      <MapPin className="h-3.5 w-3.5 shrink-0" />
-                      <span className="line-clamp-1">
-                        {[listing.district, listing.city]
-                          .filter(Boolean)
-                          .join(", ")}
-                      </span>
-                    </div>
-
-                    <div className="flex items-center justify-between text-sm">
-                      <div className="flex items-center gap-2 text-gray-500">
-                        {listing.areaM2 && <span>{listing.areaM2}m²</span>}
-                        {listing.numBedrooms != null && (
-                          <span>· {listing.numBedrooms} PN</span>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400 shrink-0" />
-                        <span className="text-xs font-semibold text-gray-700">
-                          {listing.averageRating != null &&
-                          listing.averageRating > 0
-                            ? listing.averageRating.toFixed(1)
-                            : "Chưa có"}
-                        </span>
-                      </div>
-                    </div>
-
-                    {(listing.hasWifi ||
-                      listing.hasParking ||
-                      listing.hasAirConditioner) && (
-                      <div className="mt-3 flex flex-wrap gap-1">
-                        {listing.hasWifi && (
-                          <span className="px-2 py-0.5 bg-gray-100 text-gray-500 rounded text-xs">
-                            WiFi
-                          </span>
-                        )}
-                        {listing.hasParking && (
-                          <span className="px-2 py-0.5 bg-gray-100 text-gray-500 rounded text-xs">
-                            Đỗ xe
-                          </span>
-                        )}
-                        {listing.hasAirConditioner && (
-                          <span className="px-2 py-0.5 bg-gray-100 text-gray-500 rounded text-xs">
-                            Điều hòa
-                          </span>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                </Link>
-              ))
-            )}
-          </div>
-        </div>
-      </section>
+      {/* ── For You / Trending ── */}
+      <ForYouSection />
 
       {/* ── Community ── */}
       <section className="py-12 md:py-16 bg-white border-t border-gray-100">
