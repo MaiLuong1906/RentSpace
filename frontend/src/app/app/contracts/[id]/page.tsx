@@ -1,20 +1,20 @@
 "use client";
 
-import { useState } from "react";
-import { use } from "react";
+import { use, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import {
-  FileText,
-  Download,
   CheckCircle2,
   Clock,
-  Loader2,
+  Download,
   FileCheck2,
+  FileText,
+  Loader2,
 } from "lucide-react";
 import { contractApi, ContractDetail } from "@/lib/api/contract.api";
 import { ContractStatusBadge } from "@/components/contracts/ContractStatusBadge";
 import { SignConfirmModal } from "@/components/contracts/SignConfirmModal";
+import { ContractAiPanel } from "@/components/ai/ContractAiPanel";
 
 function SignatureRow({
   label,
@@ -24,7 +24,7 @@ function SignatureRow({
   signedAt?: string;
 }) {
   return (
-    <div className="flex items-center justify-between py-3 border-b border-gray-100 last:border-0">
+    <div className="flex items-center justify-between border-b border-gray-100 py-3 last:border-0">
       <span className="text-sm text-gray-600">{label}</span>
       {signedAt ? (
         <span className="flex items-center gap-1.5 text-xs font-medium text-green-600">
@@ -40,6 +40,11 @@ function SignatureRow({
     </div>
   );
 }
+
+const AI_ELIGIBLE_STATUSES: ContractDetail["status"][] = [
+  "PENDING_SIGNATURES",
+  "FULLY_SIGNED",
+];
 
 export default function ContractPage({
   params,
@@ -60,11 +65,11 @@ export default function ContractPage({
 
   const userId = session?.user?.id ? Number(session.user.id) : null;
   const isLandlord = contract && userId === contract.landlordId;
-  const isTenant   = contract && userId === contract.tenantId;
+  const isTenant = contract && userId === contract.tenantId;
 
   const hasUserSigned =
     (isLandlord && !!contract?.landlordSignedAt) ||
-    (isTenant   && !!contract?.tenantSignedAt);
+    (isTenant && !!contract?.tenantSignedAt);
 
   const canSign =
     contract?.status === "PENDING_SIGNATURES" && !hasUserSigned;
@@ -89,9 +94,9 @@ export default function ContractPage({
     <div className="min-h-[100dvh] bg-[#FAFAFA] px-4 py-8 sm:px-6">
       <div className="mx-auto max-w-3xl space-y-6">
         {/* Header */}
-        <div className="flex items-start justify-between gap-4 flex-wrap">
+        <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <div className="flex items-center gap-2 mb-1">
+            <div className="mb-1 flex items-center gap-2">
               <FileText className="h-5 w-5 text-blue-600" />
               <h1 className="text-xl font-bold tracking-tight text-gray-900">
                 Hợp đồng #{contract.id}
@@ -124,7 +129,9 @@ export default function ContractPage({
 
         {/* Trạng thái chữ ký */}
         <div className="rounded-2xl border border-gray-200 bg-white p-5">
-          <h2 className="mb-3 text-sm font-semibold text-gray-700">Trạng thái chữ ký</h2>
+          <h2 className="mb-3 text-sm font-semibold text-gray-700">
+            Trạng thái chữ ký
+          </h2>
           <SignatureRow
             label={`Bên A — Chủ trọ (${contract.landlordName})`}
             signedAt={contract.landlordSignedAt}
@@ -146,10 +153,12 @@ export default function ContractPage({
         {/* Nội dung hợp đồng */}
         <div className="rounded-2xl border border-gray-200 bg-white">
           <div className="border-b border-gray-100 px-5 py-3">
-            <h2 className="text-sm font-semibold text-gray-700">Nội dung hợp đồng</h2>
+            <h2 className="text-sm font-semibold text-gray-700">
+              Nội dung hợp đồng
+            </h2>
           </div>
           <div
-            className="px-5 py-4 text-sm text-gray-700 leading-relaxed prose prose-sm max-w-none"
+            className="prose prose-sm max-w-none px-5 py-4 text-sm leading-relaxed text-gray-700"
             dangerouslySetInnerHTML={{ __html: contract.contentSnapshot }}
           />
         </div>
@@ -168,6 +177,11 @@ export default function ContractPage({
           contractId={contract.id}
           contractTitle={`Hợp đồng thuê ${contract.tenantName} - ${contract.landlordName}`}
         />
+      )}
+
+      {/* Floating AI bubble — chỉ hiện cho hợp đồng đang ký hoặc đã ký */}
+      {AI_ELIGIBLE_STATUSES.includes(contract.status) && (
+        <ContractAiPanel contractId={contract.id} />
       )}
     </div>
   );

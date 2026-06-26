@@ -15,6 +15,7 @@ public interface DepositMapper {
     @Mapping(target = "landlordId", source = "landlord.id")
     @Mapping(target = "landlordName", source = "landlord.fullName")
     @Mapping(target = "contractUrl", source = "contract.contractUrl")
+    @Mapping(target = "contractId", source = "digitalContract.id")
     DepositResponse toResponse(DepositTransaction transaction);
 
     @Mapping(target = "transactionId", source = "transaction.id")

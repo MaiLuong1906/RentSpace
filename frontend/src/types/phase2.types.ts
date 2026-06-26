@@ -23,6 +23,7 @@ export interface DepositTransaction {
   createdAt: string;
   updatedAt: string;
   contractUrl?: string;
+  contractId?: number;
 }
 
 export interface PostAuthor {

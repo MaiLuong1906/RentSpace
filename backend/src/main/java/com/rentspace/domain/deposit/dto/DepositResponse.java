@@ -34,4 +34,5 @@ public class DepositResponse {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private String contractUrl;
+    private Long contractId;   // ID của hợp đồng kỹ thuật số Phase 4 (null nếu chưa tạo)
 }
