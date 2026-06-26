@@ -8,7 +8,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.MethodParameter;
-import org.springframework.data.domain.Page;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -23,8 +22,12 @@ import org.springframework.web.method.support.ModelAndViewContainer;
 
 import com.rentspace.domain.interaction.dto.SaveToggleResponse;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Optional;
+
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -104,7 +107,8 @@ class SavedListingControllerTest {
     @Test
     void getSavedListings_shouldReturn200_withEmptyPage() throws Exception {
         when(userRepository.findByEmail("tenant@example.com")).thenReturn(Optional.of(mockUser));
-        when(savedListingService.getSavedListings(eq(1L), any())).thenReturn(Page.empty());
+        when(savedListingService.getSavedListings(eq(1L), any()))
+                .thenReturn(new PageImpl<>(new ArrayList<>(), PageRequest.of(0, 12), 0));
 
         mockMvc.perform(get("/api/v1/saved-listings"))
                 .andExpect(status().isOk())
