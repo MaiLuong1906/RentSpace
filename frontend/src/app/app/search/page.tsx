@@ -19,6 +19,7 @@ import { useListings, useGeoSearchListings } from "@/hooks/useListings";
 import { toast } from "sonner";
 import { formatPrice, getRoomTypeLabel } from "@/lib/mockData";
 import { ListingCardSkeleton, MapGeoSearch } from "@/components/listing";
+import { SaveButton } from "@/components/listing/SaveButton";
 import type { Coordinate, SearchListing } from "@/types/listing.types";
 
 const CITY_DISTRICTS: Record<string, string[]> = {
@@ -138,6 +139,7 @@ export default function SearchPage() {
         rating: l.averageRating !== undefined && l.averageRating !== null ? l.averageRating : 0,
         reviewCount: l.reviewCount || 0,
         isPromoted: l.isPromoted || false,
+        isSavedByCurrentUser: l.isSavedByCurrentUser,
       };
     });
   }, [standardResponse, geoResponse, isGeoQueryActive]);
@@ -571,18 +573,18 @@ export default function SearchPage() {
             {viewMode === "list" && (
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredListings.map((listing) => (
-                  <Link
+                  <div
                     key={listing.id}
-                    href={`/app/listings/${listing.id}`}
-                    className="bg-white rounded-3xl border border-gray-100 shadow-[0_4px_16px_rgba(0,0,0,0.06)] overflow-hidden hover:shadow-[0_8px_24px_rgba(0,0,0,0.08)] hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between"
+                    className="relative bg-white rounded-3xl border border-gray-100 shadow-[0_4px_16px_rgba(0,0,0,0.06)] overflow-hidden hover:shadow-[0_8px_24px_rgba(0,0,0,0.08)] hover:-translate-y-1 transition-all duration-300 flex flex-col"
                   >
-                    <div className="relative h-48 bg-gray-200">
+                    {/* Image — clickable */}
+                    <Link href={`/app/listings/${listing.id}`} className="relative block h-48 bg-gray-200 overflow-hidden">
                       <img
                         src={listing.images[0]}
                         alt={listing.title}
                         className="w-full h-full object-cover"
                       />
-                      <div className="absolute top-3 right-3 bg-white/95 backdrop-blur-sm px-3 py-1 rounded-full text-sm font-bold text-blue-600 shadow-sm border border-gray-100 animate-fade-in">
+                      <div className="absolute top-3 right-3 bg-white/95 backdrop-blur-sm px-3 py-1 rounded-full text-sm font-bold text-blue-600 shadow-sm border border-gray-100">
                         {formatPrice(listing.price)}/tháng
                       </div>
                       <div className="absolute top-3 left-3 flex flex-col gap-1.5">
@@ -597,36 +599,41 @@ export default function SearchPage() {
                           </div>
                         )}
                       </div>
-                    </div>
+                    </Link>
 
-                    <div className="p-5 flex-1 flex flex-col justify-between">
-                      <div>
-                        <h3 className="font-extrabold text-gray-900 mb-2 line-clamp-1 hover:text-blue-600 transition-colors">
-                          {listing.title}
-                        </h3>
-
-                        <div className="flex items-center gap-1 text-gray-500 text-xs mb-3 font-medium">
-                          <MapPin className="h-4 w-4 flex-shrink-0 text-gray-400" />
-                          <span className="line-clamp-1">{listing.address}, {listing.district}</span>
-                        </div>
+                    {/* Content — clickable */}
+                    <Link href={`/app/listings/${listing.id}`} className="p-5 flex-1 flex flex-col">
+                      <h3 className="font-extrabold text-gray-900 mb-2 line-clamp-1 hover:text-blue-600 transition-colors">
+                        {listing.title}
+                      </h3>
+                      <div className="flex items-center gap-1 text-gray-500 text-xs font-medium">
+                        <MapPin className="h-4 w-4 flex-shrink-0 text-gray-400" />
+                        <span className="line-clamp-1">{listing.address}, {listing.district}</span>
                       </div>
+                    </Link>
 
-                      <div className="flex items-center justify-between text-sm pt-3 border-t border-gray-100">
-                        <div className="flex items-center gap-2.5 text-gray-600 font-bold text-xs">
-                          <span>{listing.area} m²</span>
-                          <span>•</span>
-                          <span>{getRoomTypeLabel(listing.roomType)}</span>
-                        </div>
-
+                    {/* Footer — ngoài Link để đặt SaveButton hợp lệ HTML */}
+                    <div className="px-5 pb-5 flex items-center justify-between pt-3 border-t border-gray-100">
+                      <div className="flex items-center gap-2.5 text-gray-600 font-bold text-xs">
+                        <span>{listing.area} m²</span>
+                        <span>•</span>
+                        <span>{getRoomTypeLabel(listing.roomType)}</span>
+                      </div>
+                      <div className="flex items-center gap-2.5">
                         <div className="flex items-center gap-1 text-yellow-500">
                           <Star className="h-4 w-4 fill-yellow-500 text-yellow-500" />
                           <span className="font-extrabold text-gray-900 text-xs">
                             {listing.rating > 0 ? listing.rating.toFixed(1) : "Chưa có"}
                           </span>
                         </div>
+                        <SaveButton
+                          listingId={Number(listing.id)}
+                          initialSaved={listing.isSavedByCurrentUser ?? false}
+                          size="sm"
+                        />
                       </div>
                     </div>
-                  </Link>
+                  </div>
                 ))}
               </div>
             )}

@@ -94,6 +94,10 @@ app:
   frontend-url: ${FRONTEND_URL:http://localhost:3000}
   site-url: ${SITE_URL:https://rentspace.vn}
 
+  # ===== Interaction Tracking (Phase 4 Sprint 4) =====
+  interactions:
+    retention-days: 180   # Giữ tối đa 6 tháng dữ liệu interaction (cleanup job cấu hình sau)
+
   # ===== eKYC (Phase 4 Sprint 0) =====
   ekyc:
     provider: ${EKYC_PROVIDER:FPT_AI}

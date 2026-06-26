@@ -52,5 +52,7 @@ public class ListingResponse {
 
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+
+    private Boolean isSavedByCurrentUser;
 }
 

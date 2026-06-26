@@ -61,6 +61,9 @@ export interface Listing {
   isPromoted?: boolean;
   promotedExpiresAt?: string;
 
+  /** Phase 4 Sprint 4: true nếu user hiện tại đã lưu listing này vào wishlist */
+  isSavedByCurrentUser?: boolean;
+
   createdAt: string;
   updatedAt: string;
 }
@@ -167,6 +170,8 @@ export interface SearchListing {
   rating: number;
   reviewCount: number;
   isPromoted?: boolean;
+  /** Phase 4 Sprint 4: true nếu user hiện tại đã lưu listing này */
+  isSavedByCurrentUser?: boolean;
 }
 
 

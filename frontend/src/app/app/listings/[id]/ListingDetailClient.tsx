@@ -22,6 +22,8 @@ import {
 import { useListing } from "@/hooks/useListings";
 import { listingApi } from "@/lib/api/listing.api";
 import { ReviewSection, ReportModal } from "@/components/review";
+import { useInteractionTracker } from "@/hooks/useInteractionTracker";
+import { SaveButton } from "@/components/listing/SaveButton";
 import { chatApi } from "@/lib/api/chat";
 import { useChatStore } from "@/store/chatStore";
 import { useChat } from "@/hooks/useChat";
@@ -61,12 +63,13 @@ export function ListingDetailClient({ listingId }: ListingDetailClientProps) {
 
   const { data: session } = useSession();
 
-  // Track listing view on mount
+  // Interaction tracking: VIEW sau 3 giây + duration khi rời trang
+  useInteractionTracker(Number(listingId), "DIRECT");
+
+  // Giữ lại legacy view counter của listing (tương thích ngược)
   useEffect(() => {
     if (listingId) {
-      listingApi.trackListingView(listingId).catch((err) => {
-        console.error("Error tracking listing view:", err);
-      });
+      listingApi.trackListingView(listingId).catch(() => {});
     }
   }, [listingId]);
   const isLandlord = session?.user?.id && Number(session.user.id) === Number(listing?.landlordId);
@@ -344,6 +347,18 @@ export function ListingDetailClient({ listingId }: ListingDetailClientProps) {
 
               {/* CTA Buttons */}
               <div className="space-y-3">
+                {/* Save / Wishlist button */}
+                {!isLandlord && (
+                  <div className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
+                    <span className="text-sm font-semibold text-gray-700">Lưu tin này</span>
+                    <SaveButton
+                      listingId={listing.id}
+                      initialSaved={listing.isSavedByCurrentUser ?? false}
+                      size="md"
+                    />
+                  </div>
+                )}
+
                 {listing.status === "ACTIVE" && !isLandlord && (
                   <button
                     onClick={handleDepositClick}
