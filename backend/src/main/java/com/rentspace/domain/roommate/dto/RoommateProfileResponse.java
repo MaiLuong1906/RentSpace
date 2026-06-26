@@ -16,6 +16,12 @@ public class RoommateProfileResponse {
     private String fullName;
     private String avatar;
     private String kycStatus;
+
+    private String profileType;
+    private Long listingId;
+    private Integer maxOccupants;
+    private Integer currentOccupants;
+
     private String gender;
     private String occupation;
     private Long budgetMin;

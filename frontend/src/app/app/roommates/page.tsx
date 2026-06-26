@@ -3,19 +3,22 @@
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { 
-  Sparkles, 
-  User, 
-  MapPin, 
-  Calendar, 
-  DollarSign, 
-  MessageSquare, 
-  X, 
-  PlusCircle, 
-  UserPlus, 
-  Edit3, 
-  EyeOff, 
-  AlertCircle
+import {
+  Sparkles,
+  User,
+  MapPin,
+  Calendar,
+  DollarSign,
+  MessageSquare,
+  X,
+  PlusCircle,
+  UserPlus,
+  Edit3,
+  EyeOff,
+  AlertCircle,
+  Heart,
+  Home,
+  Users,
 } from "lucide-react";
 import { roommateApi } from "@/lib/api/roommate.api";
 import { kycApi } from "@/lib/api/kyc.api";
@@ -34,6 +37,7 @@ export default function RoommateDashboard() {
   const [myProfile, setMyProfile] = useState<RoommateProfile | null>(null);
   const [suggestions, setSuggestions] = useState<RoommateMatch[]>([]);
   const [dismissingIds, setDismissingIds] = useState<number[]>([]);
+  const [interestedIds, setInterestedIds] = useState<number[]>([]);
 
   useEffect(() => {
     if (authStatus === "loading") return;
@@ -88,6 +92,26 @@ export default function RoommateDashboard() {
 
     loadData();
   }, [authStatus, router]);
+
+  const handleInterest = async (matchId: number) => {
+    try {
+      setInterestedIds(prev => [...prev, matchId]);
+      const res = await roommateApi.expressInterest(matchId);
+      if (res.success && res.data) {
+        setSuggestions(prev => prev.map(m => m.id === matchId ? res.data! : m));
+        if (res.data.status === 'CONTACTED') {
+          toast.success("🎉 Kết nối thành công! Hai bên đã cùng quan tâm nhau.");
+        } else {
+          toast.success("Đã ghi nhận sự quan tâm của bạn!");
+        }
+      }
+    } catch (error) {
+      console.error("Lỗi bày tỏ quan tâm:", error);
+      toast.error("Không thể thực hiện thao tác này.");
+    } finally {
+      setInterestedIds(prev => prev.filter(id => id !== matchId));
+    }
+  };
 
   const handleDismiss = async (matchId: number) => {
     try {
@@ -234,33 +258,47 @@ export default function RoommateDashboard() {
               <div className="bg-white border border-gray-150 rounded-3xl p-6 shadow-sm space-y-6">
                 <div className="flex items-center justify-between border-b border-gray-100 pb-4">
                   <h3 className="text-sm font-extrabold text-gray-800">Hồ sơ của tôi</h3>
-                  <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
-                    myProfile.isActive 
-                      ? "bg-emerald-50 text-emerald-700" 
-                      : "bg-gray-100 text-gray-500"
-                  }`}>
-                    <span className={`h-1.5 w-1.5 rounded-full ${myProfile.isActive ? "bg-emerald-500" : "bg-gray-400"}`} />
-                    {myProfile.isActive ? "Hiển thị" : "Ẩn"}
-                  </span>
+                  <div className="flex items-center gap-1.5">
+                    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                      myProfile.profileType === 'HAS_ROOM'
+                        ? "bg-violet-50 text-violet-700"
+                        : "bg-blue-50 text-blue-700"
+                    }`}>
+                      {myProfile.profileType === 'HAS_ROOM' ? <Home className="h-3 w-3" /> : <Users className="h-3 w-3" />}
+                      {myProfile.profileType === 'HAS_ROOM' ? 'Có phòng' : 'Tìm phòng'}
+                    </span>
+                    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                      myProfile.isActive ? "bg-emerald-50 text-emerald-700" : "bg-gray-100 text-gray-500"
+                    }`}>
+                      <span className={`h-1.5 w-1.5 rounded-full ${myProfile.isActive ? "bg-emerald-500" : "bg-gray-400"}`} />
+                      {myProfile.isActive ? "Hiển thị" : "Ẩn"}
+                    </span>
+                  </div>
                 </div>
 
                 <div className="space-y-4 text-xs font-semibold text-gray-600">
                   <div className="flex items-center gap-2.5">
-                    <User className="h-4.5 w-4.5 text-gray-400" />
+                    <User className="h-4 w-4 text-gray-400" />
                     <span>Nghề: {myProfile.occupation || "Chưa cập nhật"}</span>
                   </div>
                   <div className="flex items-center gap-2.5">
-                    <DollarSign className="h-4.5 w-4.5 text-gray-400" />
-                    <span>Ngân sách: {formatCurrency(myProfile.budgetMin)} - {formatCurrency(myProfile.budgetMax)}</span>
+                    <DollarSign className="h-4 w-4 text-gray-400" />
+                    <span>{myProfile.profileType === 'HAS_ROOM' ? 'Giá/người' : 'Ngân sách'}: {formatCurrency(myProfile.budgetMin)} - {formatCurrency(myProfile.budgetMax)}</span>
                   </div>
                   <div className="flex items-center gap-2.5">
-                    <MapPin className="h-4.5 w-4.5 text-gray-400" />
-                    <span>Khu vực: {myProfile.preferredArea}</span>
+                    <MapPin className="h-4 w-4 text-gray-400" />
+                    <span>{myProfile.profileType === 'HAS_ROOM' ? 'Địa chỉ phòng' : 'Khu vực'}: {myProfile.preferredArea}</span>
                   </div>
                   <div className="flex items-center gap-2.5">
-                    <Calendar className="h-4.5 w-4.5 text-gray-400" />
-                    <span>Ngày dọn vào: {myProfile.moveInDate ? myProfile.moveInDate.split("T")[0] : "Chưa chọn"}</span>
+                    <Calendar className="h-4 w-4 text-gray-400" />
+                    <span>{myProfile.profileType === 'HAS_ROOM' ? 'Phòng trống từ' : 'Ngày dọn vào'}: {myProfile.moveInDate ? myProfile.moveInDate.split("T")[0] : "Chưa chọn"}</span>
                   </div>
+                  {myProfile.profileType === 'HAS_ROOM' && myProfile.maxOccupants != null && (
+                    <div className="flex items-center gap-2.5">
+                      <Users className="h-4 w-4 text-gray-400" />
+                      <span>Còn <span className="text-violet-600 font-bold">{myProfile.maxOccupants - (myProfile.currentOccupants ?? 0)}</span> / {myProfile.maxOccupants} chỗ</span>
+                    </div>
+                  )}
                 </div>
 
                 {myProfile.lifestyleTags && myProfile.lifestyleTags.length > 0 && (
@@ -303,6 +341,11 @@ export default function RoommateDashboard() {
                     {suggestions.map((match) => {
                       const otherUser = getOtherProfile(match);
                       const isDismissing = dismissingIds.includes(match.id);
+                      const isExpressingInterest = interestedIds.includes(match.id);
+                      const currentUserId = Number(session?.user?.id);
+                      const myProfileIsA = match.profileA.userId === currentUserId;
+                      const iAlreadyInterested = myProfileIsA ? match.profileAInterested : match.profileBInterested;
+                      const isContacted = match.status === 'CONTACTED';
                       const score = Math.round(match.matchScore);
                       const scoreColor = getMatchScoreColor(score);
                       const avatarSrc = otherUser.avatar;
@@ -430,22 +473,50 @@ export default function RoommateDashboard() {
 
                           </div>
 
+                          {/* Badge HAS_ROOM */}
+                          {otherUser.profileType === 'HAS_ROOM' && otherUser.maxOccupants != null && (
+                            <div className="flex items-center gap-1.5 text-[10px] font-bold text-violet-700 bg-violet-50 border border-violet-100 rounded-xl px-2.5 py-1.5">
+                              <Home className="h-3.5 w-3.5" />
+                              <span>Đã có phòng · còn {(otherUser.maxOccupants ?? 0) - (otherUser.currentOccupants ?? 0)} chỗ</span>
+                            </div>
+                          )}
+
+                          {/* Trạng thái CONTACTED */}
+                          {isContacted && (
+                            <div className="flex items-center gap-1.5 text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-100 rounded-xl px-2.5 py-1.5">
+                              <Heart className="h-3.5 w-3.5 fill-emerald-500" />
+                              <span>Hai bên đã kết nối — hãy nhắn tin!</span>
+                            </div>
+                          )}
+
                           {/* Hành động */}
-                          <div className="flex items-center gap-2 mt-6 border-t border-gray-100 pt-4">
+                          <div className="flex items-center gap-2 mt-4 border-t border-gray-100 pt-4">
                             <button
                               onClick={() => handleDismiss(match.id)}
-                              disabled={isDismissing}
-                              className="px-3 py-3 border border-gray-200 hover:border-red-200 text-gray-500 hover:text-red-600 rounded-2xl transition-colors hover:bg-red-50/20 active:scale-95 shrink-0"
+                              disabled={isDismissing || isContacted}
+                              className="px-3 py-3 border border-gray-200 hover:border-red-200 text-gray-500 hover:text-red-600 rounded-2xl transition-colors hover:bg-red-50/20 active:scale-95 shrink-0 disabled:opacity-40"
                               title="Bỏ qua gợi ý"
                             >
-                              <X className="h-4.5 w-4.5" />
+                              <X className="h-4 w-4" />
+                            </button>
+                            <button
+                              onClick={() => handleInterest(match.id)}
+                              disabled={isExpressingInterest || iAlreadyInterested || isContacted}
+                              className={`px-4 py-3 rounded-2xl font-bold text-xs transition-all flex items-center gap-1.5 shrink-0 ${
+                                iAlreadyInterested || isContacted
+                                  ? 'bg-rose-50 border border-rose-200 text-rose-500 cursor-default'
+                                  : 'border border-rose-200 text-rose-500 hover:bg-rose-50 active:scale-95'
+                              }`}
+                              title={iAlreadyInterested ? "Đã bày tỏ quan tâm" : "Quan tâm"}
+                            >
+                              <Heart className={`h-4 w-4 ${iAlreadyInterested || isContacted ? 'fill-rose-400' : ''}`} />
                             </button>
                             <Link
                               href={`/app/messages?userId=${otherUser.userId}`}
-                              className="flex-1 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-bold text-xs shadow-md shadow-blue-500/10 hover:shadow-blue-500/20 active:scale-[0.98] transition-all flex items-center justify-center gap-1.5"
+                              className="flex-1 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-bold text-xs shadow-md shadow-blue-500/10 active:scale-[0.98] transition-all flex items-center justify-center gap-1.5"
                             >
                               <MessageSquare className="h-4 w-4" />
-                              <span>Nhắn tin trò chuyện</span>
+                              <span>Nhắn tin</span>
                             </Link>
                           </div>
 

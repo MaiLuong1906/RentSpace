@@ -66,6 +66,11 @@ export interface RoommateProfile {
   userId: number;
   fullName?: string;
   avatar?: string;
+  kycStatus?: string;
+  profileType: 'SEEKING_ROOM' | 'HAS_ROOM';
+  listingId?: number | null;
+  maxOccupants?: number | null;
+  currentOccupants?: number | null;
   gender?: string;
   occupation?: string;
   budgetMin?: number;
@@ -83,6 +88,8 @@ export interface RoommateMatch {
   profileB: RoommateProfile;
   matchScore: number;
   status: 'SUGGESTED' | 'VIEWED' | 'CONTACTED' | 'DISMISSED';
+  profileAInterested: boolean;
+  profileBInterested: boolean;
   createdAt: string;
 }
 

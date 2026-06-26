@@ -18,24 +18,27 @@ public abstract class RoommateMapper {
     @Autowired
     protected StorageService storageService;
 
-    @Mapping(target = "userId", source = "user.id")
-    @Mapping(target = "fullName", source = "user.fullName")
-    @Mapping(target = "avatar", expression = "java(profile.getUser().getAvatarUrl() != null ? storageService.getPresignedUrl(profile.getUser().getAvatarUrl()) : null)")
-    @Mapping(target = "kycStatus", expression = "java(profile.getUser().getKycStatus() != null ? profile.getUser().getKycStatus().name() : null)")
+    @Mapping(target = "userId",      source = "user.id")
+    @Mapping(target = "fullName",    source = "user.fullName")
+    @Mapping(target = "avatar",      expression = "java(profile.getUser().getAvatarUrl() != null ? storageService.getPresignedUrl(profile.getUser().getAvatarUrl()) : null)")
+    @Mapping(target = "kycStatus",   expression = "java(profile.getUser().getKycStatus() != null ? profile.getUser().getKycStatus().name() : null)")
+    @Mapping(target = "profileType", expression = "java(profile.getProfileType() != null ? profile.getProfileType().name() : null)")
     public abstract RoommateProfileResponse toResponse(RoommateProfile profile);
 
-    @Mapping(target = "id", ignore = true)
-    @Mapping(target = "user", ignore = true)
-    @Mapping(target = "createdAt", ignore = true)
-    @Mapping(target = "updatedAt", ignore = true)
+    @Mapping(target = "id",               ignore = true)
+    @Mapping(target = "user",             ignore = true)
+    @Mapping(target = "createdAt",        ignore = true)
+    @Mapping(target = "updatedAt",        ignore = true)
     public abstract RoommateProfile toEntity(RoommateProfileRequest request);
 
-    @Mapping(target = "id", ignore = true)
-    @Mapping(target = "user", ignore = true)
-    @Mapping(target = "createdAt", ignore = true)
-    @Mapping(target = "updatedAt", ignore = true)
+    @Mapping(target = "id",               ignore = true)
+    @Mapping(target = "user",             ignore = true)
+    @Mapping(target = "createdAt",        ignore = true)
+    @Mapping(target = "updatedAt",        ignore = true)
     public abstract void updateEntityFromRequest(RoommateProfileRequest request, @MappingTarget RoommateProfile profile);
 
-    @Mapping(target = "status", expression = "java(match.getStatus() != null ? match.getStatus().name() : null)")
+    @Mapping(target = "status",            expression = "java(match.getStatus() != null ? match.getStatus().name() : null)")
+    @Mapping(target = "profileAInterested", source = "profileAInterested")
+    @Mapping(target = "profileBInterested", source = "profileBInterested")
     public abstract RoommateMatchResponse toResponse(RoommateMatch match);
 }
