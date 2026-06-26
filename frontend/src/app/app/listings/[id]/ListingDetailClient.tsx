@@ -35,6 +35,7 @@ import { ListingDetailSkeleton } from "@/components/listing";
 import { useSession } from "next-auth/react";
 import { depositApi } from "@/lib/api/deposit.api";
 import { VerifiedBadge } from "@/components/trust/VerifiedBadge";
+import { SimilarListings } from "@/components/recommendation/SimilarListings";
 
 interface ListingDetailClientProps {
   listingId: string;
@@ -322,6 +323,9 @@ export function ListingDetailClient({ listingId }: ListingDetailClientProps) {
 
             {/* Review Section */}
             <ReviewSection listingId={listing.id} />
+
+            {/* Similar Listings */}
+            <SimilarListings listingId={listing.id} />
           </div>
 
           {/* ===== Sidebar ===== */}

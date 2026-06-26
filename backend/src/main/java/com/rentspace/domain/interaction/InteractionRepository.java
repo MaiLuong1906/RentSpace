@@ -50,4 +50,50 @@ public interface InteractionRepository extends JpaRepository<UserListingInteract
     boolean existsRecentView(@Param("userId") Long userId,
                              @Param("listingId") Long listingId,
                              @Param("since") Instant since);
+
+    // Tầng 3: Personalized — listings chưa xem, weighted score theo loại interaction
+    // excludedIds phải chứa ít nhất 1 phần tử (dùng [-1L] nếu rỗng để tránh lỗi SQL)
+    @Query(value = """
+            SELECT candidate.listing_id, SUM(candidate.score) AS total_score
+            FROM (
+                SELECT uli2.listing_id,
+                       COUNT(DISTINCT uli2.user_id) *
+                       CASE uli1.interaction_type
+                           WHEN 'DEPOSIT'   THEN 5
+                           WHEN 'SAVE'      THEN 3
+                           WHEN 'CHAT_INIT' THEN 2
+                           WHEN 'VIEW'      THEN 1
+                           ELSE 1
+                       END AS score
+                FROM user_listing_interactions uli1
+                JOIN user_listing_interactions uli2
+                     ON uli2.user_id = uli1.user_id
+                    AND uli2.listing_id NOT IN (:excludedIds)
+                WHERE uli1.user_id = :userId
+                  AND uli1.created_at > :since
+                GROUP BY uli2.listing_id, uli1.interaction_type
+            ) candidate
+            JOIN listings l ON l.id = candidate.listing_id AND l.status = 'ACTIVE'
+            GROUP BY candidate.listing_id
+            ORDER BY total_score DESC
+            LIMIT :limit
+            """, nativeQuery = true)
+    List<Object[]> findForUser(@Param("userId") Long userId,
+                               @Param("excludedIds") List<Long> excludedIds,
+                               @Param("since") Instant since,
+                               @Param("limit") int limit);
+
+    // Trending: top listings theo tổng interactions trong khoảng thời gian
+    @Query(value = """
+            SELECT uli.listing_id, COUNT(*) AS interaction_count
+            FROM user_listing_interactions uli
+            JOIN listings l ON l.id = uli.listing_id AND l.status = 'ACTIVE'
+            WHERE uli.created_at > :since
+              AND uli.interaction_type IN ('VIEW','SAVE','CHAT_INIT','DEPOSIT')
+            GROUP BY uli.listing_id
+            ORDER BY interaction_count DESC
+            LIMIT :limit
+            """, nativeQuery = true)
+    List<Object[]> findTrending(@Param("since") Instant since,
+                                @Param("limit") int limit);
 }

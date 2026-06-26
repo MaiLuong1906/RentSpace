@@ -49,10 +49,12 @@ public class SecurityConfig {
 
     // Các endpoint GET của listings public (không cần đăng nhập để xem)
     private static final String[] PUBLIC_LISTING_GET_ENDPOINTS = {
-            "/api/v1/listings",             // GET - tìm kiếm
-            "/api/v1/listings/nearby",      // GET - tìm gần đây
-            "/api/v1/listings/*",           // GET - xem chi tiết
-            "/api/v1/listings/*/reviews"    // GET - xem reviews của listing
+            "/api/v1/listings",                         // GET - tìm kiếm
+            "/api/v1/listings/nearby",                  // GET - tìm gần đây
+            "/api/v1/listings/*",                       // GET - xem chi tiết
+            "/api/v1/listings/*/reviews",               // GET - xem reviews của listing
+            "/api/v1/recommendations/similar/*",        // GET - phòng tương tự (public)
+            "/api/v1/recommendations/trending"          // GET - tin nổi bật (public)
     };
 
     // Các endpoint GET của posts public

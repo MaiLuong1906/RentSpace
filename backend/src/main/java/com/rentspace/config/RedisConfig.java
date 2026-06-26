@@ -33,7 +33,10 @@ public class RedisConfig {
         Map<String, RedisCacheConfiguration> cacheConfigs = Map.of(
                 "districtList",    defaultConfig.entryTtl(Duration.ofDays(1)),
                 "priceBenchmarks", defaultConfig.entryTtl(Duration.ofHours(24)),
-                "searchResults",   defaultConfig.entryTtl(Duration.ofMinutes(5))
+                "searchResults",   defaultConfig.entryTtl(Duration.ofMinutes(5)),
+                "similarListings", defaultConfig.entryTtl(Duration.ofMinutes(30)),
+                "forYou",          defaultConfig.entryTtl(Duration.ofMinutes(30)),
+                "trending",        defaultConfig.entryTtl(Duration.ofMinutes(15))
         );
 
         return RedisCacheManager.builder(factory)
