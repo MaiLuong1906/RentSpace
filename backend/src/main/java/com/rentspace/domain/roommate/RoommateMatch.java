@@ -39,6 +39,16 @@ public class RoommateMatch {
     @Builder.Default
     private MatchStatus status = MatchStatus.SUGGESTED;
 
+    /** Profile A đã bày tỏ sự quan tâm */
+    @Column(name = "profile_a_interested", nullable = false)
+    @Builder.Default
+    private Boolean profileAInterested = false;
+
+    /** Profile B đã bày tỏ sự quan tâm */
+    @Column(name = "profile_b_interested", nullable = false)
+    @Builder.Default
+    private Boolean profileBInterested = false;
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;

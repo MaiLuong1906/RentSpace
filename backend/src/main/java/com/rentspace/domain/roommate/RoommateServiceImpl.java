@@ -4,10 +4,13 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rentspace.common.exception.BusinessException;
 import com.rentspace.common.exception.ResourceNotFoundException;
+import com.rentspace.domain.notification.NotificationService;
+import com.rentspace.domain.notification.enums.NotificationType;
 import com.rentspace.domain.roommate.dto.RoommateMatchResponse;
 import com.rentspace.domain.roommate.dto.RoommateProfileRequest;
 import com.rentspace.domain.roommate.dto.RoommateProfileResponse;
 import com.rentspace.domain.roommate.enums.MatchStatus;
+import com.rentspace.domain.roommate.enums.ProfileType;
 import com.rentspace.domain.user.User;
 import com.rentspace.domain.user.enums.KycStatus;
 import lombok.RequiredArgsConstructor;
@@ -34,6 +37,7 @@ public class RoommateServiceImpl implements RoommateService {
     private final RoommateMatchingEngine matchingEngine;
     private final StringRedisTemplate redisTemplate;
     private final ObjectMapper objectMapper;
+    private final NotificationService notificationService;
 
     private static final String CACHE_PREFIX = "roommate:suggestions:";
     private static final long CACHE_TTL_HOURS = 1;
@@ -49,9 +53,21 @@ public class RoommateServiceImpl implements RoommateService {
     @Override
     @Transactional
     public RoommateProfileResponse updateProfile(RoommateProfileRequest request, User currentUser) {
-        // 1. Kiểm tra trạng thái KYC của người dùng
         if (currentUser.getKycStatus() != KycStatus.VERIFIED) {
             throw new BusinessException("Tài khoản chưa được xác thực KYC. Hãy hoàn tất KYC để sử dụng tính năng này");
+        }
+
+        // Validation bổ sung cho HAS_ROOM
+        if (request.getProfileType() == ProfileType.HAS_ROOM) {
+            if (request.getMaxOccupants() == null) {
+                throw new BusinessException("Vui lòng điền số người tối đa cho phòng (maxOccupants)");
+            }
+            if (request.getCurrentOccupants() == null) {
+                throw new BusinessException("Vui lòng điền số người đang ở hiện tại (currentOccupants)");
+            }
+            if (request.getCurrentOccupants() >= request.getMaxOccupants()) {
+                throw new BusinessException("Phòng đã đủ người ở. Vui lòng cập nhật lại số người hoặc số chỗ tối đa");
+            }
         }
 
         Optional<RoommateProfile> existingProfileOpt = profileRepository.findByUserId(currentUser.getId());
@@ -69,8 +85,6 @@ public class RoommateServiceImpl implements RoommateService {
         }
 
         RoommateProfile savedProfile = profileRepository.save(profile);
-
-        // 2. Xoá bộ nhớ đệm gợi ý của người dùng này vì hồ sơ đã thay đổi
         evictSuggestionsCache(currentUser.getId());
 
         return roommateMapper.toResponse(savedProfile);
@@ -79,12 +93,10 @@ public class RoommateServiceImpl implements RoommateService {
     @Override
     @Transactional
     public List<RoommateMatchResponse> getSuggestions(User currentUser) {
-        // 1. Kiểm tra trạng thái KYC
         if (currentUser.getKycStatus() != KycStatus.VERIFIED) {
             throw new BusinessException("Tài khoản chưa được xác thực KYC. Hãy hoàn tất KYC để sử dụng tính năng này");
         }
 
-        // 2. Kiểm tra hồ sơ ở ghép cá nhân
         RoommateProfile myProfile = profileRepository.findByUserId(currentUser.getId())
                 .orElseThrow(() -> new BusinessException("Bạn cần tạo hồ sơ ở ghép trước khi xem gợi ý"));
 
@@ -92,7 +104,6 @@ public class RoommateServiceImpl implements RoommateService {
             throw new BusinessException("Hồ sơ ở ghép của bạn đang bị ẩn. Hãy kích hoạt hồ sơ để xem gợi ý");
         }
 
-        // 3. Đọc từ Cache Redis
         String cacheKey = CACHE_PREFIX + currentUser.getId();
         String cachedData = redisTemplate.opsForValue().get(cacheKey);
         if (cachedData != null) {
@@ -103,18 +114,15 @@ public class RoommateServiceImpl implements RoommateService {
             }
         }
 
-        // 4. Cache miss: Thực hiện tính toán khớp cặp mới
-        // Lấy tất cả các hồ sơ đang hoạt động khác đã KYC VERIFIED
         List<RoommateProfile> otherProfiles = profileRepository.findActiveProfilesForMatching(currentUser.getId());
         List<RoommateMatch> newMatches = new ArrayList<>();
         List<RoommateMatch> updatedMatches = new ArrayList<>();
 
-        // Tải trước toàn bộ các bản ghi match hiện tại của myProfile để tối ưu truy vấn (tránh N+1)
         List<RoommateMatch> existingMatches = matchRepository.findAllMatchesForProfile(myProfile.getId());
         java.util.Map<Long, RoommateMatch> matchMap = new java.util.HashMap<>();
         for (RoommateMatch match : existingMatches) {
-            Long otherProfileId = match.getProfileA().getId().equals(myProfile.getId()) 
-                    ? match.getProfileB().getId() 
+            Long otherProfileId = match.getProfileA().getId().equals(myProfile.getId())
+                    ? match.getProfileB().getId()
                     : match.getProfileA().getId();
             matchMap.put(otherProfileId, match);
         }
@@ -123,54 +131,39 @@ public class RoommateServiceImpl implements RoommateService {
             RoommateMatch existingMatch = matchMap.get(otherProfile.getId());
 
             if (existingMatch != null) {
-                // Nếu bị Dismissed thì bỏ qua không xử lý tiếp
                 if (existingMatch.getStatus() == MatchStatus.DISMISSED) {
                     continue;
                 }
-                // Nếu ở trạng thái khác, cập nhật lại điểm match mới dựa trên hồ sơ hiện tại
                 BigDecimal newScore = matchingEngine.calculateMatchScore(myProfile, otherProfile);
                 existingMatch.setMatchScore(newScore);
                 updatedMatches.add(existingMatch);
             } else {
-                // Tính điểm match mới
                 BigDecimal score = matchingEngine.calculateMatchScore(myProfile, otherProfile);
-                // Chỉ lưu các gợi ý có điểm khớp từ 50 trở lên
                 if (score.compareTo(BigDecimal.valueOf(50)) >= 0) {
                     RoommateMatch match = RoommateMatch.builder()
                             .profileA(myProfile)
                             .profileB(otherProfile)
                             .matchScore(score)
                             .status(MatchStatus.SUGGESTED)
-                            .createdAt(LocalDateTime.now())
                             .build();
                     newMatches.add(match);
                 }
             }
         }
 
-        if (!newMatches.isEmpty()) {
-            matchRepository.saveAll(newMatches);
-        }
-        if (!updatedMatches.isEmpty()) {
-            matchRepository.saveAll(updatedMatches);
-        }
+        if (!newMatches.isEmpty()) matchRepository.saveAll(newMatches);
+        if (!updatedMatches.isEmpty()) matchRepository.saveAll(updatedMatches);
 
-        // 5. Query lại từ database danh sách gợi ý chưa bị dismiss, sắp xếp theo điểm cao nhất
         List<RoommateMatch> suggestions = matchRepository.findSuggestions(myProfile.getId());
-        
-        // Giới hạn tối đa 10 gợi ý tốt nhất
         List<RoommateMatch> topSuggestions = suggestions.stream().limit(10).toList();
 
-        // Map sang DTOs
         List<RoommateMatchResponse> responseList = topSuggestions.stream()
                 .map(roommateMapper::toResponse)
                 .toList();
 
-        // 6. Lưu kết quả vào Redis Cache với thời hạn 1 giờ
         String serializedData = serializeSuggestions(responseList);
         if (serializedData != null) {
             redisTemplate.opsForValue().set(cacheKey, serializedData, CACHE_TTL_HOURS, TimeUnit.HOURS);
-            log.info("Cached roommate suggestions in Redis for userId: {}", currentUser.getId());
         }
 
         return responseList;
@@ -182,7 +175,6 @@ public class RoommateServiceImpl implements RoommateService {
         RoommateMatch match = matchRepository.findById(matchId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy thông tin gợi ý"));
 
-        // Đảm bảo user này có quyền dismiss match này (phải là profileA hoặc profileB của match)
         RoommateProfile myProfile = profileRepository.findByUserId(currentUser.getId())
                 .orElseThrow(() -> new BusinessException("Không tìm thấy hồ sơ ở ghép của bạn"));
 
@@ -191,19 +183,102 @@ public class RoommateServiceImpl implements RoommateService {
             throw new BusinessException("Bạn không có quyền từ chối gợi ý này");
         }
 
-        // Đổi trạng thái sang DISMISSED
         match.setStatus(MatchStatus.DISMISSED);
         matchRepository.save(match);
 
-        // Xoá cache gợi ý của cả hai người liên quan để cập nhật danh sách ngay lập tức
         evictSuggestionsCache(match.getProfileA().getUser().getId());
         evictSuggestionsCache(match.getProfileB().getUser().getId());
-        log.info("Dismissed matchId: {} and evicted caches for users", matchId);
+    }
+
+    @Override
+    @Transactional
+    public RoommateMatchResponse expressInterest(Long matchId, User currentUser) {
+        RoommateMatch match = matchRepository.findById(matchId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy thông tin gợi ý"));
+
+        RoommateProfile myProfile = profileRepository.findByUserId(currentUser.getId())
+                .orElseThrow(() -> new BusinessException("Không tìm thấy hồ sơ ở ghép của bạn"));
+
+        boolean isProfileA = match.getProfileA().getId().equals(myProfile.getId());
+        boolean isProfileB = match.getProfileB().getId().equals(myProfile.getId());
+
+        if (!isProfileA && !isProfileB) {
+            throw new BusinessException("Bạn không có quyền thực hiện thao tác này");
+        }
+
+        if (match.getStatus() == MatchStatus.DISMISSED) {
+            throw new BusinessException("Gợi ý này đã bị từ chối trước đó");
+        }
+        if (match.getStatus() == MatchStatus.CONTACTED) {
+            throw new BusinessException("Hai bên đã kết nối. Hãy liên hệ trực tiếp với nhau");
+        }
+
+        // Idempotency: đã express rồi thì trả về state hiện tại, không gửi notification lại
+        if (isProfileA && Boolean.TRUE.equals(match.getProfileAInterested())) {
+            return roommateMapper.toResponse(match);
+        }
+        if (isProfileB && Boolean.TRUE.equals(match.getProfileBInterested())) {
+            return roommateMapper.toResponse(match);
+        }
+
+        if (isProfileA) match.setProfileAInterested(true);
+        if (isProfileB) match.setProfileBInterested(true);
+
+        // Khi cả hai bên đều quan tâm → kết nối thành công
+        if (Boolean.TRUE.equals(match.getProfileAInterested()) && Boolean.TRUE.equals(match.getProfileBInterested())) {
+            match.setStatus(MatchStatus.CONTACTED);
+            notifyBothMatched(match);
+        } else {
+            match.setStatus(MatchStatus.VIEWED);
+            // Thông báo cho phía bên kia biết có người quan tâm
+            User otherUser = isProfileA
+                    ? match.getProfileB().getUser()
+                    : match.getProfileA().getUser();
+            notifyInterestReceived(otherUser, currentUser.getFullName());
+        }
+
+        RoommateMatch saved = matchRepository.save(match);
+        evictSuggestionsCache(match.getProfileA().getUser().getId());
+        evictSuggestionsCache(match.getProfileB().getUser().getId());
+
+        return roommateMapper.toResponse(saved);
+    }
+
+    private void notifyBothMatched(RoommateMatch match) {
+        String message = "Chúc mừng! Bạn và %s đã cùng quan tâm nhau. Hãy liên hệ để sắp xếp gặp mặt!";
+        try {
+            notificationService.createAndSendNotification(
+                    match.getProfileA().getUser(),
+                    "Kết nối ở ghép thành công!",
+                    String.format(message, match.getProfileB().getUser().getFullName()),
+                    NotificationType.ROOMMATE
+            );
+            notificationService.createAndSendNotification(
+                    match.getProfileB().getUser(),
+                    "Kết nối ở ghép thành công!",
+                    String.format(message, match.getProfileA().getUser().getFullName()),
+                    NotificationType.ROOMMATE
+            );
+        } catch (Exception e) {
+            log.warn("Failed to send CONTACTED notification for matchId: {}", match.getId(), e);
+        }
+    }
+
+    private void notifyInterestReceived(User receiver, String senderName) {
+        try {
+            notificationService.createAndSendNotification(
+                    receiver,
+                    "Có người quan tâm đến hồ sơ của bạn",
+                    String.format("%s đã bày tỏ sự quan tâm đến hồ sơ ở ghép của bạn!", senderName),
+                    NotificationType.ROOMMATE
+            );
+        } catch (Exception e) {
+            log.warn("Failed to send interest notification to userId: {}", receiver.getId(), e);
+        }
     }
 
     private void evictSuggestionsCache(Long userId) {
-        String cacheKey = CACHE_PREFIX + userId;
-        redisTemplate.delete(cacheKey);
+        redisTemplate.delete(CACHE_PREFIX + userId);
     }
 
     private String serializeSuggestions(List<RoommateMatchResponse> suggestions) {

@@ -15,5 +15,7 @@ public class RoommateMatchResponse {
     private RoommateProfileResponse profileB;
     private BigDecimal matchScore;
     private String status;
+    private Boolean profileAInterested;
+    private Boolean profileBInterested;
     private LocalDateTime createdAt;
 }

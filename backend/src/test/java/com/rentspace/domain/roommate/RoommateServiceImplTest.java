@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rentspace.common.exception.BusinessException;
 import com.rentspace.common.exception.ResourceNotFoundException;
+import com.rentspace.domain.notification.NotificationService;
 import com.rentspace.domain.roommate.dto.RoommateMatchResponse;
 import com.rentspace.domain.roommate.dto.RoommateProfileRequest;
 import com.rentspace.domain.roommate.dto.RoommateProfileResponse;
@@ -52,6 +53,9 @@ class RoommateServiceImplTest {
 
     @Mock
     private ObjectMapper objectMapper;
+
+    @Mock
+    private NotificationService notificationService;
 
     @InjectMocks
     private RoommateServiceImpl roommateService;
