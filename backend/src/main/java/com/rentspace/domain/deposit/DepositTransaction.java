@@ -99,4 +99,7 @@ public class DepositTransaction {
 
     @OneToOne(mappedBy = "transaction", fetch = FetchType.LAZY)
     private com.rentspace.domain.contract.RentalContract contract;
+
+    @OneToOne(mappedBy = "deposit", fetch = FetchType.LAZY)
+    private com.rentspace.domain.contract.Contract digitalContract;
 }

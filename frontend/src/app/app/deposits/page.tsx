@@ -362,9 +362,9 @@ export default function DepositsPage() {
                   )}
 
                   {/* Phase 4: Link đến trang hợp đồng kỹ thuật số mới */}
-                  {(item.status === "PAID" || item.status === "RELEASED") && (
+                  {(item.status === "PAID" || item.status === "RELEASED") && item.contractId && (
                     <Link
-                      href={`/app/contracts/${item.id}`}
+                      href={`/app/contracts/${item.contractId}`}
                       className="w-full border border-gray-200 text-gray-700 py-2 rounded-xl text-xs font-bold hover:bg-gray-50 transition-colors flex items-center justify-center gap-1.5"
                     >
                       <FileText className="h-3.5 w-3.5" />
