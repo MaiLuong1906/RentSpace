@@ -21,7 +21,7 @@ const ROOM_TYPE_LABELS: Record<string, string> = {
 
 const cardVariants = {
   hidden: { opacity: 0, y: 16 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.35, ease: [0.16, 1, 0.3, 1] } },
+  show: { opacity: 1, y: 0, transition: { duration: 0.35, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] } },
   exit: { opacity: 0, scale: 0.96, transition: { duration: 0.2 } },
 };
 
@@ -35,8 +35,9 @@ export default function SavedListingsPage() {
   const { data, isLoading, isError } = useSavedListings({ page, size: 12 });
 
   const listings = data?.data?.content ?? [];
-  const totalPages = data?.data?.page?.totalPages ?? 0;
-  const totalElements = data?.data?.page?.totalElements ?? 0;
+  // Hỗ trợ cả 2 format Spring Page: top-level (default) và nested page object (VIA_DTO)
+  const totalPages = data?.data?.totalPages ?? data?.data?.page?.totalPages ?? 0;
+  const totalElements = data?.data?.totalElements ?? data?.data?.page?.totalElements ?? 0;
 
   return (
     <div className="min-h-[100dvh] bg-gray-50">

@@ -4,9 +4,11 @@ import { useState } from "react";
 import { Heart, Loader2 } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { useToggleSave } from "@/hooks/useSavedListings";
+import { useToggleSave, savedListingsKeys } from "@/hooks/useSavedListings";
+import { interactionApi } from "@/lib/api/interaction.api";
 
 interface SaveButtonProps {
   listingId: number;
@@ -19,7 +21,7 @@ interface SaveButtonProps {
 /**
  * Nút lưu/bỏ lưu tin đăng vào wishlist.
  * - Chưa đăng nhập: redirect sang trang đăng nhập.
- * - Đã đăng nhập: toggle ngay (optimistic UI).
+ * - Đã đăng nhập: query trạng thái từ server (persist qua reload) + optimistic UI khi toggle.
  */
 export function SaveButton({
   listingId,
@@ -29,14 +31,27 @@ export function SaveButton({
 }: SaveButtonProps) {
   const { status } = useSession();
   const router = useRouter();
-  const [saved, setSaved] = useState(initialSaved);
   const { mutate: toggleSave, isPending } = useToggleSave();
+
+  // Query trạng thái thực từ server — tự động invalidate sau khi toggle
+  const { data: statusRes } = useQuery({
+    queryKey: savedListingsKeys.status(listingId),
+    queryFn: () => interactionApi.checkSavedStatus(listingId),
+    enabled: status === "authenticated",
+    staleTime: 1000 * 60 * 5,
+    placeholderData: { success: true, data: initialSaved, message: "", timestamp: "" },
+  });
+
+  const serverSaved = statusRes?.data ?? initialSaved;
+
+  // Optimistic override trong khi toggle đang in-flight
+  const [optimistic, setOptimistic] = useState<boolean | null>(null);
+  const saved = optimistic ?? serverSaved;
 
   const handleClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
 
-    // Đang load session — không làm gì, tránh redirect nhầm
     if (status === "loading") return;
 
     if (status === "unauthenticated") {
@@ -44,13 +59,11 @@ export function SaveButton({
       return;
     }
 
-    // Optimistic update
-    const nextSaved = !saved;
-    setSaved(nextSaved);
+    setOptimistic(!saved);
 
     toggleSave(listingId, {
       onSuccess: (response) => {
-        setSaved(response.data.isSaved);
+        setOptimistic(null); // nhường lại cho server state
         if (response.data.isSaved) {
           toast.success("Đã lưu vào danh sách yêu thích", {
             action: {
@@ -63,21 +76,13 @@ export function SaveButton({
         }
       },
       onError: () => {
-        // Revert optimistic update
-        setSaved(!nextSaved);
+        setOptimistic(null); // revert
       },
     });
   };
 
-  const sizeClasses = {
-    sm: "h-7 w-7",
-    md: "h-9 w-9",
-  };
-
-  const iconSizeClasses = {
-    sm: "h-3.5 w-3.5",
-    md: "h-4.5 w-4.5",
-  };
+  const sizeClasses = { sm: "h-7 w-7", md: "h-9 w-9" };
+  const iconSizeClasses = { sm: "h-3.5 w-3.5", md: "h-4.5 w-4.5" };
 
   return (
     <button

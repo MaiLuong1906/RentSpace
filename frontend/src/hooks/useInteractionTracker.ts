@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { useSession } from "next-auth/react";
 import { useSessionId } from "./useSessionId";
 
 // Endpoint public — không cần JWT, dùng trực tiếp fetch thay vì axios
@@ -19,10 +20,16 @@ export function useInteractionTracker(
   listingId: number,
   referrer: string = "DIRECT"
 ) {
+  const { data: authSession } = useSession();
   const sessionId = useSessionId();
   const hasStayedRef = useRef(false);
   const hasTrackedRef = useRef(false);
   const startTimeRef = useRef(0);
+  const accessTokenRef = useRef<string | undefined>(undefined);
+  // Sync token sau mỗi render mà không thêm authSession vào deps của effect tracking
+  useEffect(() => {
+    accessTokenRef.current = (authSession as { accessToken?: string } | null)?.accessToken;
+  });
 
   useEffect(() => {
     // Reset trạng thái khi listingId thay đổi
@@ -41,11 +48,14 @@ export function useInteractionTracker(
 
       const duration = Math.floor((Date.now() - startTimeRef.current) / 1000);
 
+      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      if (accessTokenRef.current) headers["Authorization"] = `Bearer ${accessTokenRef.current}`;
+
       // keepalive: true đảm bảo request hoàn thành kể cả khi component unmount
       // (axios bị cancel bởi browser khi page unload, fetch với keepalive thì không)
       fetch(TRACK_URL, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify({
           listingId,
           type: "VIEW",

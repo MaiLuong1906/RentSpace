@@ -99,7 +99,7 @@ export default function DashboardLayout({
     } catch (error) {
       console.error("Logout API error:", error);
     } finally {
-      signOut({ callbackUrl: "/auth/login" });
+      signOut({ callbackUrl: "/" });
     }
   };
 
