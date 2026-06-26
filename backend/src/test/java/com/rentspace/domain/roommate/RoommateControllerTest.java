@@ -6,6 +6,7 @@ import com.rentspace.common.response.ApiResponse;
 import com.rentspace.domain.roommate.dto.RoommateMatchResponse;
 import com.rentspace.domain.roommate.dto.RoommateProfileRequest;
 import com.rentspace.domain.roommate.dto.RoommateProfileResponse;
+import com.rentspace.domain.roommate.enums.ProfileType;
 import com.rentspace.domain.user.User;
 import com.rentspace.domain.user.UserService;
 import org.junit.jupiter.api.BeforeEach;
@@ -118,6 +119,7 @@ class RoommateControllerTest {
     void updateProfile_ShouldReturnUpdatedProfile() throws Exception {
         // Given
         RoommateProfileRequest request = new RoommateProfileRequest();
+        request.setProfileType(ProfileType.SEEKING_ROOM);
         request.setGender("Male");
         request.setOccupation("Student");
         request.setBudgetMin(1500000L);
