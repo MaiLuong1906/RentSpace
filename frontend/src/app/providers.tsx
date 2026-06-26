@@ -24,7 +24,14 @@ export function Providers({ children }: { children: React.ReactNode }) {
     <SessionProvider>
       <QueryClientProvider client={queryClient}>
         <AntdRegistry>{children}</AntdRegistry>
-        <Toaster richColors position="top-right" closeButton />
+        <Toaster
+          richColors
+          position="top-right"
+          closeButton
+          toastOptions={{
+            actionButtonStyle: { backgroundColor: "#2563eb", color: "#ffffff", borderRadius: "8px", fontSize: "13px", fontWeight: 600 },
+          }}
+        />
       </QueryClientProvider>
     </SessionProvider>
   );

@@ -18,10 +18,15 @@ import {
   Loader2,
   Flag,
   ShieldCheck,
+  Share2,
 } from "lucide-react";
 import { useListing } from "@/hooks/useListings";
 import { listingApi } from "@/lib/api/listing.api";
 import { ReviewSection, ReportModal } from "@/components/review";
+import { useInteractionTracker } from "@/hooks/useInteractionTracker";
+import { useSessionId } from "@/hooks/useSessionId";
+import { SaveButton } from "@/components/listing/SaveButton";
+import { interactionApi } from "@/lib/api/interaction.api";
 import { chatApi } from "@/lib/api/chat";
 import { useChatStore } from "@/store/chatStore";
 import { useChat } from "@/hooks/useChat";
@@ -60,13 +65,15 @@ export function ListingDetailClient({ listingId }: ListingDetailClientProps) {
   const listing = apiResponse?.data;
 
   const { data: session } = useSession();
+  const sessionId = useSessionId();
 
-  // Track listing view on mount
+  // Interaction tracking: VIEW sau 3 giây + duration khi rời trang
+  useInteractionTracker(Number(listingId), "DIRECT");
+
+  // Giữ lại legacy view counter của listing (tương thích ngược)
   useEffect(() => {
     if (listingId) {
-      listingApi.trackListingView(listingId).catch((err) => {
-        console.error("Error tracking listing view:", err);
-      });
+      listingApi.trackListingView(listingId).catch(() => {});
     }
   }, [listingId]);
   const isLandlord = session?.user?.id && Number(session.user.id) === Number(listing?.landlordId);
@@ -152,7 +159,10 @@ export function ListingDetailClient({ listingId }: ListingDetailClientProps) {
         sendMessage(listing.landlordId, contactMessage.trim());
       }
 
-      // 3. Đánh dấu cuộc trò chuyện đang active và chuyển hướng sang trang nhắn tin
+      // 3. Track CHAT_INIT cho recommendation engine
+      interactionApi.track({ listingId: Number(listingId), type: "CHAT_INIT", referrer: "DIRECT", sessionId }).catch(() => {});
+
+      // 4. Đánh dấu cuộc trò chuyện đang active và chuyển hướng sang trang nhắn tin
       setActiveConversation(conversation.id);
       router.push("/app/messages");
       toast.success("Đã kết nối cuộc trò chuyện thành công!");
@@ -344,6 +354,17 @@ export function ListingDetailClient({ listingId }: ListingDetailClientProps) {
 
               {/* CTA Buttons */}
               <div className="space-y-3">
+                {/* Save / Wishlist button */}
+                {!isLandlord && (
+                  <div className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
+                    <span className="text-sm font-semibold text-gray-700">Lưu tin này</span>
+                    <SaveButton
+                      listingId={listing.id}
+                      size="md"
+                    />
+                  </div>
+                )}
+
                 {listing.status === "ACTIVE" && !isLandlord && (
                   <button
                     onClick={handleDepositClick}
@@ -365,6 +386,24 @@ export function ListingDetailClient({ listingId }: ListingDetailClientProps) {
                 <button className="w-full flex items-center justify-center gap-2 bg-white border-2 border-blue-600 text-blue-600 py-3 rounded-lg font-semibold hover:bg-blue-50 transition-colors cursor-pointer">
                   <Phone className="h-5 w-5" />
                   Gọi điện
+                </button>
+
+                <button
+                  onClick={async () => {
+                    const url = window.location.href;
+                    const shareData = { title: listing.title, text: `${listing.title} — ${listing.address}`, url };
+                    if (navigator.share && navigator.canShare?.(shareData)) {
+                      await navigator.share(shareData).catch(() => {});
+                    } else {
+                      await navigator.clipboard.writeText(url).catch(() => {});
+                      toast.success("Đã sao chép link tin đăng");
+                    }
+                    interactionApi.track({ listingId: listing.id, type: "SHARE", referrer: "DIRECT", sessionId }).catch(() => {});
+                  }}
+                  className="w-full flex items-center justify-center gap-2 bg-white border border-gray-200 text-gray-600 py-3 rounded-lg font-semibold hover:bg-gray-50 transition-colors cursor-pointer"
+                >
+                  <Share2 className="h-5 w-5" />
+                  Chia sẻ
                 </button>
 
                 <button

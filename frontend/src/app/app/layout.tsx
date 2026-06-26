@@ -21,6 +21,7 @@ import {
   ChevronDown,
   CreditCard,
   Zap,
+  Heart,
 } from "lucide-react";
 import { authApi } from "@/lib/api/auth.api";
 import { useChat } from "@/hooks/useChat";
@@ -98,13 +99,14 @@ export default function DashboardLayout({
     } catch (error) {
       console.error("Logout API error:", error);
     } finally {
-      signOut({ callbackUrl: "/auth/login" });
+      signOut({ callbackUrl: "/" });
     }
   };
 
   const navItems = [
     { path: "/app", icon: Home, label: "Trang chủ", roles: ["tenant", "landlord", "admin"], exact: true },
     { path: "/app/search", icon: Search, label: "Tìm phòng", roles: ["tenant", "landlord", "admin"], exact: false },
+    { path: "/app/saved", icon: Heart, label: "Đã lưu", roles: ["tenant"], exact: false },
     { path: "/app/roommates", icon: Sparkles, label: "Ở ghép", roles: ["tenant", "landlord", "admin"], exact: false },
     { path: "/app/community", icon: Users, label: "Cộng đồng", roles: ["tenant", "landlord", "admin"], exact: false },
     { path: "/app/messages", icon: MessageSquare, label: "Tin nhắn", roles: ["tenant", "landlord", "admin"], exact: false },
@@ -435,16 +437,28 @@ export default function DashboardLayout({
               {status === "authenticated" ? (
                 <>
                   {userRole === "tenant" && (
-                    <Link
-                      href="/app/deposits"
-                      onClick={() => setIsMobileMenuOpen(false)}
-                      className={`flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-sm transition-all ${
-                        isActive("/app/deposits") ? "bg-blue-50 text-blue-600" : "text-gray-700 hover:bg-gray-50"
-                      }`}
-                    >
-                      <ShieldCheck className="h-5 w-5 text-gray-500" />
-                      <span>Lịch sử đặt cọc</span>
-                    </Link>
+                    <>
+                      <Link
+                        href="/app/saved"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                        className={`flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-sm transition-all ${
+                          isActive("/app/saved") ? "bg-blue-50 text-blue-600" : "text-gray-700 hover:bg-gray-50"
+                        }`}
+                      >
+                        <Heart className="h-5 w-5 text-gray-500" />
+                        <span>Tin đã lưu</span>
+                      </Link>
+                      <Link
+                        href="/app/deposits"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                        className={`flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-sm transition-all ${
+                          isActive("/app/deposits") ? "bg-blue-50 text-blue-600" : "text-gray-700 hover:bg-gray-50"
+                        }`}
+                      >
+                        <ShieldCheck className="h-5 w-5 text-gray-500" />
+                        <span>Lịch sử đặt cọc</span>
+                      </Link>
+                    </>
                   )}
                   {userRole === "landlord" && (
                     <>
