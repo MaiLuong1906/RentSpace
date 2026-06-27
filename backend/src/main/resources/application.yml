@@ -57,8 +57,8 @@ spring:
   # ===== File Upload =====
   servlet:
     multipart:
-      max-file-size: 200MB
-      max-request-size: 200MB
+      max-file-size: 10MB
+      max-request-size: 10MB
 
 # ===== Server =====
 server:
@@ -88,7 +88,7 @@ management:
 # ===== App Custom Config =====
 app:
   jwt:
-    secret: ${JWT_SECRET:VmVyeVNlY3JldEtleUZvclJlbnRTcGFjZUFwcGxpY2F0aW9uMjAyNjEyMzQ1Njc4OTA=}
+    secret: ${JWT_SECRET}
     expiration-ms: 900000 # 15 phút
     refresh-expiration-ms: 604800000 # 7 ngày
   frontend-url: ${FRONTEND_URL:http://localhost:3000}
@@ -109,8 +109,8 @@ app:
   # ===== Web Push (Sprint 5) =====
   # Tạo VAPID keys bằng: npx web-push generate-vapid-keys
   webpush:
-    public-key: ${VAPID_PUBLIC_KEY:BEl62iUYgUivxIkv69yViEuiBIa-Ib9-SkvMeAtA3LFgDzkrxZJjSgSnfckjZJkpFgfFvHnV-8tg7yRG2a7BGMQ}
-    private-key: ${VAPID_PRIVATE_KEY:fT3bU95hJgCp2ZGF2-tWvNY1nwQSmZ6FE0OBHgBwAGA}
+    public-key: ${VAPID_PUBLIC_KEY}
+    private-key: ${VAPID_PRIVATE_KEY}
     subject: ${VAPID_SUBJECT:mailto:admin@rentspace.vn}
 
 # ===== AWS S3 =====
@@ -126,7 +126,7 @@ aws:
 # ===== VNPay =====
 vnpay:
   tmn-code: ${VNPAY_TMN_CODE:none}
-  hash-secret: ${VNPAY_HASH_SECRET:none}
+  hash-secret: ${VNPAY_HASH_SECRET}
   pay-url: ${VNPAY_PAY_URL:https://sandbox.vnpayment.vn/paymentv2/vpcpay.html}
   return-url: ${VNPAY_RETURN_URL:http://localhost:3000/app/payment/result}
 
@@ -135,7 +135,7 @@ vnpay:
 momo:
   partner-code: ${MOMO_PARTNER_CODE:MOMOBKUN20180529}
   access-key: ${MOMO_ACCESS_KEY:klm05TvNBzhg7h7j}
-  secret-key: ${MOMO_SECRET_KEY:at67qH6mk8w5Y1nAyMoYKMWACiEi2bsa}
+  secret-key: ${MOMO_SECRET_KEY}
   pay-url: ${MOMO_PAY_URL:https://test-payment.momo.vn/v2/gateway/api/create}
   return-url: ${MOMO_RETURN_URL:http://localhost:3000/app/payment/result}
   ipn-url: ${MOMO_IPN_URL:http://localhost:8080/api/v1/deposits/webhook/momo}

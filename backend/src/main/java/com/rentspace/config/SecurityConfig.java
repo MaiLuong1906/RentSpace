@@ -27,6 +27,7 @@ public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final UserDetailsService userDetailsService;
+    private final org.springframework.core.env.Environment env;
 
     // Các endpoint hoàn toàn public (không cần đăng nhập)
     private static final String[] PUBLIC_ENDPOINTS = {
@@ -42,9 +43,6 @@ public class SecurityConfig {
             "/api/v1/interactions/track",   // Public - anonymous tracking được phép (JWT optional)
             "/sitemap.xml",                 // Public - Google/Bing bot crawl
             "/uploads/**",                  // Static files (ảnh upload local)
-            "/swagger-ui/**",
-            "/swagger-ui.html",
-            "/v3/api-docs/**",
             "/actuator/health",
             "/ws/**"
     };
@@ -70,15 +68,26 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
                 .csrf(AbstractHttpConfigurer::disable)
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(PUBLIC_ENDPOINTS).permitAll()
-                        // GET listings/posts public, nhưng POST/PUT/PATCH/DELETE phải authenticate
-                        .requestMatchers(org.springframework.http.HttpMethod.GET, PUBLIC_LISTING_GET_ENDPOINTS).permitAll()
+                .authorizeHttpRequests(auth -> {
+                    auth.requestMatchers(PUBLIC_ENDPOINTS).permitAll();
+
+                    // Cấu hình động cho Swagger dựa trên profile
+                    if (env.acceptsProfiles(org.springframework.core.env.Profiles.of("prod"))) {
+                        // Trong prod, yêu cầu quyền ADMIN để truy cập tài liệu API (Swagger)
+                        auth.requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").hasRole("ADMIN");
+                    } else {
+                        // Trong dev, cho phép truy cập tự do
+                        auth.requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll();
+                    }
+
+                    // GET listings/posts public, nhưng POST/PUT/PATCH/DELETE phải authenticate
+                    auth.requestMatchers(org.springframework.http.HttpMethod.GET, PUBLIC_LISTING_GET_ENDPOINTS).permitAll()
                         .requestMatchers(org.springframework.http.HttpMethod.GET, PUBLIC_POST_GET_ENDPOINTS).permitAll()
                         // Admin routes (dùng @PreAuthorize bổ sung tại controller)
                         .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/v1/kyc/admin/**").hasRole("ADMIN")
-                        .anyRequest().authenticated())
+                        .anyRequest().authenticated();
+                })
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .exceptionHandling(exception -> exception

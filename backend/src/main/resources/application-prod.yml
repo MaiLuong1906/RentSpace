@@ -1,0 +1,34 @@
+# Production Configuration Override — RentSpace Backend
+
+spring:
+  # ===== JPA / Hibernate =====
+  jpa:
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+
+# ===== Swagger / SpringDoc (Disabled in Prod) =====
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false
+
+# ===== Actuator =====
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: never
+
+# ===== Logging =====
+logging:
+  level:
+    root: INFO
+    org.springframework: WARN
+    org.hibernate: WARN
+    com.rentspace: INFO

@@ -61,6 +61,22 @@ services:
       AWS_S3_BUCKET: ${AWS_S3_BUCKET}
       AWS_REGION: ${AWS_REGION:-ap-southeast-1}
       FRONTEND_URL: ${FRONTEND_URL}
+      # eKYC (Sprint 0)
+      EKYC_API_KEY: ${EKYC_API_KEY}
+      EKYC_API_BASE_URL: ${EKYC_API_BASE_URL}
+      # AI Assistant (Sprint 6, 7)
+      GROQ_API_KEY: ${GROQ_API_KEY}
+      # Web Push (Sprint 5)
+      VAPID_PUBLIC_KEY: ${VAPID_PUBLIC_KEY}
+      VAPID_PRIVATE_KEY: ${VAPID_PRIVATE_KEY}
+      # MoMo (Phase 3)
+      MOMO_PARTNER_CODE: ${MOMO_PARTNER_CODE}
+      MOMO_ACCESS_KEY: ${MOMO_ACCESS_KEY}
+      MOMO_SECRET_KEY: ${MOMO_SECRET_KEY}
+      MOMO_IPN_URL: ${MOMO_IPN_URL}
+      # VNPay
+      VNPAY_TMN_CODE: ${VNPAY_TMN_CODE}
+      VNPAY_HASH_SECRET: ${VNPAY_HASH_SECRET}
     # Chỉ giao tiếp thông qua Nginx Reverse Proxy ở port 8080 nội bộ
     depends_on:
       postgres:
@@ -96,10 +112,11 @@ services:
     image: nginx:alpine
     container_name: rentspace-nginx-prod
     ports:
-      - "8888:80"
-      # - "443:443" # Bật khi cấu hình SSL/HTTPS thực tế
+      - "80:80"
+      - "443:443"
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - /etc/letsencrypt:/etc/nginx/ssl:ro
     depends_on:
       - backend
       - frontend

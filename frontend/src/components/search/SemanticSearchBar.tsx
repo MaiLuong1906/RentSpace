@@ -66,7 +66,7 @@ export function SemanticSearchBar({ onResults, onQuery, onAutoSearchDone, compac
     } finally {
       setIsSearching(false)
     }
-  }, [query, isSearching, lastResult, onResults])
+  }, [query, isSearching, lastResult, onResults, onQuery])
 
   const handleRemoveParam = useCallback((field: keyof ExtractedParams) => {
     if (!lastResult) return
