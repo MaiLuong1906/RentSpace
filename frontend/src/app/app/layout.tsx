@@ -34,7 +34,7 @@ import { SemanticSearchBubble } from "@/components/search/SemanticSearchBubble";
 import { RouteGuardModal } from "@/components/shared/RouteGuardModal";
 import { LandlordSidebar } from "@/components/layout/LandlordSidebar";
 import { AdminSidebar } from "@/components/layout/AdminSidebar";
-import { useRouteGuardStore, ROUTE_GUARD_PRESETS } from "@/store/routeGuardStore";
+import { useRouteGuardStore, ROUTE_GUARD_PRESETS, RouteGuardState } from "@/store/routeGuardStore";
 
 const getShortName = (fullName?: string | null, email?: string | null) => {
   if (!fullName) {
@@ -92,7 +92,7 @@ export default function DashboardLayout({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const showRouteGuardModal = useRouteGuardStore((state) => state.showModal);
+  const showRouteGuardModal = useRouteGuardStore((state: RouteGuardState) => state.showModal);
 
   // Khi Refresh Token hết hạn: xóa session và hiển thị modal thông báo thay vì redirect thẳng
   const isSigningOut = useRef(false);
