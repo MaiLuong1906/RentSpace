@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import {
   Search as SearchIcon,
@@ -13,14 +14,18 @@ import {
   Navigation,
   Compass,
   Locate,
-  Info
+  Info,
+  Sparkles,
 } from "lucide-react";
 import { useListings, useGeoSearchListings } from "@/hooks/useListings";
 import { toast } from "sonner";
 import { formatPrice, getRoomTypeLabel } from "@/lib/mockData";
 import { ListingCardSkeleton, MapGeoSearch } from "@/components/listing";
 import { SaveButton } from "@/components/listing/SaveButton";
+import { SemanticSearchBar } from "@/components/search/SemanticSearchBar";
 import type { Coordinate, SearchListing } from "@/types/listing.types";
+import type { Listing } from "@/types/listing.types";
+import type { ExtractedParams } from "@/types/search";
 
 const CITY_DISTRICTS: Record<string, string[]> = {
   "Đà Nẵng": ["Hải Châu", "Thanh Khê", "Sơn Trà", "Liên Chiểu", "Ngũ Hành Sơn", "Cẩm Lệ", "Hòa Vang"],
@@ -29,7 +34,7 @@ const CITY_DISTRICTS: Record<string, string[]> = {
 };
 
 type ViewMode = "list" | "map";
-type SearchMode = "standard" | "nearby";
+type SearchMode = "standard" | "nearby" | "semantic";
 
 const BACKEND_TO_FRONTEND_ROOM_TYPE: Record<string, string> = {
   PHONG_TRO: "single",
@@ -39,9 +44,16 @@ const BACKEND_TO_FRONTEND_ROOM_TYPE: Record<string, string> = {
   NHA_NGUYEN_CAN: "house",
 };
 
-export default function SearchPage() {
-  // Search Mode & View Mode
-  const [searchMode, setSearchMode] = useState<SearchMode>("standard");
+function SearchPageContent() {
+  const searchParams = useSearchParams();
+  const urlQuery = searchParams.get("q") ?? "";
+  const urlMode = searchParams.get("mode");
+  const [autoSearched, setAutoSearched] = useState(false);
+
+  // Search Mode & View Mode — khởi tạo từ URL param nếu có
+  const [searchMode, setSearchMode] = useState<SearchMode>(
+    urlMode === "semantic" ? "semantic" : "standard"
+  );
   const [viewMode, setViewMode] = useState<ViewMode>("list");
   const [showFilters, setShowFilters] = useState(false);
   
@@ -56,6 +68,14 @@ export default function SearchPage() {
     minArea: "",
     amenities: [] as string[],
   });
+
+  // Semantic Search State
+  const [semanticListings, setSemanticListings] = useState<SearchListing[]>([]);
+  const [semanticMeta, setSemanticMeta] = useState<{
+    extractedParams: ExtractedParams | null;
+    usedFallback: boolean;
+    resultCount: number;
+  }>({ extractedParams: null, usedFallback: false, resultCount: 0 });
 
   // Nearby/GPS Search State
   const [userCoords, setUserCoords] = useState<Coordinate | null>(null);
@@ -82,7 +102,7 @@ export default function SearchPage() {
     };
   }, [polygon, searchMode, userCoords, radius, filters]);
 
-  // Fetch standard listings
+  // Fetch standard listings — disabled khi semantic mode (tránh 401 cho anonymous user)
   const { data: standardResponse, isLoading: standardLoading } = useListings({
     city: filters.city || undefined,
     district: filters.district || undefined,
@@ -90,15 +110,58 @@ export default function SearchPage() {
     maxPrice: filters.maxPrice ? Number(filters.maxPrice) : undefined,
     minArea: filters.minArea ? Number(filters.minArea) : undefined,
     size: 50,
-  });
+  }, searchMode !== "semantic");
 
-  // Fetch geo-search listings
+  // Fetch geo-search listings — disabled khi semantic mode
   const { data: geoResponse, isLoading: geoLoading } = useGeoSearchListings(
     geoSearchParams,
-    isGeoQueryActive
+    isGeoQueryActive && searchMode !== "semantic"
   );
 
   const isLoading = isGeoQueryActive ? geoLoading : (searchMode === "standard" ? standardLoading : false);
+
+  // Callback nhận kết quả từ SemanticSearchBar
+  const handleSemanticResults = useCallback(
+    (listings: Listing[], meta: { extractedParams: ExtractedParams; usedFallback: boolean; totalElements: number }) => {
+      const transformed = listings.map((l) => {
+        const amenitiesList: string[] = [];
+        if (l.hasWifi) amenitiesList.push("WiFi");
+        if (l.hasParking) amenitiesList.push("Đỗ xe");
+        if (l.hasAirConditioner) amenitiesList.push("Điều hòa");
+        if (l.hasWashingMachine) amenitiesList.push("Máy giặt");
+        return {
+          id: String(l.id),
+          title: l.title,
+          description: l.description || "",
+          price: l.pricePerMonth,
+          address: l.address,
+          district: l.district || "",
+          city: l.city,
+          lat: l.latitude ? Number(l.latitude) : 16.0544,
+          lng: l.longitude ? Number(l.longitude) : 108.2022,
+          area: l.areaM2 || 0,
+          roomType: l.roomType ? (BACKEND_TO_FRONTEND_ROOM_TYPE[l.roomType] || "single") : "single",
+          images: l.images && l.images.length > 0
+            ? l.images.map((img) => img.imageUrl)
+            : ["https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800&h=600&fit=crop"],
+          amenities: amenitiesList,
+          landlordId: String(l.landlordId),
+          landlordName: l.landlordName,
+          landlordAvatar: l.landlordAvatar || "https://i.pravatar.cc/150?img=1",
+          landlordVerified: l.landlordIsVerified ?? false,
+          status: l.status === "ACTIVE" ? ("available" as const) : ("rented" as const),
+          createdAt: l.createdAt,
+          rating: l.averageRating ?? 0,
+          reviewCount: l.reviewCount || 0,
+          isPromoted: l.isPromoted || false,
+          isSavedByCurrentUser: l.isSavedByCurrentUser,
+        };
+      });
+      setSemanticListings(transformed);
+      setSemanticMeta({ extractedParams: meta.extractedParams, usedFallback: meta.usedFallback, resultCount: meta.totalElements });
+    },
+    []
+  );
 
   // Transform listings to unified UI representation
   const transformedListings = useMemo(() => {
@@ -271,12 +334,43 @@ export default function SearchPage() {
               <Navigation className="inline h-3.5 w-3.5 mr-1" />
               <span>Tìm lân cận (GPS)</span>
             </button>
+            <button
+              onClick={() => { setSearchMode("semantic"); setPolygon([]); }}
+              className={`px-5 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1 ${
+                searchMode === "semantic"
+                  ? "bg-blue-600 text-white shadow-md shadow-blue-500/10"
+                  : "text-gray-650 hover:bg-gray-50"
+              }`}
+            >
+              <Sparkles className="h-3.5 w-3.5" />
+              <span>Tìm thông minh (AI)</span>
+            </button>
           </div>
         </div>
 
         {/* Dynamic Filters & Settings Panel */}
         <div className="bg-white rounded-3xl border border-gray-100 shadow-[0_4px_16px_rgba(0,0,0,0.06)] p-5 mb-8">
-          {searchMode === "standard" ? (
+          {searchMode === "semantic" ? (
+            /* Semantic / AI Search Panel */
+            <div className="space-y-2">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="h-4 w-4 text-blue-500" />
+                  <span className="text-sm font-bold text-gray-800">Tìm kiếm bằng ngôn ngữ tự nhiên</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] text-gray-400 font-medium">Powered by</span>
+                  <span className="text-[10px] font-bold text-gray-600 bg-gray-100 px-2 py-0.5 rounded-full">Groq AI</span>
+                </div>
+              </div>
+              <SemanticSearchBar
+                onResults={handleSemanticResults}
+                initialQuery={urlQuery}
+                autoSearch={!!urlQuery && !autoSearched}
+                onAutoSearchDone={() => setAutoSearched(true)}
+              />
+            </div>
+          ) : searchMode === "standard" ? (
             /* Standard Search Input */
             <div className="flex flex-col md:flex-row gap-4">
               <div className="flex-1 relative">
@@ -546,15 +640,105 @@ export default function SearchPage() {
         </div>
 
         {/* Results Info Bar */}
-        <div className="mb-4 flex items-center justify-between">
-          <p className="text-sm text-gray-500 font-semibold">
-            Tìm thấy <strong className="text-gray-800 font-extrabold">{filteredListings.length}</strong> phòng trọ phù hợp
-          </p>
-        </div>
+        {(() => {
+          const activeListings = searchMode === "semantic" ? semanticListings : filteredListings;
+          return (
+            <div className="mb-4 flex items-center justify-between">
+              <p className="text-sm text-gray-500 font-semibold">
+                {searchMode === "semantic" && semanticMeta.resultCount > 0 ? (
+                  <>
+                    AI tìm thấy{" "}
+                    <strong className="text-gray-800 font-extrabold">
+                      {semanticMeta.resultCount > activeListings.length
+                        ? `${semanticMeta.resultCount}+`
+                        : semanticMeta.resultCount}
+                    </strong>{" "}
+                    phòng phù hợp
+                    {semanticMeta.usedFallback && (
+                      <span className="ml-2 text-[11px] font-medium text-amber-500">(kết quả tổng hợp)</span>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    Tìm thấy{" "}
+                    <strong className="text-gray-800 font-extrabold">{activeListings.length}</strong>{" "}
+                    phòng trọ phù hợp
+                  </>
+                )}
+              </p>
+            </div>
+          );
+        })()}
 
         {/* Dynamic Views Rendering */}
-        {isLoading ? (
-          viewMode === "list" ? (
+        {searchMode === "semantic" ? (
+          /* Semantic mode: hiển thị kết quả từ AI */
+          <div>
+            {semanticListings.length === 0 && semanticMeta.resultCount === 0 ? (
+              <div className="bg-white border border-gray-100 rounded-3xl p-16 text-center">
+                <Sparkles className="h-12 w-12 text-gray-200 mx-auto mb-4" />
+                <h3 className="text-base font-bold text-gray-600 mb-1">Mô tả phòng bạn muốn thuê</h3>
+                <p className="text-xs text-gray-400 font-medium max-w-sm mx-auto">
+                  AI sẽ tự động nhận diện thành phố, giá, tiện ích từ câu mô tả của bạn
+                </p>
+              </div>
+            ) : (
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {semanticListings.map((listing) => (
+                  <div
+                    key={listing.id}
+                    className="relative bg-white rounded-3xl border border-gray-100 shadow-[0_2px_8px_rgba(0,0,0,0.04)] overflow-hidden hover:-translate-y-1 transition-all duration-200 flex flex-col"
+                  >
+                    <Link href={`/app/listings/${listing.id}`} className="relative block h-48 bg-gray-200 overflow-hidden">
+                      <img src={listing.images[0]} alt={listing.title} className="w-full h-full object-cover" />
+                      <div className="absolute top-3 right-3 bg-white/95 px-3 py-1 rounded-full text-sm font-bold text-blue-600 border border-gray-100">
+                        {formatPrice(listing.price)}/tháng
+                      </div>
+                      <div className="absolute top-3 left-3 flex flex-col gap-1.5">
+                        {listing.isPromoted && (
+                          <div className="bg-amber-500 text-white px-2.5 py-1 rounded-full text-[10px] font-bold flex items-center gap-1 uppercase tracking-wider">
+                            ✨ Nổi bật
+                          </div>
+                        )}
+                        {listing.landlordVerified && (
+                          <div className="bg-emerald-500 text-white px-2.5 py-1 rounded-full text-[10px] font-bold flex items-center gap-1 uppercase tracking-wider self-start">
+                            ✓ Đã KYC
+                          </div>
+                        )}
+                      </div>
+                    </Link>
+                    <Link href={`/app/listings/${listing.id}`} className="p-5 flex-1 flex flex-col">
+                      <h3 className="font-extrabold text-gray-900 mb-2 line-clamp-1 hover:text-blue-600 transition-colors">
+                        {listing.title}
+                      </h3>
+                      <div className="flex items-center gap-1 text-gray-500 text-xs font-medium">
+                        <MapPin className="h-4 w-4 flex-shrink-0 text-gray-400" />
+                        <span className="line-clamp-1">{listing.address}, {listing.district}</span>
+                      </div>
+                    </Link>
+                    <div className="px-5 pb-5 flex items-center justify-between pt-3 border-t border-gray-100">
+                      <div className="flex items-center gap-2.5 text-gray-600 font-bold text-xs">
+                        <span>{listing.area} m²</span>
+                        <span>•</span>
+                        <span>{getRoomTypeLabel(listing.roomType)}</span>
+                      </div>
+                      <div className="flex items-center gap-2.5">
+                        <div className="flex items-center gap-1 text-yellow-500">
+                          <Star className="h-4 w-4 fill-yellow-500 text-yellow-500" />
+                          <span className="font-extrabold text-gray-900 text-xs">
+                            {listing.rating > 0 ? listing.rating.toFixed(1) : "Chưa có"}
+                          </span>
+                        </div>
+                        <SaveButton listingId={Number(listing.id)} initialSaved={listing.isSavedByCurrentUser ?? false} size="sm" />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        ) : isLoading ? (
+          viewMode === "list" ? ( // standard/nearby loading skeleton
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               {Array.from({ length: 6 }).map((_, idx) => (
                 <ListingCardSkeleton key={idx} />
@@ -710,8 +894,8 @@ export default function SearchPage() {
           </>
         )}
 
-        {/* Empty States */}
-        {!isLoading && filteredListings.length === 0 && (
+        {/* Empty States — chỉ cho standard/nearby */}
+        {searchMode !== "semantic" && !isLoading && filteredListings.length === 0 && (
           <div className="bg-white border border-gray-100 rounded-3xl p-16 text-center shadow-[0_4px_16px_rgba(0,0,0,0.04)]">
             <SearchIcon className="h-14 w-14 text-gray-300 mx-auto mb-4" />
             <h3 className="text-xl font-bold text-gray-700 mb-1">
@@ -731,4 +915,12 @@ export default function SearchPage() {
       </div>
     </div>
   );
+}
+
+export default function SearchPage() {
+  return (
+    <Suspense>
+      <SearchPageContent />
+    </Suspense>
+  )
 }

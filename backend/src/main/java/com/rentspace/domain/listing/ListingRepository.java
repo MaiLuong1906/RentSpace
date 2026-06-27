@@ -1,6 +1,7 @@
 package com.rentspace.domain.listing;
 
 import com.rentspace.domain.listing.enums.ListingStatus;
+import com.rentspace.domain.listing.enums.RoomType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -31,6 +32,42 @@ public interface ListingRepository extends JpaRepository<Listing, Long> {
             @Param("minPrice") BigDecimal minPrice,
             @Param("maxPrice") BigDecimal maxPrice,
             @Param("minArea") BigDecimal minArea,
+            Pageable pageable
+    );
+
+    @Query("""
+            SELECT l FROM Listing l
+            LEFT JOIN PromotedListing p ON p.listing = l AND p.isActive = true AND p.expiresAt > CURRENT_TIMESTAMP
+            WHERE l.status = :status
+              AND (CAST(:city AS string) IS NULL OR LOWER(l.city) LIKE LOWER(CONCAT('%', CAST(:city AS string), '%')))
+              AND (CAST(:district AS string) IS NULL OR LOWER(l.district) LIKE LOWER(CONCAT('%', CAST(:district AS string), '%')))
+              AND (:minPrice IS NULL OR l.pricePerMonth >= :minPrice)
+              AND (:maxPrice IS NULL OR l.pricePerMonth <= :maxPrice)
+              AND (:minArea IS NULL OR l.areaM2 >= :minArea)
+              AND (:roomType IS NULL OR l.roomType = :roomType)
+              AND (:hasWifi IS NULL OR l.hasWifi = :hasWifi)
+              AND (:hasAirConditioner IS NULL OR l.hasAirConditioner = :hasAirConditioner)
+              AND (:hasParking IS NULL OR l.hasParking = :hasParking)
+              AND (:hasWashingMachine IS NULL OR l.hasWashingMachine = :hasWashingMachine)
+              AND (CAST(:keywords AS string) IS NULL
+                   OR LOWER(l.title) LIKE LOWER(CONCAT('%', CAST(:keywords AS string), '%'))
+                   OR LOWER(l.address) LIKE LOWER(CONCAT('%', CAST(:keywords AS string), '%'))
+                   OR LOWER(l.description) LIKE LOWER(CONCAT('%', CAST(:keywords AS string), '%')))
+            ORDER BY (CASE WHEN p.id IS NOT NULL THEN 1 ELSE 0 END) DESC, l.createdAt DESC
+            """)
+    Page<Listing> searchSemantic(
+            @Param("status") ListingStatus status,
+            @Param("city") String city,
+            @Param("district") String district,
+            @Param("minPrice") BigDecimal minPrice,
+            @Param("maxPrice") BigDecimal maxPrice,
+            @Param("minArea") BigDecimal minArea,
+            @Param("roomType") RoomType roomType,
+            @Param("hasWifi") Boolean hasWifi,
+            @Param("hasAirConditioner") Boolean hasAirConditioner,
+            @Param("hasParking") Boolean hasParking,
+            @Param("hasWashingMachine") Boolean hasWashingMachine,
+            @Param("keywords") String keywords,
             Pageable pageable
     );
 

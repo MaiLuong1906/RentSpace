@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
@@ -28,6 +28,7 @@ import { useChat } from "@/hooks/useChat";
 import { useChatStore } from "@/store/chatStore";
 import { NotificationDropdown } from "@/components/notification";
 import { WebPushBanner } from "@/components/notification/WebPushBanner";
+import { SemanticSearchBubble } from "@/components/search/SemanticSearchBubble";
 
 const getShortName = (fullName?: string | null, email?: string | null) => {
   if (!fullName) {
@@ -76,8 +77,10 @@ export default function DashboardLayout({
   }, []);
 
   // Tự động đăng xuất nếu Refresh Token hết hạn hoặc không hợp lệ (Silent Session Expiration)
+  const isSigningOut = useRef(false);
   useEffect(() => {
-    if ((session as { error?: string })?.error === "RefreshAccessTokenError") {
+    if ((session as { error?: string })?.error === "RefreshAccessTokenError" && !isSigningOut.current) {
+      isSigningOut.current = true;
       signOut({ callbackUrl: "/auth/login" });
     }
   }, [session]);
@@ -542,6 +545,7 @@ export default function DashboardLayout({
       </main>
 
       <WebPushBanner />
+      <SemanticSearchBubble />
     </div>
   );
 }
