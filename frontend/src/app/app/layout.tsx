@@ -34,7 +34,7 @@ import { SemanticSearchBubble } from "@/components/search/SemanticSearchBubble";
 import { RouteGuardModal } from "@/components/shared/RouteGuardModal";
 import { LandlordSidebar } from "@/components/layout/LandlordSidebar";
 import { AdminSidebar } from "@/components/layout/AdminSidebar";
-import { useRouteGuardStore, ROUTE_GUARD_PRESETS, RouteGuardState } from "@/store/routeGuardStore";
+import { useRouteGuardStore, ROUTE_GUARD_PRESETS } from "@/store/routeGuardStore";
 
 const getShortName = (fullName?: string | null, email?: string | null) => {
   if (!fullName) {
@@ -92,7 +92,7 @@ export default function DashboardLayout({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const showRouteGuardModal = useRouteGuardStore((state: RouteGuardState) => state.showModal);
+  const showRouteGuardModal = useRouteGuardStore((state) => state.showModal);
 
   // Khi Refresh Token hết hạn: xóa session và hiển thị modal thông báo thay vì redirect thẳng
   const isSigningOut = useRef(false);
@@ -166,11 +166,10 @@ export default function DashboardLayout({
                   <Link
                     key={item.path}
                     href={item.path}
-                    className={`flex items-center gap-2 px-4 py-2.5 rounded-lg transition-colors text-[16px] font-medium whitespace-nowrap ${
-                      isItemActive(item.path, item.exact || false)
+                    className={`flex items-center gap-2 px-4 py-2.5 rounded-lg transition-colors text-[16px] font-medium whitespace-nowrap ${isItemActive(item.path, item.exact || false)
                         ? "bg-blue-50 text-blue-600 font-semibold"
                         : "text-gray-700 hover:bg-gray-50"
-                    }`}
+                      }`}
                   >
                     <div className="relative">
                       <item.icon className="h-5 w-5 shrink-0" />
@@ -192,11 +191,10 @@ export default function DashboardLayout({
                     setIsExploreOpen(!isExploreOpen);
                     setIsManageOpen(false);
                   }}
-                  className={`flex items-center gap-1.5 px-4 py-2.5 rounded-lg transition-colors text-[16px] font-medium whitespace-nowrap ${
-                    isActive("/app/roommates") || isActive("/app/community")
+                  className={`flex items-center gap-1.5 px-4 py-2.5 rounded-lg transition-colors text-[16px] font-medium whitespace-nowrap ${isActive("/app/roommates") || isActive("/app/community")
                       ? "bg-blue-50 text-blue-600 font-semibold"
                       : "text-gray-700 hover:bg-gray-50"
-                  }`}
+                    }`}
                 >
                   <Compass className="h-5 w-5 shrink-0" />
                   <span>Khám phá</span>
@@ -237,11 +235,10 @@ export default function DashboardLayout({
                       setIsManageOpen(!isManageOpen);
                       setIsExploreOpen(false);
                     }}
-                    className={`flex items-center gap-1.5 px-4 py-2.5 rounded-lg transition-colors text-[16px] font-medium whitespace-nowrap ${
-                      pathname?.startsWith("/app/landlord") || pathname === "/app/deposits"
+                    className={`flex items-center gap-1.5 px-4 py-2.5 rounded-lg transition-colors text-[16px] font-medium whitespace-nowrap ${pathname?.startsWith("/app/landlord") || pathname === "/app/deposits"
                         ? "bg-blue-50 text-blue-600 font-semibold"
                         : "text-gray-700 hover:bg-gray-50"
-                    }`}
+                      }`}
                   >
                     <LayoutDashboard className="h-5 w-5 shrink-0" />
                     <span>Quản lý</span>
@@ -290,11 +287,10 @@ export default function DashboardLayout({
                     <Link
                       key={item.path}
                       href={item.path}
-                      className={`flex items-center gap-2 px-4 py-2.5 rounded-lg transition-colors text-[16px] font-medium whitespace-nowrap ${
-                        isActive(item.path)
+                      className={`flex items-center gap-2 px-4 py-2.5 rounded-lg transition-colors text-[16px] font-medium whitespace-nowrap ${isActive(item.path)
                           ? "bg-blue-50 text-blue-600 font-semibold"
                           : "text-gray-700 hover:bg-gray-50"
-                      }`}
+                        }`}
                     >
                       <item.icon className="h-5 w-5 shrink-0" />
                       <span>{item.label}</span>
@@ -310,15 +306,14 @@ export default function DashboardLayout({
                 {status === "authenticated" ? (
                   <div className="flex items-center gap-3">
                     <NotificationDropdown />
-                    
+
                     {/* User Dropdown Container */}
                     <div className="relative">
                       <button
                         id="user-dropdown-trigger"
                         onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                        className={`flex items-center gap-2 px-3.5 py-2 rounded-xl hover:bg-gray-105 border border-gray-100 transition-all active:scale-[0.98] cursor-pointer text-gray-700 ${
-                          isUserMenuOpen ? "bg-gray-50 border-gray-200 shadow-sm" : "bg-white"
-                        }`}
+                        className={`flex items-center gap-2 px-3.5 py-2 rounded-xl hover:bg-gray-105 border border-gray-100 transition-all active:scale-[0.98] cursor-pointer text-gray-700 ${isUserMenuOpen ? "bg-gray-50 border-gray-200 shadow-sm" : "bg-white"
+                          }`}
                       >
                         <div className="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-sm border border-blue-100 uppercase">
                           {getShortName(session?.user?.fullName, session?.user?.email).charAt(0)}
@@ -350,9 +345,8 @@ export default function DashboardLayout({
                           <div className="p-1 space-y-0.5">
                             <Link
                               href="/app/profile"
-                              className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-[14px] font-semibold transition-colors ${
-                                isActive("/app/profile") ? "bg-blue-50 text-blue-600" : "text-gray-700 hover:bg-gray-50"
-                              }`}
+                              className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-[14px] font-semibold transition-colors ${isActive("/app/profile") ? "bg-blue-50 text-blue-600" : "text-gray-700 hover:bg-gray-50"
+                                }`}
                             >
                               <User className="h-4.5 w-4.5 text-gray-400" />
                               <span>Hồ sơ cá nhân</span>
@@ -362,27 +356,24 @@ export default function DashboardLayout({
                               <>
                                 <Link
                                   href="/app/landlord/subscription"
-                                  className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-[14px] font-semibold transition-colors ${
-                                    isActive("/app/landlord/subscription") ? "bg-blue-50 text-blue-600" : "text-gray-700 hover:bg-gray-50"
-                                  }`}
+                                  className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-[14px] font-semibold transition-colors ${isActive("/app/landlord/subscription") ? "bg-blue-50 text-blue-600" : "text-gray-700 hover:bg-gray-50"
+                                    }`}
                                 >
                                   <Zap className="h-4.5 w-4.5 text-gray-400" />
                                   <span>Gói hội viên</span>
                                 </Link>
                                 <Link
                                   href="/app/landlord/payout"
-                                  className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-[14px] font-semibold transition-colors ${
-                                    isActive("/app/landlord/payout") ? "bg-blue-50 text-blue-600" : "text-gray-700 hover:bg-gray-50"
-                                  }`}
+                                  className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-[14px] font-semibold transition-colors ${isActive("/app/landlord/payout") ? "bg-blue-50 text-blue-600" : "text-gray-700 hover:bg-gray-50"
+                                    }`}
                                 >
                                   <CreditCard className="h-4.5 w-4.5 text-gray-400" />
                                   <span>Giải ngân tiền cọc</span>
                                 </Link>
                                 <Link
                                   href="/app/deposits"
-                                  className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-[14px] font-semibold transition-colors ${
-                                    isActive("/app/deposits") ? "bg-blue-50 text-blue-600" : "text-gray-700 hover:bg-gray-50"
-                                  }`}
+                                  className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-[14px] font-semibold transition-colors ${isActive("/app/deposits") ? "bg-blue-50 text-blue-600" : "text-gray-700 hover:bg-gray-50"
+                                    }`}
                                 >
                                   <ShieldCheck className="h-4.5 w-4.5 text-gray-400" />
                                   <span>Lịch sử đặt cọc</span>
@@ -392,9 +383,8 @@ export default function DashboardLayout({
                             {userRole === "tenant" && (
                               <Link
                                 href="/app/deposits"
-                                className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-[14px] font-semibold transition-colors ${
-                                  isActive("/app/deposits") ? "bg-blue-50 text-blue-600" : "text-gray-700 hover:bg-gray-50"
-                                }`}
+                                className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-[14px] font-semibold transition-colors ${isActive("/app/deposits") ? "bg-blue-50 text-blue-600" : "text-gray-700 hover:bg-gray-50"
+                                  }`}
                               >
                                 <ShieldCheck className="h-4.5 w-4.5 text-gray-400" />
                                 <span>Lịch sử đặt cọc</span>
@@ -472,11 +462,10 @@ export default function DashboardLayout({
                     key={item.path}
                     href={item.path}
                     onClick={() => setIsMobileMenuOpen(false)}
-                    className={`flex items-center gap-3 px-4 py-3 rounded-lg ${
-                      isItemActive(item.path, item.exact || false)
+                    className={`flex items-center gap-3 px-4 py-3 rounded-lg ${isItemActive(item.path, item.exact || false)
                         ? "bg-blue-50 text-blue-600"
                         : "text-gray-700 hover:bg-gray-50"
-                    }`}
+                      }`}
                   >
                     <div className="relative">
                       <item.icon className="h-5 w-5" />
@@ -498,11 +487,10 @@ export default function DashboardLayout({
                       key={item.path}
                       href={item.path}
                       onClick={() => setIsMobileMenuOpen(false)}
-                      className={`flex items-center gap-3 px-4 py-3 rounded-lg ${
-                        isActive(item.path)
+                      className={`flex items-center gap-3 px-4 py-3 rounded-lg ${isActive(item.path)
                           ? "bg-blue-50 text-blue-600"
                           : "text-gray-700 hover:bg-gray-50"
-                      }`}
+                        }`}
                     >
                       <item.icon className="h-5 w-5" />
                       <span>{item.label}</span>
@@ -519,11 +507,10 @@ export default function DashboardLayout({
                       key={item.path}
                       href={item.path}
                       onClick={() => setIsMobileMenuOpen(false)}
-                      className={`flex items-center gap-3 px-4 py-3 rounded-lg ${
-                        isActive(item.path)
+                      className={`flex items-center gap-3 px-4 py-3 rounded-lg ${isActive(item.path)
                           ? "bg-blue-50 text-blue-600"
                           : "text-gray-700 hover:bg-gray-50"
-                      }`}
+                        }`}
                     >
                       <item.icon className="h-5 w-5" />
                       <span>{item.label}</span>
@@ -540,9 +527,8 @@ export default function DashboardLayout({
                       <Link
                         href="/app/saved"
                         onClick={() => setIsMobileMenuOpen(false)}
-                        className={`flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-sm transition-all ${
-                          isActive("/app/saved") ? "bg-blue-50 text-blue-600" : "text-gray-700 hover:bg-gray-50"
-                        }`}
+                        className={`flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-sm transition-all ${isActive("/app/saved") ? "bg-blue-50 text-blue-600" : "text-gray-700 hover:bg-gray-50"
+                          }`}
                       >
                         <Heart className="h-5 w-5 text-gray-500" />
                         <span>Tin đã lưu</span>
@@ -550,9 +536,8 @@ export default function DashboardLayout({
                       <Link
                         href="/app/deposits"
                         onClick={() => setIsMobileMenuOpen(false)}
-                        className={`flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-sm transition-all ${
-                          isActive("/app/deposits") ? "bg-blue-50 text-blue-600" : "text-gray-700 hover:bg-gray-50"
-                        }`}
+                        className={`flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-sm transition-all ${isActive("/app/deposits") ? "bg-blue-50 text-blue-600" : "text-gray-700 hover:bg-gray-50"
+                          }`}
                       >
                         <ShieldCheck className="h-5 w-5 text-gray-500" />
                         <span>Lịch sử đặt cọc</span>
@@ -564,9 +549,8 @@ export default function DashboardLayout({
                       <Link
                         href="/app/landlord/subscription"
                         onClick={() => setIsMobileMenuOpen(false)}
-                        className={`flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-sm transition-all ${
-                          isActive("/app/landlord/subscription") ? "bg-blue-50 text-blue-600" : "text-gray-700 hover:bg-gray-50"
-                        }`}
+                        className={`flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-sm transition-all ${isActive("/app/landlord/subscription") ? "bg-blue-50 text-blue-600" : "text-gray-700 hover:bg-gray-50"
+                          }`}
                       >
                         <Zap className="h-5 w-5 text-gray-500" />
                         <span>Gói hội viên</span>
@@ -574,9 +558,8 @@ export default function DashboardLayout({
                       <Link
                         href="/app/landlord/payout"
                         onClick={() => setIsMobileMenuOpen(false)}
-                        className={`flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-sm transition-all ${
-                          isActive("/app/landlord/payout") ? "bg-blue-50 text-blue-600" : "text-gray-700 hover:bg-gray-50"
-                        }`}
+                        className={`flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-sm transition-all ${isActive("/app/landlord/payout") ? "bg-blue-50 text-blue-600" : "text-gray-700 hover:bg-gray-50"
+                          }`}
                       >
                         <CreditCard className="h-5 w-5 text-gray-500" />
                         <span>Giải ngân tiền cọc</span>
@@ -584,9 +567,8 @@ export default function DashboardLayout({
                       <Link
                         href="/app/deposits"
                         onClick={() => setIsMobileMenuOpen(false)}
-                        className={`flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-sm transition-all ${
-                          isActive("/app/deposits") ? "bg-blue-50 text-blue-600" : "text-gray-700 hover:bg-gray-50"
-                        }`}
+                        className={`flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-sm transition-all ${isActive("/app/deposits") ? "bg-blue-50 text-blue-600" : "text-gray-700 hover:bg-gray-50"
+                          }`}
                       >
                         <ShieldCheck className="h-5 w-5 text-gray-500" />
                         <span>Lịch sử đặt cọc</span>
