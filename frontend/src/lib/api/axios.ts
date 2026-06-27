@@ -1,5 +1,6 @@
 import axios from "axios";
-import { getSession } from "next-auth/react";
+import { getSession, signOut } from "next-auth/react";
+import { useRouteGuardStore, ROUTE_GUARD_PRESETS } from "@/store/routeGuardStore";
 
 // Dùng để tránh gọi trùng lắp API session (tránh race-condition khi refresh token song song)
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -50,8 +51,9 @@ apiClient.interceptors.response.use(
         return apiClient(originalRequest);
       }
 
-      // Token không còn hợp lệ → về login
-      window.location.href = "/auth/login";
+      // Token không còn hợp lệ → xóa session và hiển thị modal thay vì redirect thẳng
+      await signOut({ redirect: false });
+      useRouteGuardStore.getState().showModal(ROUTE_GUARD_PRESETS.SESSION_EXPIRED);
     }
 
     return Promise.reject(error);

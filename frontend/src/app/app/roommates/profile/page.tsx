@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
+import { useRouteGuardStore, ROUTE_GUARD_PRESETS } from "@/store/routeGuardStore";
 import {
   User,
   MapPin,
@@ -53,6 +54,7 @@ const CITY_DISTRICTS: Record<string, string[]> = {
 export default function RoommateProfilePage() {
   const { status: authStatus } = useSession();
   const router = useRouter();
+  const showRouteGuardModal = useRouteGuardStore((state) => state.showModal);
 
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -84,7 +86,7 @@ export default function RoommateProfilePage() {
   useEffect(() => {
     if (authStatus === "loading") return;
     if (authStatus === "unauthenticated") {
-      router.push("/auth/login");
+      showRouteGuardModal(ROUTE_GUARD_PRESETS.UNAUTHORIZED);
       return;
     }
 
@@ -149,7 +151,7 @@ export default function RoommateProfilePage() {
     };
 
     checkKycAndFetchProfile();
-  }, [authStatus, router]);
+  }, [authStatus, router, showRouteGuardModal]);
 
   // Fetch danh sách tin đăng khi user chọn HAS_ROOM
   useEffect(() => {

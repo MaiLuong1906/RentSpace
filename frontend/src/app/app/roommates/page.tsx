@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useRouteGuardStore, ROUTE_GUARD_PRESETS } from "@/store/routeGuardStore";
 import {
   Sparkles,
   User,
@@ -30,7 +30,7 @@ import { RoommateProfile, RoommateMatch } from "@/types/phase2.types";
 
 export default function RoommateDashboard() {
   const { data: session, status: authStatus } = useSession();
-  const router = useRouter();
+  const showRouteGuardModal = useRouteGuardStore((state) => state.showModal);
 
   const [loading, setLoading] = useState(true);
   const [kycVerified, setKycVerified] = useState<boolean | null>(null);
@@ -43,7 +43,7 @@ export default function RoommateDashboard() {
     if (authStatus === "loading") return;
 
     if (authStatus === "unauthenticated") {
-      router.push("/auth/login");
+      showRouteGuardModal(ROUTE_GUARD_PRESETS.UNAUTHORIZED);
       return;
     }
 
@@ -91,7 +91,7 @@ export default function RoommateDashboard() {
     };
 
     loadData();
-  }, [authStatus, router]);
+  }, [authStatus, showRouteGuardModal]);
 
   const handleInterest = async (matchId: number) => {
     try {

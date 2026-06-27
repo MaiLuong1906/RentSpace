@@ -50,6 +50,7 @@ function MessagesContent() {
 
       // Tránh tự nhắn tin với chính mình
       if (targetUserId === sessionUserId) {
+        toast.info("Bạn không thể nhắn tin với chính mình.");
         router.replace("/app/messages");
         return;
       }
