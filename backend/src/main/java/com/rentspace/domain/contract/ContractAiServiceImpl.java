@@ -64,7 +64,7 @@ public class ContractAiServiceImpl implements ContractAiService {
 
         String question = request.getQuestion();
         String model = isComplexQuestion(question) ? fallbackModel : defaultModel;
-        String systemPrompt = buildSystemPrompt(contract.getContentSnapshot());
+        String systemPrompt = buildSystemPrompt(contract);
 
         long start = System.currentTimeMillis();
         GeminiResult result = geminiApiClient.generateContent(model, systemPrompt, question);
@@ -147,7 +147,11 @@ public class ContractAiServiceImpl implements ContractAiService {
                 || COMPLEX_KEYWORDS.stream().anyMatch(lower::contains);
     }
 
-    private String buildSystemPrompt(String contractContent) {
+    private String buildSystemPrompt(Contract contract) {
+        String contractData = (contract.getContentJson() != null && !contract.getContentJson().isEmpty())
+                ? formatJsonForAi(contract.getContentJson())
+                : contract.getContentSnapshot();
+
         return """
                 Bạn là trợ lý pháp lý chuyên về hợp đồng thuê nhà tại Việt Nam.
 
@@ -162,6 +166,12 @@ public class ContractAiServiceImpl implements ContractAiService {
                 PHONG CÁCH: Trả lời bằng tiếng Việt, ngắn gọn, rõ ràng, dễ hiểu với người không có nền tảng pháp lý.
 
                 HỢP ĐỒNG:
-                """ + contractContent;
+                """ + contractData;
+    }
+
+    private String formatJsonForAi(java.util.Map<String, Object> json) {
+        StringBuilder sb = new StringBuilder();
+        json.forEach((k, v) -> sb.append(k).append(": ").append(v).append("\n"));
+        return sb.toString();
     }
 }

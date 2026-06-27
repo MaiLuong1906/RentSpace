@@ -312,11 +312,12 @@ public class VerificationServiceImpl implements VerificationService {
         String content = String.format(
                 "Hồ sơ xác minh danh tính của %s (%s) cần được xét duyệt thủ công.",
                 user.getFullName(), user.getEmail());
-        userRepository.findByRole(Role.ADMIN).forEach(admin ->
+        List<com.rentspace.domain.user.User> admins = userRepository.findByRole(Role.ADMIN);
+        admins.forEach(admin ->
                 notificationService.createAndSendNotification(
                         admin, "Có hồ sơ xác minh cần xét duyệt", content, NotificationType.KYC));
         log.warn("Đã gửi alert xét duyệt verification tới {} admin — userId={}",
-                userRepository.findByRole(Role.ADMIN).size(), user.getId());
+                admins.size(), user.getId());
     }
 
     private String maskId(String id) {
