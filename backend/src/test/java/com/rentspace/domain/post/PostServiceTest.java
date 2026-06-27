@@ -130,7 +130,7 @@ class PostServiceTest {
     void getFeed_Success() {
         Pageable pageable = PageRequest.of(0, 10);
         Page<Post> postsPage = new PageImpl<>(List.of(post));
-        
+
         when(postRepository.findAllActive(pageable)).thenReturn(postsPage);
         when(postMapper.toResponse(post)).thenReturn(PostResponse.builder().id(10L).build());
         when(postLikeRepository.findLikedPostIdsByUserIdAndPostIds(any(), any()))
@@ -189,16 +189,25 @@ class PostServiceTest {
     }
 
     @Test
-    void reportPost_NoAutoModeration_RemainsVisible() {
+    void reportPost_AutoModeration_Triggered() {
         post.setReportCount(2); // Đã có 2 report trước đó
         when(postRepository.findById(10L)).thenReturn(Optional.of(post));
         when(postReportRepository.existsByPostIdAndReporterId(10L, 1L)).thenReturn(false);
 
+        User admin = User.builder()
+                .id(99L)
+                .email("admin@rentspace.com")
+                .fullName("System Admin")
+                .build();
+        when(userRepository.findByRole(Role.ADMIN)).thenReturn(List.of(admin));
+
         postService.reportPost(10L, "SPAM", user);
 
         assertEquals(3, post.getReportCount());
-        assertFalse(post.getIsHidden()); // Không tự động ẩn nữa, chờ admin duyệt
+        assertTrue(post.getIsHidden()); // Đã tự động ẩn do >= 3 report
         verify(postReportRepository, times(1)).save(any());
+        verify(userRepository, times(1)).findByRole(Role.ADMIN);
+        verify(notificationService, times(1)).createAndSendNotification(eq(admin), any(), any(), any());
         verify(postRepository, times(1)).save(post);
     }
 }
