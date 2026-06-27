@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import {
@@ -44,7 +44,7 @@ const BACKEND_TO_FRONTEND_ROOM_TYPE: Record<string, string> = {
   NHA_NGUYEN_CAN: "house",
 };
 
-export default function SearchPage() {
+function SearchPageContent() {
   const searchParams = useSearchParams();
   const urlQuery = searchParams.get("q") ?? "";
   const urlMode = searchParams.get("mode");
@@ -915,4 +915,12 @@ export default function SearchPage() {
       </div>
     </div>
   );
+}
+
+export default function SearchPage() {
+  return (
+    <Suspense>
+      <SearchPageContent />
+    </Suspense>
+  )
 }
