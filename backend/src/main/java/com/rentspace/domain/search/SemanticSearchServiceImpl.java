@@ -149,20 +149,15 @@ public class SemanticSearchServiceImpl implements SemanticSearchService {
 
         ExtractedSearchParams params = objectMapper.readValue(groqResult.text(), ExtractedSearchParams.class);
 
-        // Bỏ qua log cho anonymous (userId=0 vi phạm FK constraint)
-        try {
-            aiUsageRepo.save(AiUsageLog.builder()
-                    .userId(0L)
-                    .contractId(null)
-                    .feature("SEMANTIC_SEARCH")
-                    .modelUsed(MODEL)
-                    .inputTokens(groqResult.inputTokens())
-                    .outputTokens(groqResult.outputTokens())
-                    .latencyMs((int) (System.currentTimeMillis() - start))
-                    .build());
-        } catch (Exception e) {
-            log.debug("Bỏ qua lưu AI usage log cho anonymous user: {}", e.getMessage());
-        }
+        aiUsageRepo.save(AiUsageLog.builder()
+                .userId(null)
+                .contractId(null)
+                .feature("SEMANTIC_SEARCH")
+                .modelUsed(MODEL)
+                .inputTokens(groqResult.inputTokens())
+                .outputTokens(groqResult.outputTokens())
+                .latencyMs((int) (System.currentTimeMillis() - start))
+                .build());
 
         return params;
     }

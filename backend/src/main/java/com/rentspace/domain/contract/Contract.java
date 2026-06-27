@@ -5,9 +5,12 @@ import com.rentspace.domain.deposit.DepositTransaction;
 import com.rentspace.domain.user.User;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.hibernate.type.SqlTypes;
 
 import java.time.Instant;
+import java.util.Map;
 
 @Entity
 @Table(
@@ -33,9 +36,14 @@ public class Contract {
     @JoinColumn(name = "tenant_id", nullable = false)
     private User tenant;
 
-    /** Snapshot nội dung hợp đồng — không đổi sau FULLY_SIGNED */
+    /** Snapshot nội dung hợp đồng (HTML) — không đổi sau FULLY_SIGNED */
     @Column(name = "content_snapshot", nullable = false, columnDefinition = "TEXT")
     private String contentSnapshot;
+
+    /** Dữ liệu có cấu trúc để AI đọc — ngắn gọn hơn HTML cho LLM */
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "content_json", columnDefinition = "jsonb")
+    private Map<String, Object> contentJson;
 
     @Builder.Default
     @Enumerated(EnumType.STRING)

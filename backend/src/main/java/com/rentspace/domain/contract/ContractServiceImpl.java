@@ -22,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 @Service
@@ -64,6 +65,19 @@ public class ContractServiceImpl implements ContractService {
             "generatedAt",    templateService.formatDate(Instant.now())
         );
 
+        // Dữ liệu có cấu trúc cho AI assistant — raw values, không format
+        Map<String, Object> contentJson = new LinkedHashMap<>();
+        contentJson.put("landlordName",      deposit.getLandlord().getFullName());
+        contentJson.put("landlordPhone",     nvl(deposit.getLandlord().getPhoneNumber()));
+        contentJson.put("tenantName",        deposit.getTenant().getFullName());
+        contentJson.put("tenantPhone",       nvl(deposit.getTenant().getPhoneNumber()));
+        contentJson.put("listingTitle",      deposit.getListing().getTitle());
+        contentJson.put("listingAddress",    deposit.getListing().getAddress());
+        contentJson.put("pricePerMonthVnd",  deposit.getListing().getPricePerMonth());
+        contentJson.put("depositAmountVnd",  deposit.getAmount());
+        contentJson.put("moveInDate",        deposit.getMoveInDate() != null ? deposit.getMoveInDate().toString() : null);
+        contentJson.put("generatedAt",       Instant.now().toString());
+
         String snapshot = templateService.buildContentSnapshot(vars);
 
         // Bắt đầu ở DRAFT — sau 24h scheduler tự chuyển sang PENDING_SIGNATURES
@@ -72,6 +86,7 @@ public class ContractServiceImpl implements ContractService {
                 .landlord(deposit.getLandlord())
                 .tenant(deposit.getTenant())
                 .contentSnapshot(snapshot)
+                .contentJson(contentJson)
                 .status(ContractStatus.DRAFT)
                 .expiresAt(Instant.now().plus(signDeadlineDays + 1L, ChronoUnit.DAYS))
                 .build();
