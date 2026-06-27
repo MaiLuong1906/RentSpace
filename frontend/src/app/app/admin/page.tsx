@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
-import { Users, Home, Shield, Flag, Clock, UserCheck, ShieldAlert, AlertTriangle, CreditCard } from "lucide-react";
+import { Users, Home, Shield, Flag, Clock, UserCheck, ShieldAlert, AlertTriangle, CreditCard, Building2 } from "lucide-react";
 import { userApi } from "@/lib/api/user.api";
 import { listingApi } from "@/lib/api/listing.api";
 import { kycApi } from "@/lib/api/kyc.api";
@@ -158,143 +158,118 @@ export default function AdminDashboard() {
         </div>
 
         {/* Quick Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
           <Link
             href="/app/admin/kyc"
-            className="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-shadow flex flex-col justify-between"
+            className="bg-white rounded-2xl border border-gray-150 shadow-sm p-8 hover:shadow-md transition-all flex flex-col justify-between"
           >
             <div className="flex items-center gap-4 mb-4">
-              <div className="p-3 bg-blue-100 rounded-lg flex-shrink-0">
+              <div className="p-4 bg-blue-50 rounded-xl flex-shrink-0">
                 <Shield className="h-8 w-8 text-blue-600" />
               </div>
               <div>
-                <h3 className="text-lg font-semibold">Duyệt KYC</h3>
-                <p className="text-xs text-gray-600">
+                <h3 className="text-lg font-bold text-gray-800">Duyệt KYC</h3>
+                <p className="text-xs text-gray-500 font-semibold mt-1">
                   {loading ? "Đang tải..." : `${stats.pendingKyc} hồ sơ chờ duyệt`}
                 </p>
               </div>
             </div>
-            <div className="text-sm text-blue-600 font-semibold mt-2">
+            <div className="text-xs text-blue-600 font-bold mt-2">
               Xem tất cả →
             </div>
           </Link>
 
           <Link
             href="/app/admin/listings"
-            className="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-shadow flex flex-col justify-between"
+            className="bg-white rounded-2xl border border-gray-150 shadow-sm p-8 hover:shadow-md transition-all flex flex-col justify-between"
           >
             <div className="flex items-center gap-4 mb-4">
-              <div className="p-3 bg-blue-50 rounded-lg flex-shrink-0">
-                <Home className="h-8 w-8 text-blue-600" />
+              <div className="p-4 bg-blue-50 rounded-xl flex-shrink-0">
+                <Building2 className="h-8 w-8 text-blue-600" />
               </div>
               <div>
-                <h3 className="text-lg font-semibold">Quản lý tin</h3>
-                <p className="text-xs text-gray-600">Kiểm duyệt bài viết phòng trọ</p>
+                <h3 className="text-lg font-bold text-gray-800">Quản lý tin</h3>
+                <p className="text-xs text-gray-500 font-semibold mt-1">Kiểm duyệt bài viết phòng trọ</p>
               </div>
             </div>
-            <div className="text-sm text-blue-600 font-semibold mt-2">
+            <div className="text-xs text-blue-600 font-bold mt-2">
               Xem tất cả →
             </div>
           </Link>
 
           <Link
             href="/app/admin/users"
-            className="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-shadow flex flex-col justify-between"
+            className="bg-white rounded-2xl border border-gray-150 shadow-sm p-8 hover:shadow-md transition-all flex flex-col justify-between"
           >
             <div className="flex items-center gap-4 mb-4">
-              <div className="p-3 bg-emerald-100 rounded-lg flex-shrink-0">
+              <div className="p-4 bg-emerald-50 rounded-xl flex-shrink-0">
                 <UserCheck className="h-8 w-8 text-emerald-600" />
               </div>
               <div>
-                <h3 className="text-lg font-semibold">Quản lý User</h3>
-                <p className="text-xs text-gray-600">
+                <h3 className="text-lg font-bold text-gray-800">Quản lý User</h3>
+                <p className="text-xs text-gray-500 font-semibold mt-1">
                   {loading ? "Đang tải..." : `${stats.totalUsers} thành viên hệ thống`}
                 </p>
               </div>
             </div>
-            <div className="text-sm text-emerald-600 font-semibold mt-2">
+            <div className="text-xs text-emerald-600 font-bold mt-2">
               Xem tất cả →
             </div>
           </Link>
 
           <Link
             href="/app/admin/reports"
-            className="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-shadow flex flex-col justify-between"
+            className="bg-white rounded-2xl border border-gray-150 shadow-sm p-8 hover:shadow-md transition-all flex flex-col justify-between"
           >
             <div className="flex items-center gap-4 mb-4">
-              <div className="p-3 bg-red-100 rounded-lg flex-shrink-0">
+              <div className="p-4 bg-red-50 rounded-xl flex-shrink-0">
                 <Flag className="h-8 w-8 text-red-600" />
               </div>
               <div>
-                <h3 className="text-lg font-semibold">Xử lý báo cáo</h3>
-                <p className="text-xs text-gray-600">7 báo cáo cần xử lý</p>
+                <h3 className="text-lg font-bold text-gray-800">Xử lý báo cáo</h3>
+                <p className="text-xs text-gray-500 font-semibold mt-1">Các bài viết bị báo cáo vi phạm</p>
               </div>
             </div>
-            <div className="text-sm text-red-600 font-semibold mt-2">
+            <div className="text-xs text-red-600 font-bold mt-2">
               Xem tất cả →
             </div>
           </Link>
 
           <Link
             href="/app/admin/disputes"
-            className="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-shadow flex flex-col justify-between"
+            className="bg-white rounded-2xl border border-gray-150 shadow-sm p-8 hover:shadow-md transition-all flex flex-col justify-between"
           >
             <div className="flex items-center gap-4 mb-4">
-              <div className="p-3 bg-amber-100 rounded-lg flex-shrink-0">
+              <div className="p-4 bg-amber-50 rounded-xl flex-shrink-0">
                 <AlertTriangle className="h-8 w-8 text-amber-600" />
               </div>
               <div>
-                <h3 className="text-lg font-semibold">Tranh chấp</h3>
-                <p className="text-xs text-gray-600">Giải quyết tranh chấp cọc</p>
+                <h3 className="text-lg font-bold text-gray-800">Tranh chấp</h3>
+                <p className="text-xs text-gray-500 font-semibold mt-1">Giải quyết tranh chấp cọc</p>
               </div>
             </div>
-            <div className="text-sm text-amber-600 font-semibold mt-2">
+            <div className="text-xs text-amber-600 font-bold mt-2">
               Xem tất cả →
             </div>
           </Link>
 
           <Link
             href="/app/admin/payouts"
-            className="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-shadow flex flex-col justify-between"
+            className="bg-white rounded-2xl border border-gray-150 shadow-sm p-8 hover:shadow-md transition-all flex flex-col justify-between"
           >
             <div className="flex items-center gap-4 mb-4">
-              <div className="p-3 bg-green-100 rounded-lg flex-shrink-0">
+              <div className="p-4 bg-green-50 rounded-xl flex-shrink-0">
                 <CreditCard className="h-8 w-8 text-green-600" />
               </div>
               <div>
-                <h3 className="text-lg font-semibold">Đối soát</h3>
-                <p className="text-xs text-gray-600">Giải ngân tiền cọc chủ nhà</p>
+                <h3 className="text-lg font-bold text-gray-800">Đối soát</h3>
+                <p className="text-xs text-gray-500 font-semibold mt-1">Giải ngân tiền cọc chủ nhà</p>
               </div>
             </div>
-            <div className="text-sm text-green-600 font-semibold mt-2">
+            <div className="text-xs text-green-600 font-bold mt-2">
               Xem tất cả →
             </div>
           </Link>
-        </div>
-
-        {/* Recent Activity */}
-        <div className="bg-white rounded-xl shadow-md p-6">
-          <h2 className="text-xl font-semibold mb-6">Hoạt động gần đây</h2>
-          <div className="space-y-4">
-            {[
-              { user: "Nguyễn Văn A", action: "đã đăng ký tài khoản mới", time: "5 phút trước" },
-              { user: "Trần Thị B", action: "đã nộp hồ sơ KYC", time: "15 phút trước" },
-              { user: "Lê Minh C", action: "đã đăng tin phòng trọ mới", time: "30 phút trước" },
-              { user: "Phạm Thị D", action: "đã báo cáo tin đăng vi phạm", time: "1 giờ trước" },
-            ].map((activity, index) => (
-              <div key={index} className="flex items-center gap-4 p-4 hover:bg-gray-50 rounded-lg">
-                <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
-                  <Users className="h-5 w-5 text-gray-600" />
-                </div>
-                <div className="flex-1">
-                  <p className="text-gray-900">
-                    <strong>{activity.user}</strong> {activity.action}
-                  </p>
-                  <p className="text-sm text-gray-500">{activity.time}</p>
-                </div>
-              </div>
-            ))}
-          </div>
         </div>
       </div>
     </div>

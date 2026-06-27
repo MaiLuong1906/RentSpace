@@ -24,14 +24,13 @@ interface CreatePostModalProps {
 }
 
 const POST_TYPES = [
-  { value: "ROOMMATE", label: "Tìm ở ghép", desc: "Tìm kiếm bạn cùng phòng, cùng nhà trọ" },
   { value: "TIPS", label: "Chia sẻ kinh nghiệm", desc: "Kinh nghiệm thuê phòng, tránh lừa đảo, mẹo sinh hoạt" },
   { value: "REVIEW", label: "Đánh giá khu vực", desc: "Đánh giá phòng trọ, khu phố, chủ nhà" },
   { value: "QUESTION", label: "Hỏi đáp cộng đồng", desc: "Đặt câu hỏi nhờ cộng đồng tư vấn, hỗ trợ" },
 ];
 
 export function CreatePostModal({ isOpen, onClose, onPostCreated, currentUserId }: CreatePostModalProps) {
-  const [type, setType] = useState("ROOMMATE");
+  const [type, setType] = useState("TIPS");
   const [content, setContent] = useState("");
   const [district, setDistrict] = useState("");
   const [selectedListingId, setSelectedListingId] = useState<number | undefined>(undefined);
@@ -152,7 +151,7 @@ export function CreatePostModal({ isOpen, onClose, onPostCreated, currentUserId 
     setSelectedListingId(undefined);
     setSelectedFiles([]);
     setPreviews([]);
-    setType("ROOMMATE");
+    setType("TIPS");
     onClose();
   };
 

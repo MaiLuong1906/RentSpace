@@ -1,111 +1,154 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useQuery } from "@tanstack/react-query";
+import { useSession } from "next-auth/react";
 import { VerificationBanner } from "@/components/trust/VerificationBanner";
 import { verificationApi } from "@/lib/api/verification.api";
+import { listingApi } from "@/lib/api/listing.api";
 import {
-  Search,
   Users,
   MessageCircle,
   TrendingUp,
   ArrowRight,
+  MapPin,
+  Sparkles,
 } from "lucide-react";
-import { useListings } from "@/hooks/useListings";
 import { ForYouSection } from "@/components/recommendation/ForYouSection";
+import { Skeleton } from "@/components/ui/skeleton";
 
-const DISTRICTS = ["Hải Châu", "Thanh Khê", "Sơn Trà", "Liên Chiểu"];
+function formatPrice(price: number): string {
+  return new Intl.NumberFormat("vi-VN").format(price) + "đ";
+}
+
+function FeaturedSkeleton() {
+  return (
+    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {Array.from({ length: 3 }).map((_, i) => (
+        <div key={i} className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm">
+          <Skeleton className="h-44 w-full rounded-none" />
+          <div className="p-4 space-y-2">
+            <Skeleton className="h-4 w-3/4 rounded" />
+            <Skeleton className="h-3 w-1/2 rounded" />
+            <Skeleton className="h-3 w-1/4 rounded" />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 export default function HomePage() {
-  const { data: apiResponse } = useListings({ size: 1 });
-  const totalListings =
-    apiResponse?.data?.page?.totalElements ??
-    apiResponse?.data?.totalElements ??
-    0;
+  const { data: session } = useSession();
 
+  // Chỉ gọi KYC status khi đã đăng nhập
   const { data: verifyData } = useQuery({
     queryKey: ["verification-status"],
     queryFn: verificationApi.getStatus,
     retry: false,
+    enabled: !!session?.user,
   });
+  
   const verificationStatus = verifyData?.data?.status ?? "NOT_STARTED";
   const isVerified = verificationStatus === "VERIFIED";
 
+  // Lấy các tin đăng nổi bật được boost (hệ thống tự động ưu tiên tin promoted lên đầu)
+  const { data: featuredResponse, isLoading: isFeaturedLoading } = useQuery({
+    queryKey: ["featured-listings"],
+    queryFn: () => listingApi.getListings({ size: 6 }),
+  });
+  
+  const featuredListings = featuredResponse?.data?.content || [];
+
   return (
-    <div className="min-h-[100dvh] bg-[#FAFAFA]">
-      <VerificationBanner isVerified={isVerified} verificationStatus={verificationStatus} />
-      {/* ── Hero Search ── */}
-      <section className="bg-white border-b border-gray-100 py-12 md:py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-8">
-            <span className="text-xs font-semibold uppercase tracking-widest text-blue-600">
-              Nền tảng tin cậy
+    <div className="min-h-[100dvh] bg-[#FAFAFA] pb-12">
+      {session?.user && (
+        <VerificationBanner isVerified={isVerified} verificationStatus={verificationStatus} />
+      )}
+
+      {/* ── Featured Listings Section ── */}
+      <section className="py-12 md:py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-end justify-between mb-8">
+          <div>
+            <span className="text-xs font-semibold uppercase tracking-widest text-amber-600 flex items-center gap-1">
+              <Sparkles className="h-3.5 w-3.5 fill-amber-500 text-amber-500 animate-pulse" />
+              Ưu tiên hiển thị
             </span>
-            <h1 className="text-3xl md:text-5xl font-bold tracking-tight text-gray-900 mt-3 mb-3">
-              Tìm phòng trọ lý tưởng của bạn
-            </h1>
-            <p className="text-base text-gray-500">
-              Hơn{" "}
-              <span className="font-semibold text-gray-700">
-                {totalListings > 0 ? totalListings : "--"}
-              </span>{" "}
-              phòng trọ được xác thực tại Đà Nẵng
+            <h2 className="text-2xl font-bold tracking-tight text-gray-900 mt-1">
+              Tin nổi bật dành cho bạn
+            </h2>
+            <p className="text-sm text-gray-500 mt-1">
+              Các phòng trọ nổi bật từ các chủ nhà uy tín
             </p>
           </div>
-
-          <div className="max-w-2xl mx-auto">
-            <Link
-              href="/app/search"
-              className="flex items-center gap-3 bg-white border border-gray-200 text-gray-900 rounded-xl p-4 hover:border-blue-300 hover:shadow-[0_4px_16px_rgba(37,99,235,0.08)] transition-all"
-            >
-              <Search className="h-5 w-5 text-gray-400 shrink-0" />
-              <span className="text-gray-400">
-                Tìm theo khu vực, giá, loại phòng...
-              </span>
-            </Link>
-
-            <div className="mt-4 flex flex-wrap gap-2 justify-center">
-              {DISTRICTS.map((d) => (
-                <Link
-                  key={d}
-                  href={`/app/search?district=${d}`}
-                  className="px-4 py-1.5 bg-gray-100 hover:bg-blue-50 hover:text-blue-700 text-gray-600 text-sm rounded-full transition-colors"
-                >
-                  {d}
-                </Link>
-              ))}
-            </div>
-          </div>
+          <Link
+            href="/app/search"
+            className="flex items-center gap-1.5 text-sm text-blue-600 hover:text-blue-700 font-semibold transition-colors"
+          >
+            Xem tất cả
+            <ArrowRight className="h-4 w-4" />
+          </Link>
         </div>
-      </section>
 
-      {/* ── Stats ── */}
-      <section className="bg-white border-b border-gray-100 py-6">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
-            {[
-              {
-                value: totalListings > 0 ? `${totalListings}+` : "12+",
-                label: "Phòng trọ",
-              },
-              { value: "98%", label: "Đã xác thực" },
-              { value: "4.7★", label: "Đánh giá TB" },
-              { value: "24/7", label: "Hỗ trợ" },
-            ].map((s) => (
-              <div key={s.label}>
-                <div className="text-2xl font-bold text-gray-900">{s.value}</div>
-                <div className="text-sm text-gray-500 mt-1">{s.label}</div>
-              </div>
+        {isFeaturedLoading ? (
+          <FeaturedSkeleton />
+        ) : featuredListings.length === 0 ? (
+          <div className="text-center py-12 text-gray-400 text-sm bg-white border rounded-2xl">
+            Chưa có tin nổi bật nào được đăng.
+          </div>
+        ) : (
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {featuredListings.map((listing) => (
+              <Link
+                key={listing.id}
+                href={`/app/listings/${listing.id}`}
+                className="group block bg-white border border-gray-200 rounded-2xl overflow-hidden hover:shadow-lg hover:border-blue-200 transition-all duration-300 relative"
+              >
+                {listing.isPromoted && (
+                  <span className="absolute top-3 left-3 z-10 inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-500 text-white shadow-sm border border-amber-400">
+                    ✨ NỔI BẬT
+                  </span>
+                )}
+                <div className="relative h-44 bg-gray-100 overflow-hidden">
+                  <Image
+                    src={
+                      listing.images?.[0]?.imageUrl ||
+                      "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800&h=600&fit=crop"
+                    }
+                    alt={listing.title}
+                    fill
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                    className="object-cover group-hover:scale-105 transition-transform duration-500"
+                    unoptimized
+                  />
+                  <div className="absolute top-3 right-3 z-10 bg-white/95 px-2.5 py-1 rounded-full text-xs font-bold text-blue-600 shadow-sm">
+                    {formatPrice(listing.pricePerMonth)}/tháng
+                  </div>
+                </div>
+
+                <div className="p-4">
+                  <h3 className="font-semibold text-gray-900 mb-1.5 line-clamp-1 group-hover:text-blue-600 transition-colors">
+                    {listing.title}
+                  </h3>
+                  <div className="flex items-center gap-1 text-gray-500 text-xs">
+                    <MapPin className="h-3.5 w-3.5 shrink-0 text-gray-400" />
+                    <span className="truncate">{listing.district}, Đà Nẵng</span>
+                    <span className="mx-1">•</span>
+                    <span>{listing.areaM2}m²</span>
+                  </div>
+                </div>
+              </Link>
             ))}
           </div>
-        </div>
+        )}
       </section>
 
-      {/* ── For You / Trending ── */}
-      <ForYouSection />
+      {/* ── For You Section (AI Recommendation) ── */}
+      {session?.user && <ForYouSection />}
 
-      {/* ── Community ── */}
-      <section className="py-12 md:py-16 bg-white border-t border-gray-100">
+      {/* ── Community Section ── */}
+      <section className="py-12 md:py-16 bg-white border-t border-b border-gray-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-10">
             <h2 className="text-2xl font-bold tracking-tight text-gray-900 mb-2">
@@ -167,8 +210,8 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ── CTA landlord ── */}
-      <section className="py-12 border-t border-gray-100">
+      {/* ── CTA Landlord Section ── */}
+      <section className="py-12 mt-4">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-2xl font-bold tracking-tight text-gray-900 mb-2">
             Bạn là chủ trọ?

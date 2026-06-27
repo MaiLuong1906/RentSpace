@@ -7,6 +7,7 @@ import { useMyListings } from "@/hooks/useListings";
 import { useQueryClient } from "@tanstack/react-query";
 import { listingApi } from "@/lib/api/listing.api";
 import type { ListingStatus } from "@/types/listing.types";
+import { toast } from "sonner";
 
 function formatPrice(price: number): string {
   return new Intl.NumberFormat("vi-VN").format(price) + "đ";
@@ -103,6 +104,10 @@ export default function MyListingsPage() {
   }));
 
   const handleToggleStatus = async (id: string, currentStatus: ListingStatus) => {
+    if (currentStatus === "PENDING" || currentStatus === "REJECTED") {
+      toast.warning("Không thể thay đổi trạng thái khi tin đang chờ duyệt hoặc bị từ chối.");
+      return;
+    }
     setActionLoading(id);
     setError("");
     try {
@@ -344,20 +349,22 @@ export default function MyListingsPage() {
                                     <TrendingUp className="h-5 w-5" />
                                   </button>
                                 )}
-                                <button
-                                  onClick={() => handleToggleStatus(listing.id, listing.originalStatus)}
-                                  disabled={isOperating}
-                                  className="p-3 text-green-600 hover:bg-green-50 rounded-lg disabled:opacity-50 transition-colors"
-                                  title={listing.status === "ACTIVE" ? "Đổi sang Đã cho thuê" : "Đổi sang Đang hiển thị"}
-                                >
-                                  {isOperating ? (
-                                    <Loader2 className="h-5 w-5 animate-spin" />
-                                  ) : listing.status === "ACTIVE" ? (
-                                    <ToggleRight className="h-5 w-5" />
-                                  ) : (
-                                    <ToggleLeft className="h-5 w-5" />
-                                  )}
-                                </button>
+                                {listing.status !== "PENDING" && listing.status !== "REJECTED" && (
+                                  <button
+                                    onClick={() => handleToggleStatus(listing.id, listing.originalStatus)}
+                                    disabled={isOperating}
+                                    className="p-3 text-green-600 hover:bg-green-50 rounded-lg disabled:opacity-50 transition-colors"
+                                    title={listing.status === "ACTIVE" ? "Đổi sang Đã cho thuê" : "Đổi sang Đang hiển thị"}
+                                  >
+                                    {isOperating ? (
+                                      <Loader2 className="h-5 w-5 animate-spin" />
+                                    ) : listing.status === "ACTIVE" ? (
+                                      <ToggleRight className="h-5 w-5" />
+                                    ) : (
+                                      <ToggleLeft className="h-5 w-5" />
+                                    )}
+                                  </button>
+                                )}
                                 <button
                                   onClick={() => handleDelete(listing.id, listing.title)}
                                   disabled={isOperating}

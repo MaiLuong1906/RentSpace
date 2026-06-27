@@ -65,7 +65,13 @@ public class ChatServiceImpl implements ChatService {
                             .build();
 
                     log.info("Tạo cuộc trò chuyện mới giữa User ID {} và User ID {}", firstId, secondId);
-                    return conversationRepository.save(conversation);
+                    try {
+                        return conversationRepository.save(conversation);
+                    } catch (org.springframework.dao.DataIntegrityViolationException e) {
+                        log.warn("Cuộc trò chuyện giữa {} và {} đã được tạo song song, quay lại tìm kiếm", tenantId, landlordId);
+                        return conversationRepository.findConversationBetween(tenantId, landlordId)
+                                .orElseThrow(() -> new BusinessException("Không thể khởi tạo cuộc hội thoại"));
+                    }
                 });
     }
 

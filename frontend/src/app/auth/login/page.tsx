@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Eye, EyeOff, Mail, Lock, Loader2, Home, Shield, Star, Users } from "lucide-react";
-import { signIn } from "next-auth/react";
+import { signIn, getSession } from "next-auth/react";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 
@@ -33,7 +33,15 @@ export default function LoginPage() {
         toast.error("Đăng nhập thất bại. Vui lòng kiểm tra lại email hoặc mật khẩu!");
       } else {
         toast.success("Đăng nhập thành công!");
-        router.push("/app");
+        const session = await getSession();
+        const role = session?.user?.role?.toLowerCase();
+        if (role === "admin") {
+          router.push("/app/admin");
+        } else if (role === "landlord") {
+          router.push("/app/landlord/dashboard");
+        } else {
+          router.push("/app");
+        }
       }
     } catch (error) {
       toast.error("Đã xảy ra lỗi kết nối với máy chủ!");

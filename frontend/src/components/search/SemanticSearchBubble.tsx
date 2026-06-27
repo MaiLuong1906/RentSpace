@@ -9,6 +9,8 @@ import { assistantSearch, type ConversationTurn } from "@/lib/api/semantic-searc
 import { formatPrice } from "@/lib/mockData"
 import type { Listing } from "@/types/listing.types"
 
+import { useSession } from "next-auth/react"
+
 interface ChatTurn {
   id: string
   userMessage: string
@@ -48,8 +50,19 @@ export function SemanticSearchBubble() {
     }
   }, [isOpen])
 
-  // Không render trên trang search (đã có full semantic UI ở đó)
-  if (pathname === "/app/search") return null
+  const { data: session } = useSession()
+  const role = session?.user?.role?.toLowerCase()
+
+  // Không render trên trang search, deposits, contracts, hoặc cho landlord/admin
+  if (
+    role === "landlord" ||
+    role === "admin" ||
+    pathname === "/app/search" ||
+    pathname === "/app/deposits" ||
+    pathname?.startsWith("/app/contracts/")
+  ) {
+    return null
+  }
 
   const buildHistory = (): ConversationTurn[] =>
     turns.flatMap((turn) => [
