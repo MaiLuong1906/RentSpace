@@ -37,8 +37,15 @@ export const contractApi = {
   sign: (id: number): Promise<ApiResponse<ContractDetail>> =>
     apiClient.post(`/contracts/${id}/sign`).then((r) => r.data),
 
-  downloadPdfUrl: (id: number): string =>
-    `/api/v1/contracts/${id}/pdf`,
+  downloadPdf: async (id: number, filename = "hop-dong.pdf"): Promise<void> => {
+    const res = await apiClient.get(`/contracts/${id}/pdf`, { responseType: "blob" });
+    const url = URL.createObjectURL(new Blob([res.data], { type: "application/pdf" }));
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+  },
 
   getMyContracts: (
     status?: ContractStatus,

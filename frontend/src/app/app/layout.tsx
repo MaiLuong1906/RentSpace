@@ -15,13 +15,15 @@ import {
   Building2,
   Shield,
   Users,
-  Sparkles,
   BarChart3,
   ShieldCheck,
   ChevronDown,
   CreditCard,
   Zap,
   Heart,
+  Compass,
+  LayoutDashboard,
+  UserRound,
 } from "lucide-react";
 import { authApi } from "@/lib/api/auth.api";
 import { useChat } from "@/hooks/useChat";
@@ -29,6 +31,10 @@ import { useChatStore } from "@/store/chatStore";
 import { NotificationDropdown } from "@/components/notification";
 import { WebPushBanner } from "@/components/notification/WebPushBanner";
 import { SemanticSearchBubble } from "@/components/search/SemanticSearchBubble";
+import { RouteGuardModal } from "@/components/shared/RouteGuardModal";
+import { LandlordSidebar } from "@/components/layout/LandlordSidebar";
+import { AdminSidebar } from "@/components/layout/AdminSidebar";
+import { useRouteGuardStore, ROUTE_GUARD_PRESETS, RouteGuardState } from "@/store/routeGuardStore";
 
 const getShortName = (fullName?: string | null, email?: string | null) => {
   if (!fullName) {
@@ -54,12 +60,16 @@ export default function DashboardLayout({
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const [isExploreOpen, setIsExploreOpen] = useState(false);
+  const [isManageOpen, setIsManageOpen] = useState(false);
   const pathname = usePathname();
 
   // Đóng dropdown khi chuyển trang
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsUserMenuOpen(false);
+      setIsExploreOpen(false);
+      setIsManageOpen(false);
     }, 0);
     return () => clearTimeout(timer);
   }, [pathname]);
@@ -71,19 +81,28 @@ export default function DashboardLayout({
       if (!target.closest("#user-dropdown-trigger") && !target.closest("#user-dropdown-menu")) {
         setIsUserMenuOpen(false);
       }
+      if (!target.closest("#explore-dropdown-trigger") && !target.closest("#explore-dropdown-menu")) {
+        setIsExploreOpen(false);
+      }
+      if (!target.closest("#manage-dropdown-trigger") && !target.closest("#manage-dropdown-menu")) {
+        setIsManageOpen(false);
+      }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Tự động đăng xuất nếu Refresh Token hết hạn hoặc không hợp lệ (Silent Session Expiration)
+  const showRouteGuardModal = useRouteGuardStore((state: RouteGuardState) => state.showModal);
+
+  // Khi Refresh Token hết hạn: xóa session và hiển thị modal thông báo thay vì redirect thẳng
   const isSigningOut = useRef(false);
   useEffect(() => {
     if ((session as { error?: string })?.error === "RefreshAccessTokenError" && !isSigningOut.current) {
       isSigningOut.current = true;
-      signOut({ callbackUrl: "/auth/login" });
+      signOut({ redirect: false });
+      showRouteGuardModal(ROUTE_GUARD_PRESETS.SESSION_EXPIRED);
     }
-  }, [session]);
+  }, [session, showRouteGuardModal]);
 
   // Reset active conversation khi rời khỏi các trang chat (messages / chat)
   useEffect(() => {
@@ -107,17 +126,15 @@ export default function DashboardLayout({
   };
 
   const navItems = [
-    { path: "/app", icon: Home, label: "Trang chủ", roles: ["tenant", "landlord", "admin"], exact: true },
     { path: "/app/search", icon: Search, label: "Tìm phòng", roles: ["tenant", "landlord", "admin"], exact: false },
     { path: "/app/saved", icon: Heart, label: "Đã lưu", roles: ["tenant"], exact: false },
-    { path: "/app/roommates", icon: Sparkles, label: "Ở ghép", roles: ["tenant", "landlord", "admin"], exact: false },
-    { path: "/app/community", icon: Users, label: "Cộng đồng", roles: ["tenant", "landlord", "admin"], exact: false },
     { path: "/app/messages", icon: MessageSquare, label: "Tin nhắn", roles: ["tenant", "landlord", "admin"], exact: false },
   ];
 
   const landlordItems = [
+    { path: "/app/landlord/dashboard", icon: LayoutDashboard, label: "Dashboard chủ nhà" },
     { path: "/app/landlord/my-listings", icon: Building2, label: "Quản lý phòng" },
-    { path: "/app/landlord/analytics", icon: BarChart3, label: "Thống kê" },
+    { path: "/app/landlord/analytics", icon: BarChart3, label: "Thống kê doanh thu" },
   ];
 
   const adminItems = [
@@ -167,26 +184,105 @@ export default function DashboardLayout({
                   </Link>
                 ))}
 
-              {userRole === "landlord" && (
-                <>
-                  <div className="h-6 w-px bg-gray-200 mx-1.5" />
-                  {landlordItems.map((item) => (
+              {/* Dropdown Khám phá */}
+              <div className="relative">
+                <button
+                  id="explore-dropdown-trigger"
+                  onClick={() => {
+                    setIsExploreOpen(!isExploreOpen);
+                    setIsManageOpen(false);
+                  }}
+                  className={`flex items-center gap-1.5 px-4 py-2.5 rounded-lg transition-colors text-[16px] font-medium whitespace-nowrap ${
+                    isActive("/app/roommates") || isActive("/app/community")
+                      ? "bg-blue-50 text-blue-600 font-semibold"
+                      : "text-gray-700 hover:bg-gray-50"
+                  }`}
+                >
+                  <Compass className="h-5 w-5 shrink-0" />
+                  <span>Khám phá</span>
+                  <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${isExploreOpen ? "rotate-180" : ""}`} />
+                </button>
+
+                {isExploreOpen && (
+                  <div
+                    id="explore-dropdown-menu"
+                    className="absolute left-0 mt-2.5 w-48 bg-white border border-gray-150 rounded-xl shadow-lg py-1.5 z-50 animate-in fade-in slide-in-from-top-2 duration-150"
+                  >
                     <Link
-                      key={item.path}
-                      href={item.path}
-                      className={`flex items-center gap-2 px-4 py-2.5 rounded-lg transition-colors text-[16px] font-medium whitespace-nowrap ${
-                        isActive(item.path)
-                          ? "bg-blue-50 text-blue-600 font-semibold"
-                          : "text-gray-700 hover:bg-gray-50"
-                      }`}
+                      href="/app/roommates"
+                      onClick={() => setIsExploreOpen(false)}
+                      className="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 text-gray-700 text-sm font-semibold transition-colors"
                     >
-                      <item.icon className="h-5 w-5 shrink-0" />
-                      <span>{item.label}</span>
+                      <UserRound className="h-4.5 w-4.5 text-gray-400" />
+                      <span>Ở ghép</span>
                     </Link>
-                  ))}
-                </>
+                    <Link
+                      href="/app/community"
+                      onClick={() => setIsExploreOpen(false)}
+                      className="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 text-gray-700 text-sm font-semibold transition-colors"
+                    >
+                      <Users className="h-4.5 w-4.5 text-gray-400" />
+                      <span>Cộng đồng</span>
+                    </Link>
+                  </div>
+                )}
+              </div>
+
+              {/* Dropdown Quản lý cho Landlord */}
+              {userRole === "landlord" && (
+                <div className="relative">
+                  <button
+                    id="manage-dropdown-trigger"
+                    onClick={() => {
+                      setIsManageOpen(!isManageOpen);
+                      setIsExploreOpen(false);
+                    }}
+                    className={`flex items-center gap-1.5 px-4 py-2.5 rounded-lg transition-colors text-[16px] font-medium whitespace-nowrap ${
+                      pathname?.startsWith("/app/landlord") || pathname === "/app/deposits"
+                        ? "bg-blue-50 text-blue-600 font-semibold"
+                        : "text-gray-700 hover:bg-gray-50"
+                    }`}
+                  >
+                    <LayoutDashboard className="h-5 w-5 shrink-0" />
+                    <span>Quản lý</span>
+                    <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${isManageOpen ? "rotate-180" : ""}`} />
+                  </button>
+
+                  {isManageOpen && (
+                    <div
+                      id="manage-dropdown-menu"
+                      className="absolute left-0 mt-2.5 w-52 bg-white border border-gray-150 rounded-xl shadow-lg py-1.5 z-50 animate-in fade-in slide-in-from-top-2 duration-150"
+                    >
+                      <Link
+                        href="/app/landlord/dashboard"
+                        onClick={() => setIsManageOpen(false)}
+                        className="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 text-gray-700 text-sm font-semibold transition-colors"
+                      >
+                        <LayoutDashboard className="h-4.5 w-4.5 text-gray-400" />
+                        <span>Dashboard chủ nhà</span>
+                      </Link>
+                      <Link
+                        href="/app/landlord/my-listings"
+                        onClick={() => setIsManageOpen(false)}
+                        className="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 text-gray-700 text-sm font-semibold transition-colors"
+                      >
+                        <Building2 className="h-4.5 w-4.5 text-gray-400" />
+                        <span>Quản lý phòng</span>
+                      </Link>
+                      <Link
+                        href="/app/landlord/analytics"
+                        onClick={() => setIsManageOpen(false)}
+                        className="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 text-gray-700 text-sm font-semibold transition-colors"
+                      >
+                        <BarChart3 className="h-4.5 w-4.5 text-gray-400" />
+                        <span>Thống kê doanh thu</span>
+                      </Link>
+                    </div>
+                  )}
+                </div>
               )}
 
+              {/* Admin Menu */}
               {userRole === "admin" && (
                 <>
                   <div className="h-6 w-px bg-gray-200 mx-1.5" />
@@ -540,12 +636,17 @@ export default function DashboardLayout({
       </header>
 
       {/* Main Content */}
-      <main>
-        {children}
-      </main>
+      <div className="flex-1 flex flex-col md:flex-row">
+        {userRole === "landlord" && (pathname?.startsWith("/app/landlord") || pathname === "/app/deposits") && <LandlordSidebar />}
+        {userRole === "admin" && pathname?.startsWith("/app/admin") && <AdminSidebar />}
+        <main className="flex-1 min-w-0">
+          {children}
+        </main>
+      </div>
 
       <WebPushBanner />
       <SemanticSearchBubble />
+      <RouteGuardModal />
     </div>
   );
 }

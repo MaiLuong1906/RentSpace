@@ -102,14 +102,9 @@ export function PostCard({ post, currentUserId, onPostHidden }: PostCardProps) {
     try {
       const res = await postApi.reportPost(post.id, reportReason.trim());
       if (res.success) {
-        toast.success("Đã gửi báo cáo vi phạm. Cảm ơn phản hồi của bạn.");
+        toast.success("Đã gửi báo cáo đến Admin. Chúng tôi sẽ xem xét trong 24h.");
         setShowReportModal(false);
         setReportReason("");
-        
-        // Ẩn ngay lập tức bài viết khỏi bảng tin của người dùng báo cáo vi phạm
-        if (onPostHidden) {
-          onPostHidden(post.id);
-        }
       }
     } catch (err: unknown) {
       const apiError = err as { response?: { data?: { message?: string } } };
@@ -238,20 +233,22 @@ export function PostCard({ post, currentUserId, onPostHidden }: PostCardProps) {
           <span>Bình luận {commentCount > 0 && `(${commentCount})`}</span>
         </button>
 
-        <button
-          onClick={() => {
-            if (!currentUserId) {
-              toast.error("Bạn cần đăng nhập để báo cáo bài viết.");
-              return;
-            }
-            setShowReportModal(true);
-          }}
-          className="flex items-center gap-1.5 text-sm font-medium text-gray-400 hover:text-amber-600 hover:bg-amber-50 px-3 py-1.5 rounded-lg transition"
-          title="Báo cáo bài viết vi phạm"
-        >
-          <Flag size={16} />
-          <span className="hidden md:inline">Báo cáo</span>
-        </button>
+        {post.author.id !== currentUserId && (
+          <button
+            onClick={() => {
+              if (!currentUserId) {
+                toast.error("Bạn cần đăng nhập để báo cáo bài viết.");
+                return;
+              }
+              setShowReportModal(true);
+            }}
+            className="flex items-center gap-1.5 text-sm font-medium text-gray-400 hover:text-amber-600 hover:bg-amber-50 px-3 py-1.5 rounded-lg transition"
+            title="Báo cáo bài viết vi phạm"
+          >
+            <Flag size={16} />
+            <span className="hidden md:inline">Báo cáo</span>
+          </button>
+        )}
       </div>
 
       {/* Comments Section */}

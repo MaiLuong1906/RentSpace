@@ -326,49 +326,49 @@ export default function DepositsPage() {
                 </div>
 
                 {/* Actions bottom */}
-                <div className="mt-5 flex gap-2.5 border-t border-gray-100 pt-4">
-                  {/* PENDING_PAYMENT action for Tenant */}
-                  {item.status === "PENDING_PAYMENT" && isTenant && (
+                <div className="mt-5 flex flex-col gap-3 border-t border-gray-100 pt-4">
+                  {/* Phase 4: Link đến trang hợp đồng kỹ thuật số mới */}
+                  {(item.status === "PAID" || item.status === "RELEASED") && item.contractId && (
                     <Link
-                      href={`/app/checkout/${item.id}`}
-                      className="w-full flex items-center justify-center gap-2 bg-blue-600 text-white py-2 rounded-xl text-xs font-bold hover:bg-blue-700 transition-colors shadow-sm"
+                      href={`/app/contracts/${item.contractId}`}
+                      className="w-full border border-gray-200 text-gray-700 py-3 rounded-xl text-xs font-bold hover:bg-gray-50 transition-colors flex items-center justify-center gap-1.5"
                     >
-                      <CreditCard className="h-3.5 w-3.5" />
-                      <span>Thanh toán ngay</span>
+                      <FileText className="h-4 w-4" />
+                      <span>Xem hợp đồng kỹ thuật số</span>
                     </Link>
                   )}
 
                   {/* PAID actions for Tenant */}
                   {item.status === "PAID" && isTenant && (
-                    <>
+                    <div className="grid grid-cols-2 gap-3 w-full">
                       <button
                         onClick={() => handleConfirmMoveIn(item.id)}
                         disabled={processingId !== null}
-                        className="flex-1 bg-emerald-600 text-white py-2 rounded-xl text-xs font-bold hover:bg-emerald-700 disabled:bg-gray-300 transition-colors cursor-pointer"
+                        className="w-full bg-emerald-600 text-white py-3 rounded-xl text-xs font-bold hover:bg-emerald-700 disabled:bg-gray-300 transition-colors cursor-pointer"
                       >
                         {processingId === item.id ? (
-                          <Loader2 className="h-3.5 w-3.5 animate-spin mx-auto" />
+                          <Loader2 className="h-4 w-4 animate-spin mx-auto" />
                         ) : (
                           "Xác nhận nhận phòng"
                         )}
                       </button>
                       <button
                         onClick={() => setDisputeId(item.id)}
-                        className="flex-1 border border-rose-350 text-rose-600 py-2 rounded-xl text-xs font-bold hover:bg-rose-50 transition-colors cursor-pointer"
+                        className="w-full border border-rose-300 text-rose-600 py-3 rounded-xl text-xs font-bold hover:bg-rose-50 transition-colors cursor-pointer"
                       >
                         Báo cáo tranh chấp
                       </button>
-                    </>
+                    </div>
                   )}
 
-                  {/* Phase 4: Link đến trang hợp đồng kỹ thuật số mới */}
-                  {(item.status === "PAID" || item.status === "RELEASED") && item.contractId && (
+                  {/* PENDING_PAYMENT action for Tenant */}
+                  {item.status === "PENDING_PAYMENT" && isTenant && (
                     <Link
-                      href={`/app/contracts/${item.contractId}`}
-                      className="w-full border border-gray-200 text-gray-700 py-2 rounded-xl text-xs font-bold hover:bg-gray-50 transition-colors flex items-center justify-center gap-1.5"
+                      href={`/app/checkout/${item.id}`}
+                      className="w-full flex items-center justify-center gap-2 bg-blue-600 text-white py-3 rounded-xl text-xs font-bold hover:bg-blue-700 transition-colors shadow-sm"
                     >
-                      <FileText className="h-3.5 w-3.5" />
-                      <span>Xem hợp đồng kỹ thuật số</span>
+                      <CreditCard className="h-4 w-4" />
+                      <span>Thanh toán ngay</span>
                     </Link>
                   )}
 
@@ -381,9 +381,9 @@ export default function DepositsPage() {
                           ? (item.landlordName || `Chủ trọ #${item.landlordId}`)
                           : (item.tenantName || `Người thuê #${item.tenantId}`)
                       })}
-                      className="w-full flex items-center justify-center gap-1.5 border border-amber-300 bg-amber-50 text-amber-700 py-2 rounded-xl text-xs font-bold hover:bg-amber-100 transition-colors"
+                      className="w-full flex items-center justify-center gap-1.5 border border-amber-300 bg-amber-50 text-amber-700 py-3 rounded-xl text-xs font-bold hover:bg-amber-100 transition-colors"
                     >
-                      <Star className="h-3.5 w-3.5" />
+                      <Star className="h-4 w-4" />
                       <span>Đánh giá</span>
                     </button>
                   )}

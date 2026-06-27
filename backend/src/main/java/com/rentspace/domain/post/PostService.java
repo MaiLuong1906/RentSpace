@@ -211,26 +211,6 @@ public class PostService {
         // Cập nhật lượt report của bài viết
         post.setReportCount(post.getReportCount() + 1);
 
-        // Auto-moderation: Tự động ẩn bài viết nếu nhận được >= 3 reports
-        if (post.getReportCount() >= 3) {
-            post.setIsHidden(true);
-            log.info("Post ID {} has been hidden automatically due to receiving {} reports.", postId, post.getReportCount());
-            
-            // Gửi thông báo cho toàn bộ Admin để phê duyệt / kiểm duyệt lại bài đăng
-            try {
-                List<User> admins = userRepository.findByRole(Role.ADMIN);
-                String title = "Bài viết bị ẩn tự động";
-                String content = String.format("Bài viết ID %d của người dùng %s đã bị tự động ẩn do nhận %d báo cáo vi phạm.",
-                        post.getId(), post.getAuthor().getFullName(), post.getReportCount());
-                for (User admin : admins) {
-                    notificationService.createAndSendNotification(admin, title, content, NotificationType.SYSTEM);
-                }
-                log.info("Sent auto-hidden post notification to {} admins.", admins.size());
-            } catch (Exception e) {
-                log.error("Lỗi khi gửi thông báo bài viết bị ẩn cho các Admin", e);
-            }
-        }
-
         postRepository.save(post);
         log.info("User ID {} reported post ID {}. Reason: {}", reporter.getId(), postId, reason);
     }

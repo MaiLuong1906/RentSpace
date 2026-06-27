@@ -15,6 +15,7 @@ import { contractApi, ContractDetail } from "@/lib/api/contract.api";
 import { ContractStatusBadge } from "@/components/contracts/ContractStatusBadge";
 import { SignConfirmModal } from "@/components/contracts/SignConfirmModal";
 import { ContractAiPanel } from "@/components/ai/ContractAiPanel";
+import { toast } from "sonner";
 
 function SignatureRow({
   label,
@@ -54,6 +55,21 @@ export default function ContractPage({
   const { id } = use(params);
   const { data: session } = useSession();
   const [showSign, setShowSign] = useState(false);
+  const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
+
+  const handleDownloadPdf = async () => {
+    if (!contract) return;
+    setIsDownloadingPdf(true);
+    try {
+      await contractApi.downloadPdf(contract.id, `hop-dong-${contract.id}.pdf`);
+      toast.success("Tải hợp đồng PDF thành công!");
+    } catch (err) {
+      console.error(err);
+      toast.error("Không thể tải hợp đồng PDF. Vui lòng thử lại sau.");
+    } finally {
+      setIsDownloadingPdf(false);
+    }
+  };
 
   const { data, isLoading } = useQuery({
     queryKey: ["contract", Number(id)],
@@ -115,15 +131,18 @@ export default function ContractPage({
                 Ký hợp đồng
               </button>
             )}
-            <a
-              href={contractApi.downloadPdfUrl(contract.id)}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-2 rounded-xl border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+            <button
+              onClick={handleDownloadPdf}
+              disabled={isDownloadingPdf}
+              className="flex items-center gap-2 rounded-xl border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
             >
-              <Download className="h-4 w-4" />
-              Tải PDF
-            </a>
+              {isDownloadingPdf ? (
+                <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
+              ) : (
+                <Download className="h-4 w-4" />
+              )}
+              <span>Tải PDF</span>
+            </button>
           </div>
         </div>
 

@@ -18,11 +18,10 @@ import type { Post } from "@/types/phase2.types";
 import { PostCard, CreatePostModal } from "@/components/community";
 import { toast } from "sonner";
 
-type FilterType = "ALL" | "ROOMMATE" | "TIPS" | "REVIEW" | "QUESTION";
+type FilterType = "ALL" | "TIPS" | "REVIEW" | "QUESTION";
 
 const FILTER_ITEMS = [
   { value: "ALL", label: "Tất cả tin", icon: BookOpen, color: "border-blue-100 text-blue-700 bg-blue-50/50 hover:bg-blue-50" },
-  { value: "ROOMMATE", label: "Tìm ở ghép", icon: Users, color: "border-emerald-100 text-emerald-700 bg-emerald-50/50 hover:bg-emerald-50" },
   { value: "TIPS", label: "Kinh nghiệm", icon: Lightbulb, color: "border-amber-100 text-amber-700 bg-amber-50/50 hover:bg-amber-50" },
   { value: "REVIEW", label: "Đánh giá", icon: TrendingUp, color: "border-blue-100 text-blue-700 bg-blue-50/50 hover:bg-blue-50" },
   { value: "QUESTION", label: "Hỏi đáp", icon: HelpCircle, color: "border-rose-100 text-rose-700 bg-rose-50/50 hover:bg-rose-50" },
