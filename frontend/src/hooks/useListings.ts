@@ -4,11 +4,12 @@ import { useQuery } from "@tanstack/react-query";
 import { listingApi } from "@/lib/api/listing.api";
 import type { ListingSearchParams, NearbySearchParams, GeoSearchRequest } from "@/types/listing.types";
 
-export function useListings(params: ListingSearchParams) {
+export function useListings(params: ListingSearchParams, enabled = true) {
   return useQuery({
     queryKey: ["listings", params],
     queryFn: () => listingApi.getListings(params),
     staleTime: 1000 * 60 * 5, // 5 phút
+    enabled,
   });
 }
 

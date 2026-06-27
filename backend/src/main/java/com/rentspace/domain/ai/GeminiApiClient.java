@@ -71,6 +71,87 @@ public class GeminiApiClient {
         );
     }
 
+    /**
+     * Gọi Groq với JSON mode + lịch sử hội thoại — hỗ trợ multi-turn conversation.
+     * Groq hiểu ngữ cảnh từ các lượt trước (user/assistant history).
+     */
+    public GeminiResult generateJsonContentWithHistory(String model, String systemPrompt,
+            List<Message> history, String userMessage) {
+        var messages = new java.util.ArrayList<Message>(history.size() + 2);
+        messages.add(new Message("system", systemPrompt));
+        messages.addAll(history);
+        messages.add(new Message("user", userMessage));
+
+        var requestBody = new JsonChatRequest(model, messages, 0.1, new ResponseFormat("json_object"));
+
+        ChatResponse response;
+        try {
+            response = restClient.post()
+                    .uri("/chat/completions")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(requestBody)
+                    .retrieve()
+                    .body(ChatResponse.class);
+        } catch (RestClientException e) {
+            throw new BusinessException("Không thể kết nối đến Groq API: " + e.getMessage());
+        }
+
+        if (response == null || response.choices() == null || response.choices().isEmpty()) {
+            throw new BusinessException("Groq API trả về phản hồi không hợp lệ");
+        }
+
+        String text = response.choices().get(0).message().content();
+        Usage usage = response.usage();
+        return new GeminiResult(
+                text,
+                usage != null ? usage.promptTokens() : 0,
+                usage != null ? usage.completionTokens() : 0,
+                usage != null ? usage.totalTokens() : 0
+        );
+    }
+
+    /**
+     * Gọi Groq với JSON mode bật — response đảm bảo là JSON hợp lệ.
+     * Dùng cho structured extraction, không phải chat thông thường.
+     */
+    public GeminiResult generateJsonContent(String model, String systemPrompt, String userMessage) {
+        var requestBody = new JsonChatRequest(
+                model,
+                List.of(
+                        new Message("system", systemPrompt),
+                        new Message("user", userMessage)
+                ),
+                0.1,
+                new ResponseFormat("json_object")
+        );
+
+        ChatResponse response;
+        try {
+            response = restClient.post()
+                    .uri("/chat/completions")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(requestBody)
+                    .retrieve()
+                    .body(ChatResponse.class);
+        } catch (RestClientException e) {
+            throw new BusinessException("Không thể kết nối đến Groq API: " + e.getMessage());
+        }
+
+        if (response == null || response.choices() == null || response.choices().isEmpty()) {
+            throw new BusinessException("Groq API trả về phản hồi không hợp lệ");
+        }
+
+        String text = response.choices().get(0).message().content();
+        Usage usage = response.usage();
+
+        return new GeminiResult(
+                text,
+                usage != null ? usage.promptTokens() : 0,
+                usage != null ? usage.completionTokens() : 0,
+                usage != null ? usage.totalTokens() : 0
+        );
+    }
+
     // ─── Public result record ─────────────────────────────────────────────────
 
     public record GeminiResult(String text, int inputTokens, int outputTokens, int totalTokens) {}
@@ -79,7 +160,16 @@ public class GeminiApiClient {
 
     record ChatRequest(String model, List<Message> messages, double temperature) {}
 
-    record Message(String role, String content) {}
+    record JsonChatRequest(
+            String model,
+            List<Message> messages,
+            double temperature,
+            @JsonProperty("response_format") ResponseFormat responseFormat
+    ) {}
+
+    record ResponseFormat(String type) {}
+
+    public record Message(String role, String content) {}
 
     @JsonIgnoreProperties(ignoreUnknown = true)
     record ChatResponse(List<Choice> choices, Usage usage) {}

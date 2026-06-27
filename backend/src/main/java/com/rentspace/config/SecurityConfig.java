@@ -35,6 +35,8 @@ public class SecurityConfig {
             "/api/v1/deposits/webhook/vnpay", // VNPay IPN callback (Public)
             "/api/v1/listings/*/view",      // Public - ghi nhận lượt xem (cho phép cả ẩn danh)
             "/api/v1/listings/search/geo",  // Public - tìm kiếm địa lý không gian (cho phép cả ẩn danh)
+            "/api/v1/search/semantic",      // Public - semantic search cho phép anonymous
+            "/api/v1/search/assistant",     // Public - AI assistant chat cho phép anonymous
             "/api/v1/subscriptions/plans",  // Public - xem gói cước
             "/api/v1/seo/pages",            // Public - frontend đọc SEO metadata cho ISR pages
             "/api/v1/interactions/track",   // Public - anonymous tracking được phép (JWT optional)

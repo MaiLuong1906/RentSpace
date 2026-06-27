@@ -20,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.rentspace.domain.review.ReviewRepository;
+import com.rentspace.domain.search.ExtractedSearchParams;
 import com.rentspace.domain.subscription.annotation.EnforceSubscriptionLimit;
 import com.rentspace.domain.subscription.UserSubscriptionRepository;
 import com.rentspace.domain.subscription.SubscriptionService;
@@ -55,6 +56,38 @@ public class ListingService {
         Page<ListingResponse> page = listingRepository
                 .search(ListingStatus.ACTIVE, city, district, minPrice, maxPrice, minArea, pageable)
                 .map(listingMapper::toResponse);
+        return enrichPageWithRatingAndPromotion(page);
+    }
+
+    // ===== POST /api/v1/search/semantic =====
+    public Page<ListingResponse> searchSemantic(ExtractedSearchParams params, Pageable pageable) {
+        RoomType roomType = null;
+        if (params.roomType() != null) {
+            try {
+                roomType = RoomType.valueOf(params.roomType());
+            } catch (IllegalArgumentException e) {
+                log.warn("Giá trị roomType không hợp lệ từ AI: {}", params.roomType());
+            }
+        }
+
+        Page<ListingResponse> page = listingRepository
+                .searchSemantic(
+                        ListingStatus.ACTIVE,
+                        params.city(),
+                        params.district(),
+                        params.minPrice(),
+                        params.maxPrice(),
+                        params.minArea(),
+                        roomType,
+                        params.hasWifi(),
+                        params.hasAirConditioner(),
+                        params.hasParking(),
+                        params.hasWashingMachine(),
+                        params.keywords(),
+                        pageable
+                )
+                .map(listingMapper::toResponse);
+
         return enrichPageWithRatingAndPromotion(page);
     }
 
