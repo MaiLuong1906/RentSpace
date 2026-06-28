@@ -18,7 +18,7 @@ TEST_REPORT_PATH = Path(__file__).parent.parent / "TestReport.xlsx"
 # Load .env nếu tồn tại (optional)
 try:
     from dotenv import load_dotenv
-    load_dotenv(Path(__file__).parent / ".env")
+    load_dotenv(Path(__file__).parent / ".env", override=True)
 except ImportError:
     pass
 
