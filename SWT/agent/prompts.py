@@ -236,19 +236,36 @@ Total TCs     : [tổng UTCID]
 Sinh block code JUnit 5 + Mockito tương ứng với tất cả UTCID ở Bảng 2.
 Mỗi UTCID = 1 @Test method. Đặt tên method theo quy tắc: `utcidXX_<mô tả ngắn>`.
 
+QUY TẮC MOCK CHO SPRING BOOT:
+- Nếu lớp cần test (ví dụ: AuthService) có chứa các dependency khai báo bằng `private final ...` (thường được inject qua `@RequiredArgsConstructor`), bạn BẮT BUỘC phải sử dụng `@ExtendWith(MockitoExtension.class)` của Mockito để tự động inject mock dependencies, thay vì gọi constructor trống `new [ClassName]()` dẫn đến lỗi biên dịch.
+- Sử dụng `@Mock` cho tất cả các dependency.
+- Sử dụng `@InjectMocks` cho class cần test để Mockito tự động inject các mock vào qua constructor.
+- Mock đầy đủ các hành vi (`when(...).thenReturn(...)`) trước khi gọi phương thức cần test.
+- Với các class Entity (như User, Room), nếu class dùng `@Builder` (qua Lombok), hãy dùng `.builder()...build()` để tạo thực thể thay vì gọi constructor tùy tiện.
+
 ```java
 import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.junit.jupiter.MockitoExtension;
+import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
 
+@ExtendWith(MockitoExtension.class)
 class [ClassName]Test {
 
-    private [ClassName] [instance]; // khởi tạo object cần test
+    @Mock
+    private [Dependency1] [dependency1]; // ví dụ: UserRepository userRepository
 
-    @BeforeEach
-    void setUp() {
-        [instance] = new [ClassName]();
-        // Mockito: mock dependency nếu có
-    }
+    @Mock
+    private [Dependency2] [dependency2]; // ví dụ: PasswordEncoder passwordEncoder
+
+    @InjectMocks
+    private [ClassName] [instance]; // ví dụ: AuthService authService (Mockito sẽ tự động inject các mock trên vào đây)
 
     // UTCID01 — Normal: input hợp lệ thông thường
     @Test
@@ -256,18 +273,22 @@ class [ClassName]Test {
     void utcid01_[tenMoTaNgan]() {
         // Arrange
         [kieuDuLieu] input = [giaTriInput];
+        // Stub mock behavior nếu có:
+        // when(userRepository.findByEmail(any())).thenReturn(Optional.of(mockUser));
+        
         // Act
         [kieuTraVe] result = [instance].[tenHam](input);
+        
         // Assert
         assertEquals([giaTriMongDoi], result);
     }
 
-    // UTCID04 — Abnormal: input dưới giá trị min
+    // UTCID04 — Abnormal: input dưới giá trị min hoặc gây lỗi
     @Test
     @DisplayName("UTCID04 - [mô tả ngắn]")
     void utcid04_[tenMoTaNgan]() {
         // Arrange
-        [kieuDuLieu] input = [giaTriDuoiMin];
+        [kieuDuLieu] input = [giaTriLoi];
         // Act & Assert
         assertThrows([LoaiException].class, () -> [instance].[tenHam](input));
     }
