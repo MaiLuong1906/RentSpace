@@ -210,7 +210,10 @@ def write_to_test_report(
         if key in MARKDOWN_TO_EXCEL and MARKDOWN_TO_EXCEL[key] is not None:
             header_map[h] = MARKDOWN_TO_EXCEL[key]
 
-    # Cột excel mà chúng ta sẽ điền: A(1)..E(5) = 5 cột chính
+    # Cột excel mà chúng ta sẽ điền: A(1)..F(6) = 6 cột chính
+    prefix = MODULE_PREFIX.get(module, "TC_GEN")
+    start_num = (existing_count if not overwrite else 0) + 1
+
     written = 0
     for row_data in rows:
         # Khởi tạo 14 cột với giá trị trống
@@ -221,6 +224,10 @@ def write_to_test_report(
             excel_col = MARKDOWN_TO_EXCEL.get(key)
             if excel_col is not None:
                 excel_row[excel_col] = val
+
+        # Tự động gán lại Test Case ID tăng dần theo số lượng thực tế trong sheet
+        case_num = start_num + written
+        excel_row[0] = f"{prefix}_{case_num:03d}"
 
         # Ghi vào sheet
         current_row = actual_start + written
