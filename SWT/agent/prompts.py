@@ -236,11 +236,18 @@ Total TCs     : [tổng UTCID]
 Sinh block code JUnit 5 + Mockito tương ứng với tất cả UTCID ở Bảng 2.
 Mỗi UTCID = 1 @Test method. Đặt tên method theo quy tắc: `utcidXX_<mô tả ngắn>`.
 
-QUY TẮC MOCK CHO SPRING BOOT:
-- Nếu lớp cần test (ví dụ: AuthService) có chứa các dependency khai báo bằng `private final ...` (thường được inject qua `@RequiredArgsConstructor`), bạn BẮT BUỘC phải sử dụng `@ExtendWith(MockitoExtension.class)` của Mockito để tự động inject mock dependencies, thay vì gọi constructor trống `new [ClassName]()` dẫn đến lỗi biên dịch.
-- Sử dụng `@Mock` cho tất cả các dependency.
-- Sử dụng `@InjectMocks` cho class cần test để Mockito tự động inject các mock vào qua constructor.
-- Mock đầy đủ các hành vi (`when(...).thenReturn(...)`) trước khi gọi phương thức cần test.
+QUY TẮC MOCK VÀ STUBBING BẮT BUỘC:
+- Với các class Spring Boot Service có các dependency khai báo bằng `private final ...` (được inject qua `@RequiredArgsConstructor`), bạn BẮT BUỘC phải dùng `@ExtendWith(MockitoExtension.class)`, `@Mock`, và `@InjectMocks` để Mockito tự động inject mock dependencies qua constructor, tránh tuyệt đối lỗi gọi constructor trống `new [ClassName]()` gây lỗi biên dịch.
+- BẮT BUỘC MOCK TOÀN BỘ CÁC PHƯƠNG THỨC LIÊN QUAN: Nếu phương thức cần test gọi đến bất kỳ hàm nào của đối tượng Mock, bạn PHẢI stub behavior bằng `when(...).thenReturn(...)` trong phần Arrange.
+  • Ví dụ: nếu gọi `redisTemplate.opsForValue().set(...)`, bạn phải khai báo `@Mock private ValueOperations<String, String> valueOperations;` ở đầu class test, và viết stub: `when(redisTemplate.opsForValue()).thenReturn(valueOperations);`.
+  • Ví dụ: nếu gọi `jwtTokenProvider.generateAccessToken(any())`, bạn phải stub: `when(jwtTokenProvider.generateAccessToken(any())).thenReturn("mockToken");`.
+  Bất kỳ cuộc gọi nào trên đối tượng Mock mà không được Stubbing sẽ trả về null và gây NullPointerException. Đây là lỗi nghiêm trọng cần tránh.
+- BẢO ĐẢM TÍNH ĐÚNG ĐẮN VỀ EXCEPTION:
+  Không được phỏng đoán/bịa ra ngoại lệ (như `IllegalArgumentException` hay `BusinessException`) nếu trong mã nguồn của phương thức được dán vào không có dòng `throw new ...`. Nếu lỗi xảy ra ở DB do thiếu dữ liệu hoặc vi phạm DB, hãy kỳ vọng các ngoại lệ DB thực tế (như `DataIntegrityViolationException.class` hoặc `RuntimeException.class`).
+- TRÁNH TRÙNG LẶP TEST CASE:
+  Đảm bảo mỗi test case (UTCID) có một kịch bản dữ liệu kiểm thử (Input) và tiền điều kiện (Precondition) khác nhau hoàn toàn.
+- ĐẶT TÊN PHƯƠNG THỨC DUY NHẤT:
+  Tên các `@Test` method bắt buộc phải duy nhất và mang tính mô tả cụ thể bằng tiếng Anh (ví dụ: `void utcid01_loginSuccessWithGoogleId()`, `void utcid02_loginSuccessWithEmail()`). KHÔNG ĐƯỢC đặt trùng tên phương thức.
 - Với các class Entity (như User, Room), nếu class dùng `@Builder` (qua Lombok), hãy dùng `.builder()...build()` để tạo thực thể thay vì gọi constructor tùy tiện.
 
 ```java
