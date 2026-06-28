@@ -188,12 +188,6 @@ def write_to_test_report(
         if ws.cell(r, 1).value
     )
 
-    if existing_count > 0 and not overwrite:
-        return False, (
-            f"⚠️ Sheet '{module}' đã có **{existing_count} test case** từ dòng {start_row}. "
-            f"Chọn **Overwrite** để ghi đè hoặc **Append** để tiếp tục từ dòng tiếp theo."
-        )
-
     # Nếu overwrite, xóa dữ liệu cũ từ start_row trở xuống
     if overwrite and existing_count > 0:
         for r in range(start_row, ws.max_row + 1):
