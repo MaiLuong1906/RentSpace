@@ -5,11 +5,12 @@ Sinh test case theo format chuẩn TestReport.xlsx & Report5_UnitTest.xlsx
 """
 
 import os
+import re
 import anthropic
 import streamlit as st
 from pathlib import Path
 from prompts import SYSTEM_TEST_PROMPT, UNIT_TEST_PROMPT
-from excel_writer import parse_markdown_table, write_to_test_report
+from excel_writer import parse_markdown_table, write_to_test_report, write_junit_test
 
 # Đường dẫn file TestReport.xlsx (cùng thư mục cha với thư mục agent/)
 TEST_REPORT_PATH = Path(__file__).parent.parent / "TestReport.xlsx"
@@ -541,7 +542,29 @@ with tab_unit:
                     mime="text/plain",
                     use_container_width=True,
                 )
-
+            # --- Ghi thẳng code JUnit vào codebase ---
+            st.divider()
+            st.markdown("**💻 Xuất thẳng JUnit Test Code vào codebase**")
+            
+            target_class = fn_class.strip() or "AuthService"
+            if st.button(
+                f"📤 Ghi JUnit test cases vào {target_class}Test.java",
+                type="secondary",
+                use_container_width=True,
+                key="btn_export_junit",
+            ):
+                with st.spinner("Đang xuất JUnit test code..."):
+                    md_text = st.session_state["unit_result"]
+                    java_code_match = re.search(r"```java\s*(.*?)\s*```", md_text, re.DOTALL)
+                    if not java_code_match:
+                        st.error("❌ Không tìm thấy block code Java (```java) trong kết quả sinh của AI.")
+                    else:
+                        java_code = java_code_match.group(1).strip()
+                        success, msg = write_junit_test(target_class, java_code)
+                        if success:
+                            st.success(msg)
+                        else:
+                            st.error(msg)
 # ------------------------------------------------------------------
 # Footer
 # ------------------------------------------------------------------

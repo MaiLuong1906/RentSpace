@@ -264,3 +264,95 @@ def write_to_test_report(
         return False, "❌ Không lưu được file — Excel đang mở. Hãy đóng TestReport.xlsx rồi thử lại."
     except Exception as e:
         return False, f"❌ Lỗi khi lưu file: {e}"
+
+
+def write_junit_test(class_name: str, java_code: str) -> tuple[bool, str]:
+    """
+    Tìm file test [ClassName]Test.java trong thư mục backend/src/test/java
+    và ghi đè hoặc chèn thêm các phương thức test vào.
+    """
+    if not java_code.strip():
+        return False, "❌ Không tìm thấy mã test Java để ghi."
+
+    # Tìm file test
+    agent_dir = Path(__file__).parent
+    workspace_root = agent_dir.parent.parent
+    test_root = workspace_root / "backend/src/test/java"
+
+    if not test_root.exists():
+        return False, f"❌ Không tìm thấy thư mục test: {test_root}"
+
+    test_file_path = None
+    for path in test_root.rglob(f"{class_name}Test.java"):
+        test_file_path = path
+        break
+
+    if not test_file_path:
+        # Nếu chưa có file test, tìm class chính trong src/main/java để xác định package
+        main_root = workspace_root / "backend/src/main/java"
+        main_file_path = None
+        for path in main_root.rglob(f"{class_name}.java"):
+            main_file_path = path
+            break
+        
+        if not main_file_path:
+            return False, f"❌ Không tìm thấy class gốc '{class_name}.java' trong backend/src/main/java để xác định package."
+
+        # Đọc package name từ main file
+        package_name = ""
+        try:
+            with open(main_file_path, "r", encoding="utf-8") as f:
+                content = f.read()
+                pkg_match = re.search(r"package\s+([\w\.]+);", content)
+                if pkg_match:
+                    package_name = pkg_match.group(1)
+        except Exception as e:
+            return False, f"❌ Lỗi khi đọc class gốc: {e}"
+
+        if not package_name:
+            return False, f"❌ Không parse được package của class '{class_name}.java'."
+
+        # Tạo đường dẫn thư mục test tương ứng với package
+        rel_pkg_path = package_name.replace(".", "/")
+        target_dir = test_root / rel_pkg_path
+        target_dir.mkdir(parents=True, exist_ok=True)
+        test_file_path = target_dir / f"{class_name}Test.java"
+
+        # Khởi tạo file mới hoàn toàn với code từ AI
+        try:
+            with open(test_file_path, "w", encoding="utf-8") as f:
+                f.write(java_code)
+            return True, f"✅ Đã tạo mới file test và ghi thành công vào: `{test_file_path.relative_to(workspace_root)}`"
+        except Exception as e:
+            return False, f"❌ Không tạo được file test mới: {e}"
+
+    # Nếu file đã tồn tại, ta sẽ chèn các test method vào cuối class
+    try:
+        with open(test_file_path, "r", encoding="utf-8") as f:
+            content = f.read()
+
+        # Parse phần code JUnit từ AI để lấy các method bên trong class [ClassName]Test
+        # AI sinh ra dạng: class [ClassName]Test { ... methods ... }
+        # Tìm cặp ngoặc nhọn đầu tiên và cuối cùng của class
+        class_body_match = re.search(r"class\s+\w+Test\s*(?:extends\s+\w+\s*)?\{([\s\S]*)\}\s*$", java_code)
+        if not class_body_match:
+            class_body = java_code
+        else:
+            class_body = class_body_match.group(1).strip()
+
+        # Tìm dấu ngoặc nhọn cuối cùng của file hiện tại để chèn vào ngay trước nó
+        last_brace_idx = content.rfind("}")
+        if last_brace_idx == -1:
+            return False, f"❌ File test hiện tại `{test_file_path.name}` không có cấu trúc hợp lệ (thiếu dấu đóng ngoặc '}}')."
+
+        # Chèn class_body vào trước dấu đóng ngoặc cuối cùng
+        new_content = content[:last_brace_idx] + "\n\n    // ────────────── ADDED BY AI AGENT ──────────────\n    " + class_body + "\n" + content[last_brace_idx:]
+
+        with open(test_file_path, "w", encoding="utf-8") as f:
+            f.write(new_content)
+
+        return True, f"✅ Đã chèn thêm các test cases thành công vào file test: `{test_file_path.relative_to(workspace_root)}`"
+
+    except Exception as e:
+        return False, f"❌ Gặp lỗi khi cập nhật file test: {e}"
+
