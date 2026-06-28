@@ -1,22 +1,28 @@
-# 🏠 RentSpace — Nền tảng Mạng xã hội & Đặt phòng trọ trực tuyến
+# 🏠 RentSpace — Nền tảng Mạng xã hội & Thuê phòng trọ thông minh
 
-> *Kết nối người thuê và chủ trọ trong một hệ sinh thái an toàn, minh bạch và có tính cộng đồng cao.*
+[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.3.5-brightgreen.svg?style=flat-square&logo=springboot)](https://spring.io/projects/spring-boot)
+[![Next.js](https://img.shields.io/badge/Next.js-16.2.6-black.svg?style=flat-square&logo=nextdotjs)](https://nextjs.org/)
+[![React](https://img.shields.io/badge/React-19.2.4-blue.svg?style=flat-square&logo=react)](https://react.dev/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind%20CSS-v4.0-blueviolet.svg?style=flat-square&logo=tailwindcss)](https://tailwindcss.com/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16--PostGIS-blue.svg?style=flat-square&logo=postgresql)](https://www.postgresql.org/)
+[![Redis](https://img.shields.io/badge/Redis-7.0-red.svg?style=flat-square&logo=redis)](https://redis.io/)
+[![Project Phase](https://img.shields.io/badge/Phase-4%20Completed-orange.svg?style=flat-square)](#-lộ-trình-phát-triển-roadmap)
+
+> **RentSpace** là giải pháp toàn diện kết nối người thuê trọ (Tenant) và chủ nhà (Landlord) tại Việt Nam thông qua một hệ sinh thái an toàn, minh bạch, có tính tương tác cộng đồng cao và tích hợp trí tuệ nhân tạo (AI).
 
 ---
 
 ## 📋 Mục lục
 
-- [Tổng quan dự án](#-tổng-quan-dự-án)
-- [Vấn đề & Giải pháp](#-vấn-đề--giải-pháp)
-- [Phân tích thị trường & Đối thủ cạnh tranh](#-phân-tích-thị-trường--đối-thủ-cạnh-tranh)
-- [Mô hình kinh doanh](#-mô-hình-kinh-doanh)
-- [Phạm vi MVP (Phase 1)](#-phạm-vi-mvp-phase-1)
-- [Product Backlog — Các nhóm tính năng cốt lõi](#-product-backlog--các-nhóm-tính-năng-cốt-lõi)
-- [Kiến trúc hệ thống](#-kiến-trúc-hệ-thống)
-- [Tech Stack & Hạ tầng triển khai](#-tech-stack--hạ-tầng-triển-khai)
-- [Lộ trình phát triển (Roadmap)](#-lộ-trình-phát-triển-roadmap)
-- [Tuân thủ pháp lý](#-tuân-thủ-pháp-lý)
-- [Bắt đầu dự án (Getting Started)](#-bắt-đầu-dự-án-getting-started)
+1. [Tổng quan dự án](#-tổng-quan-dự-án)
+2. [Vấn đề & Giải pháp](#-vấn-đề--giải-pháp)
+3. [Các tính năng nổi bật (All-Phases Done)](#-các-tính-năng-nổi-bật-all-phases-done)
+4. [Kiến trúc hệ thống](#-kiến-trúc-hệ-thống)
+5. [Tech Stack & Tích hợp dịch vụ](#-tech-stack--tích-hợp-dịch-vụ)
+6. [Cấu trúc thư mục Monorepo](#-cấu-trúc-thư-mục-monorepo)
+7. [Bắt đầu dự án (Getting Started)](#-bắt-đầu-dự-án-getting-started)
+8. [Tuân thủ pháp lý & Bảo mật](#-tuân-thủ-pháp-lý--bảo-mật)
+9. [Quy trình phát triển & Đóng góp](#-quy-trình-phát-triển--đóng-góp)
 
 ---
 
@@ -24,378 +30,301 @@
 
 | Thuộc tính | Chi tiết |
 |---|---|
-| **Tên dự án** | RentSpace *(tên gợi ý, có thể thay đổi)* |
-| **Loại sản phẩm** | Web Application (Mobile-first Responsive) |
-| **Thị trường mục tiêu** | Sinh viên, người đi làm độ tuổi 18–30 tại các đô thị lớn |
-| **Địa bàn Pilot** | Đà Nẵng → mở rộng TP.HCM, Hà Nội *(Phase 2)* |
-| **Quy mô phát triển** | Solo Developer (Cá nhân) |
-| **Phương pháp** | Agile Scrum — Sprint 2 tuần/lần |
-
-### Phân khúc người dùng chính (User Personas)
-
-- 👤 **Người thuê (Tenant):** Sinh viên hoặc người đi làm đang tìm phòng trọ/chung cư mini, cần thông tin minh bạch và quy trình đặt cọc an toàn.
-- 🏠 **Chủ trọ (Landlord):** Cá nhân hoặc hộ gia đình quản lý từ 1–20 phòng, cần công cụ đăng tin hiệu quả và quản lý trạng thái phòng dễ dàng.
+| **Tên sản phẩm** | RentSpace |
+| **Loại ứng dụng** | Web Application (Responsive thiết kế tối ưu trên cả Desktop & Mobile) |
+| **Đối tượng người dùng** | Sinh viên, người đi làm độ tuổi 18–35 tại các đô thị lớn (Hà Nội, TP.HCM, Đà Nẵng) |
+| **Quy mô dự án** | Hệ thống Web-First Monorepo hoàn chỉnh với AI Layer, Trust Layer & Hệ thống thanh toán thực |
+| **Quy trình vận hành** | Agile Scrum — Tự động tích hợp & kiểm thử liên tục qua GitHub Actions CI/CD |
 
 ---
 
 ## 💡 Vấn đề & Giải pháp
 
-### Những pain point thực tế trên thị trường hiện nay
+### Pain Points trên thị trường cho thuê trọ hiện nay
+1. **Lừa đảo tiền đặt cọc:** Giao dịch qua các hội nhóm MXH trôi nổi không được bảo vệ.
+2. **Thông tin ảo, ảnh ảo:** Hình ảnh được chỉnh sửa quá đà hoặc sai lệch thực tế, gây mất thời gian xem phòng.
+3. **Thiếu đánh giá khách quan:** Người thuê không có thông tin lịch sử về chủ trọ, khu vực xung quanh và an ninh phòng trọ.
+4. **Hợp đồng mập mờ:** Thỏa thuận miệng hoặc văn bản giấy dễ bị thay đổi đơn phương, thiếu ràng buộc pháp lý số.
 
-| # | Vấn đề | Tác động |
-|---|---|---|
-| 1 | **Lừa đảo đặt cọc** trên các hội nhóm Facebook, Zalo không được kiểm soát | Người thuê mất tiền cọc, mất lòng tin |
-| 2 | **Thông tin ảo, ảnh không thực tế** — phòng trọ được đăng với hình ảnh chỉnh sửa, giá không khớp thực tế | Tốn thời gian đi xem, thất vọng khi đến nơi |
-| 3 | **Thiếu review chân thực** từ người từng ở — không biết chủ trọ có tốt không, khu vực có an ninh không | Rủi ro cao khi đặt cọc lần đầu |
-| 4 | **Không có kênh tìm bạn ở ghép** an toàn và có kiểm chứng danh tính | Phải tìm bạn ghép qua mạng xã hội không bảo đảm |
-| 5 | **Chủ trọ thiếu công cụ quản lý** — theo dõi phòng trống/đã thuê, thu tiền, hợp đồng vẫn làm thủ công | Tốn thời gian, dễ thất thoát |
-
-### Giải pháp — Hệ sinh thái 2-trong-1
+### Giải pháp RentSpace — Hệ sinh thái tích hợp 3-trong-1
 
 ```
-┌─────────────────────────────────────────────────────┐
-│                    RENTSPACE                         │
-│                                                     │
-│   🤝 SOCIAL NETWORK  +  🏠 BOOKING SYSTEM           │
-│                                                     │
-│  • Cộng đồng tìm trọ       • Đăng tin có KYC        │
-│  • Review & Rating          • Đặt cọc bảo vệ        │
-│  • Tìm bạn ở ghép           • Quản lý hợp đồng      │
-│  • Chia sẻ kinh nghiệm      • Thanh toán online      │
-└─────────────────────────────────────────────────────┘
+┌────────────────────────────────────────────────────────────────────────┐
+│                              RENTSPACE                                 │
+│                                                                        │
+│   🤝 SOCIAL NETWORK   +   🏠 BOOKING SYSTEM   +   🤖 AI & TRUST LAYER  │
+│                                                                        │
+│  • Bảng tin & ở ghép       • Đặt cọc giữ phòng       • eKYC xác thực   │
+│  • Đánh giá hai chiều      • Quản lý ví & Payout     • Trợ lý hợp đồng │
+│  • Chat & STOMP realtime   • Gói Seller Pro Sub      • Tìm kiếm bằng AI│
+└────────────────────────────────────────────────────────────────────────┘
 ```
 
 **Điểm khác biệt cốt lõi (Unique Value Proposition):**
-Không chỉ là trang đăng tin — RentSpace xây dựng **danh tính số có kiểm chứng** cho cả người thuê và chủ trọ, tạo ra hệ thống uy tín dựa trên lịch sử giao dịch và đánh giá thực.
+RentSpace không chỉ dừng lại ở việc đăng tin. Hệ thống xây dựng **danh tính số có xác thực eKYC** và tích hợp **Ví giữ tiền cọc an toàn (Escrow Payment)** kết hợp **Hợp đồng điện tử ký số**. Mọi giao dịch và đánh giá đều được ghi nhận trực quan, công bằng cho cả chủ nhà lẫn khách thuê.
 
 ---
 
-## 📊 Phân tích thị trường & Đối thủ cạnh tranh
+## 🚀 Các tính năng nổi bật (All-Phases Done)
 
-### Bức tranh thị trường
+Hệ thống đã hoàn thiện 100% lộ trình phát triển thông qua 4 giai đoạn lớn:
 
-- **Quy mô:** Hơn 5 triệu sinh viên và hàng chục triệu người đi làm tại đô thị đang có nhu cầu thuê trọ
-- **Tăng trưởng:** Nhu cầu thuê phòng ở các đô thị lớn tăng đều hàng năm cùng với tốc độ đô thị hoá
+### 🔑 Phân hệ Xác thực & Định danh (Trust Layer)
+- [x] **Xác thực đa phương thức:** Đăng ký/Đăng nhập bảo mật qua Email, JWT Session nâng cao và Google OAuth (NextAuth v5).
+- [x] **eKYC Tự động (Tích hợp FPT.AI):** Xác minh danh tính người dùng bằng chụp ảnh thẻ CCCD/CMND (OCR trích xuất thông tin tự động) và so khớp khuôn mặt (Face Matching).
+- [x] **Admin Approval Flow:** Bảng điều khiển quản lý yêu cầu xác minh thủ công hoặc tự động và hiển thị tích xanh chuyên nghiệp (`Verified Badge`) trên profile.
 
-### So sánh đối thủ cạnh tranh trực tiếp
+### 🏠 Đăng tin & Tìm kiếm thông minh (Listing & Map)
+- [x] **Quản lý Listing:** Chủ nhà đăng tin kèm thư viện ảnh/video chất lượng cao, định vị tọa độ, tiện nghi và thông tin phòng chi tiết.
+- [x] **Tìm kiếm & Lọc nâng cao:** Tìm kiếm theo bán kính địa lý động, loại phòng trọ, mức giá và tiện ích.
+- [x] **Bản đồ tương tác Mapbox:** Hiển thị vị trí phòng trọ trực quan trực tiếp trên bản đồ Mapbox GL JS phía Client kết hợp truy vấn không gian PostGIS phía Backend.
+- [x] **Smart Price Suggestion Engine:** Hệ thống gợi ý khoảng giá tối ưu khi đăng tin dựa trên dữ liệu so chuẩn (Price Benchmarks) từ các phòng trọ tương đồng cùng khu vực.
 
-| Tiêu chí | Facebook Groups | Phongtro123 | NhaTot (Chotot) | **RentSpace** |
-|---|:---:|:---:|:---:|:---:|
-| Xác thực danh tính (KYC) | ❌ | ❌ | ❌ | ✅ |
-| Đặt cọc bảo vệ online | ❌ | ❌ | ❌ | ✅ |
-| Review từ người đã ở | ❌ | ❌ | Hạn chế | ✅ |
-| Tìm bạn ở ghép | ❌ | ❌ | ❌ | ✅ |
-| Tương tác cộng đồng | ✅ | ❌ | ❌ | ✅ |
-| Quản lý phòng cho chủ trọ | ❌ | Cơ bản | Cơ bản | ✅ |
-| SEO / Tìm kiếm Google | ❌ | ✅ | ✅ | ✅ |
-| Tìm kiếm theo bản đồ | ❌ | Cơ bản | ✅ | ✅ |
+### 💳 Giao dịch điện tử & Doanh thu (Marketplace Core)
+- [x] **Thanh toán đặt cọc MoMo:** Khách thuê chuyển tiền cọc trực tuyến. Tiền được RentSpace đóng vai trò trung gian giữ an toàn (Escrow) và chỉ giải ngân (Release) khi có xác nhận nhận phòng thành công hoặc xử lý khiếu nại (Disputes).
+- [x] **Seller Pro Subscription:** Hệ thống gói đăng ký thành viên nâng cao cho chủ trọ, mở giới hạn số tin đăng, đẩy tin nổi bật (Promoted Listings) và truy cập dashboard phân tích.
+- [x] **Hệ thống Payout:** Chủ trọ liên kết tài khoản ngân hàng chính chủ, theo dõi số dư ví và gửi yêu cầu rút tiền tự động/thủ công từ dashboard.
 
-> **Kết luận:** Không có đối thủ nào hiện tại kết hợp được yếu tố **cộng đồng + xác thực danh tính + bảo vệ giao dịch** trong cùng một nền tảng.
+### 📝 Hợp đồng điện tử & Đánh giá hai chiều
+- [x] **Digital Contracts:** Tự động tạo lập hợp đồng thuê nhà điện tử với các điều khoản mẫu hợp pháp.
+- [x] **E-signature:** Cho phép cả chủ nhà và người thuê thực hiện ký số trực tiếp trên giao diện web.
+- [x] **PDF Generator & Email Alert:** Sau khi hai bên hoàn tất ký, hệ thống tự động xuất file PDF hợp đồng bất biến và gửi đính kèm qua email giao dịch.
+- [x] **Bidirectional Reviews:** Đánh giá 2 chiều sau khi giao dịch hoàn tất. Khách thuê đánh giá chất lượng phòng và chủ trọ; chủ trọ đánh giá độ uy tín của khách thuê.
 
----
+### 💬 Tương tác xã hội & Tìm bạn ở ghép
+- [x] **Chat Realtime STOMP:** Nhắn tin thời gian thực đa phương tiện (văn bản, hình ảnh, liên kết phòng trọ) giữa người thuê và chủ nhà.
+- [x] **Bảng tin Cộng đồng:** Nơi đăng tải các tin tức tìm phòng, nhượng phòng trọ và thảo luận xã hội.
+- [x] **Roommate Matching:** Bộ lọc ghép cặp tìm bạn ở ghép dựa trên các tiêu chí thói quen sinh hoạt, giờ giấc, giới tính và nghề nghiệp.
 
-## 💰 Mô hình kinh doanh
-
-### Các luồng doanh thu (Revenue Streams)
-
-| Giai đoạn | Hình thức | Mô tả |
-|---|---|---|
-| **Phase 1** | Miễn phí hoàn toàn | Tập trung tăng trưởng người dùng, thu thập dữ liệu, xây dựng uy tín |
-| **Phase 2** | Phí đăng tin nổi bật | Chủ trọ trả phí để tin đăng hiển thị ưu tiên (boost listing) |
-| **Phase 2** | Hoa hồng giao dịch | Thu ~1–2% trên mỗi giao dịch đặt cọc thành công qua nền tảng |
-| **Phase 3** | Gói Subscription | Chủ trọ nhiều phòng trả phí tháng để dùng dashboard quản lý nâng cao |
-| **Phase 3** | Dịch vụ xác minh nhanh | Chủ trọ trả phí để được gắn badge "Đã xác minh cao cấp" |
-
----
-
-## 🚀 Phạm vi MVP (Phase 1)
-
-> ⚠️ **Nguyên tắc MVP:** Với quy mô phát triển cá nhân, cần xác định tập tính năng **tối thiểu nhưng đủ dùng** để ra thị trường kiểm chứng sớm nhất có thể. **Không build tất cả mọi thứ ngay từ đầu.**
-
-### ✅ MVP bao gồm (Must Have)
-
-- [ ] Đăng ký / Đăng nhập (Email + Google OAuth)
-- [ ] Xác thực danh tính cơ bản (upload CCCD, admin duyệt thủ công)
-- [ ] Phân quyền: Người thuê / Chủ trọ
-- [ ] Chủ trọ đăng tin phòng trống (ảnh, mô tả, giá, vị trí)
-- [ ] Người thuê tìm kiếm & lọc phòng (theo giá, khu vực, loại phòng)
-- [ ] Xem phòng trên bản đồ (Map view)
-- [ ] Nhắn tin trực tiếp giữa người thuê và chủ trọ
-- [ ] Người thuê đánh giá/review phòng sau khi ở
-- [ ] Hệ thống báo cáo/tố cáo tin đăng vi phạm
-- [ ] Thông báo cơ bản (in-app + email)
-
-### 🔄 Phase 2 — Sau khi có traction (Sau MVP)
-
-- [ ] Đặt cọc online qua cổng thanh toán (VNPay / MoMo)
-- [ ] Quản lý hợp đồng điện tử
-- [ ] Tính năng tìm bạn ở ghép
-- [ ] Bảng tin cộng đồng (Newsfeed)
-- [ ] Dashboard quản lý phòng nâng cao cho chủ trọ
-- [ ] KYC tự động tích hợp API (VNPT eKYC hoặc VNeid)
-
-### 🌟 Phase 3 — Mở rộng
-
-- [ ] App Mobile (React Native)
-- [ ] Hệ thống gợi ý phòng (Recommendation Engine)
-- [ ] Quản lý hóa đơn điện/nước tích hợp
-- [ ] Mở rộng địa bàn TP.HCM, Hà Nội
-
----
-
-## 📦 Product Backlog — Các nhóm tính năng cốt lõi
-
-Hệ thống được chia thành **4 phân hệ (Epic)** chính:
-
----
-
-### Epic 1 — Quản lý Người dùng (User Management)
-
-| User Story | Độ ưu tiên |
-|---|:---:|
-| Người dùng có thể đăng ký bằng email hoặc Google | 🔴 Cao |
-| Người dùng nhận OTP qua email/SMS để xác minh tài khoản | 🔴 Cao |
-| Người dùng upload CCCD để được xác thực danh tính (KYC) | 🔴 Cao |
-| Admin có thể duyệt/từ chối hồ sơ KYC trên Admin Panel | 🔴 Cao |
-| Người dùng có thể chọn vai trò: Người thuê hoặc Chủ trọ | 🔴 Cao |
-| Người dùng quản lý hồ sơ cá nhân (avatar, thông tin, lịch sử) | 🟡 Trung bình |
-| Người dùng xem lịch sử giao dịch, review đã viết | 🟡 Trung bình |
-
----
-
-### Epic 2 — Hệ thống Đăng tin & Tìm kiếm (Listing & Search)
-
-| User Story | Độ ưu tiên |
-|---|:---:|
-| Chủ trọ đăng tin phòng với ảnh, video, mô tả, giá, tiện nghi | 🔴 Cao |
-| Hệ thống tự động duyệt tin mới trước khi hiển thị (hoặc admin duyệt) | 🔴 Cao |
-| Người thuê tìm kiếm phòng theo bộ lọc: khu vực, giá, loại phòng, tiện nghi | 🔴 Cao |
-| Người thuê xem kết quả tìm kiếm trên bản đồ tương tác (Map View) | 🔴 Cao |
-| Người thuê lưu danh sách phòng yêu thích | 🟡 Trung bình |
-| Người thuê nhận thông báo khi có phòng mới phù hợp tiêu chí đã lưu | 🟡 Trung bình |
-| Chủ trọ cập nhật trạng thái phòng: Còn trống / Đã cho thuê | 🔴 Cao |
-
----
-
-### Epic 3 — Tương tác Cộng đồng (Social & Community)
-
-| User Story | Độ ưu tiên |
-|---|:---:|
-| Người thuê viết review & chấm sao cho phòng đã ở | 🔴 Cao |
-| Người dùng nhắn tin trực tiếp (chat realtime) với nhau | 🔴 Cao |
-| Người dùng báo cáo tin đăng hoặc tài khoản vi phạm | 🔴 Cao |
-| Bảng tin cộng đồng: đăng bài tìm trọ, nhượng trọ, hỏi đáp | 🟡 Trung bình *(Phase 2)* |
-| Tính năng tìm bạn ở ghép (lọc theo giới tính, nghề nghiệp, lịch sinh hoạt) | 🟡 Trung bình *(Phase 2)* |
-| Người dùng bình luận và tương tác trên bảng tin | 🟢 Thấp *(Phase 2)* |
-
----
-
-### Epic 4 — Giao dịch & Vận hành (Booking & Operations)
-
-| User Story | Độ ưu tiên |
-|---|:---:|
-| Người thuê gửi yêu cầu đặt lịch xem phòng | 🔴 Cao |
-| Người thuê thanh toán đặt cọc online qua VNPay/MoMo *(Phase 2)* | 🟡 Trung bình |
-| Tiền cọc được giữ bởi nền tảng, chỉ giải ngân khi hai bên xác nhận *(Phase 2)* | 🟡 Trung bình |
-| Hệ thống tạo hợp đồng điện tử mẫu *(Phase 2)* | 🟢 Thấp |
-| Chủ trọ quản lý danh sách phòng & trạng thái trên Dashboard | 🔴 Cao |
-| Admin Panel: duyệt KYC, xử lý báo cáo, quản lý tin đăng | 🔴 Cao |
+### 🤖 AI Assistant Layer
+- [x] **Semantic Search Agent:** Người dùng có thể tìm phòng trọ bằng câu hỏi tự nhiên tiếng Việt (Ví dụ: *"Tìm phòng trọ cho nữ ở gần Đại học Bách Khoa dưới 3 triệu"*). Hệ thống sử dụng LLM để hiểu ý định và truy vấn dữ liệu chính xác.
+- [x] **Contract AI Assistant:** Hỗ trợ người dùng phân tích, tóm tắt điều khoản hợp đồng và giải đáp các thắc mắc về mặt pháp lý/rủi ro trong hợp đồng thuê nhà.
 
 ---
 
 ## 🏗️ Kiến trúc hệ thống
 
+Hệ thống được thiết kế theo mô hình Monorepo tách biệt Frontend và Backend, giao tiếp thông qua RESTful APIs và WebSockets bảo mật cao:
+
 ```
-                          ┌─────────────────┐
-                          │   Cloudflare    │
-                          │ (DNS, SSL, DDoS)│
-                          └────────┬────────┘
-                                   │
-                          ┌────────▼────────┐
-                          │      NGINX      │
-                          │ (Reverse Proxy) │
-                          └──┬─────────────┘
-                             │
-              ┌──────────────┼──────────────┐
-              │              │              │
-    ┌─────────▼──┐  ┌────────▼───┐  ┌──────▼──────┐
-    │  Next.js   │  │ Spring Boot│  │   Static    │
-    │ (Frontend) │  │  (API)     │  │  (NGINX)    │
-    │  Port 3000 │  │  Port 8080 │  └─────────────┘
-    └────────────┘  └──────┬─────┘
-                           │
-           ┌───────────────┼───────────────┐
-           │               │               │
-    ┌──────▼─────┐  ┌──────▼─────┐  ┌─────▼──────┐
-    │ PostgreSQL │  │   Redis    │  │  Amazon S3 │
-    │ + PostGIS  │  │  (Cache)   │  │  (Storage) │
-    └────────────┘  └────────────┘  └────────────┘
+                            ┌───────────────────┐
+                            │    Cloudflare     │
+                            │ (DNS, SSL, DDoS)  │
+                            └─────────┬─────────┘
+                                      │
+                            ┌─────────▼─────────┐
+                            │       NGINX       │
+                            │  (Reverse Proxy)  │
+                            └────┬──────────┬───┘
+                                 │          │
+                 ┌───────────────┘          └───────────────┐
+                 │ (Port 3000)                              │ (Port 8080)
+        ┌────────▼────────┐                        ┌────────▼────────┐
+        │     Next.js     │                        │   Spring Boot   │
+        │   (Frontend)    │                        │  (Backend API)  │
+        └─────────────────┘                        └────────┬────────┘
+                                                            │
+                                            ┌───────────────┼───────────────┐
+                                            │               │               │
+                                     ┌──────▼──────┐ ┌──────▼──────┐ ┌──────▼──────┐
+                                     │ PostgreSQL  │ │    Redis    │ │  Amazon S3  │
+                                     │  + PostGIS  │ │   (Cache)   │ │  (Storage)  │
+                                     └─────────────┘ └─────────────┘ └─────────────┘
 ```
+
+- **Backend Architecture:** Theo chuẩn Clean Architecture / Layered Architecture (`Controller` -> `Service` -> `Repository` -> `Entity`).
+- **Database Migrations:** Quản lý thay đổi schema chặt chẽ thông qua Flyway (tổng cộng 39 migrations từ thiết lập ban đầu đến tối ưu hóa thống kê phân tích nâng cao).
 
 ---
 
-## 🛠️ Tech Stack & Hạ tầng triển khai
+## 🛠️ Tech Stack & Tích hợp dịch vụ
 
-### Công nghệ Cốt lõi (Core Stack)
+### Backend (Java Spring Boot Stack)
+- **Runtime:** Java 21 (LTS).
+- **Framework:** Spring Boot 3.3.5.
+- **Security:** Spring Security + JJWT 0.12.5 (xác thực không trạng thái stateless JWT).
+- **ORM:** Spring Data JPA + Hibernate Spatial (xử lý dữ liệu GIS tọa độ địa lý).
+- **Database:** PostgreSQL 16 + PostGIS extension.
+- **Caching:** Redis 7 (Quản lý cache, rate limit và JWT blacklist).
+- **WebSocket:** Spring WebSockets + STOMP Protocol.
+- **File Storage:** AWS S3 SDK v2 (Hỗ trợ lưu trữ file tại local trong môi trường dev và AWS S3 trên production).
+- **Migration:** Flyway.
+- **API Docs:** SpringDoc OpenAPI v2 (Swagger UI).
+- **Mapping:** MapStruct 1.5.5.
 
-| Layer | Công nghệ | Lý do lựa chọn |
-|---|---|---|
-| **Frontend** | React + Next.js + TypeScript | SSR tối ưu SEO, TypeScript bắt lỗi chặt chẽ, trải nghiệm mượt mà |
-| **Backend** | Java Spring Boot | Kiến trúc vững chắc, Spring Security cho bảo mật cao, xử lý toàn vẹn dữ liệu giao dịch |
-| **Database** | PostgreSQL + PostGIS | Quan hệ phức tạp + query tìm kiếm phòng theo bán kính địa lý |
-| **Cache / Session** | Redis | Cache newsfeed, quản lý JWT session, rate limiting chống spam |
-| **Realtime** | WebSocket (Spring WebSocket / STOMP) | Tính năng chat realtime giữa người dùng |
-| **Map SDK** | Mapbox GL JS *(hoặc Leaflet.js + OpenStreetMap)* | Hiển thị bản đồ phòng trọ phía Frontend |
+### Frontend (Next.js App Router Stack)
+- **Framework:** Next.js 16.2.6 (App Router) với React 19.2.4.
+- **Authentication:** NextAuth.js v5 (beta) tích hợp Google Provider.
+- **Styling:** TailwindCSS v4.0.
+- **Component UI:** Shadcn UI (Radix UI) kết hợp Ant Design v6.
+- **Animation:** Framer Motion v12.
+- **State Management:** TanStack React Query v5 (đồng bộ dữ liệu server) & Zustand v5 (quản lý state client).
+- **Map Library:** Mapbox GL + React Map GL v3.
+- **Charts:** Recharts v3 (vẽ biểu đồ thống kê doanh thu chủ trọ và tương tác).
+- **Form:** React Hook Form + Zod validator.
 
-### Tích hợp Dịch vụ Bên thứ ba (Third-party Services)
-
-| Mục đích | Dịch vụ | Ghi chú |
-|---|---|---|
-| **Thanh toán** | VNPay / MoMo / ZaloPay | Ưu tiên VNPay — phổ biến nhất tại VN |
-| **KYC tự động** | VNPT eKYC hoặc VNeid API | Phase 2 — Phase 1 duyệt thủ công |
-| **Email** | Resend hoặc SendGrid | OTP, thông báo giao dịch |
-| **SMS / OTP** | VIETGUYS hoặc eSMS | Rẻ hơn Twilio cho thị trường VN |
-| **Lưu trữ tệp** | Amazon S3 *(hoặc Cloudinary)* | Ảnh phòng, hợp đồng, CCCD |
-| **Error Tracking** | Sentry *(Free tier)* | Theo dõi lỗi production |
-| **Analytics** | Google Analytics 4 + Hotjar | Hành vi người dùng |
-
-### Hạ tầng Vận hành (DevOps & Infrastructure)
-
-| Thành phần | Công nghệ | Vai trò |
-|---|---|---|
-| **Containerization** | Docker + Docker Compose | Đóng gói môi trường đồng nhất, dễ deploy |
-| **Web Server** | NGINX | Reverse proxy, load balancing, phục vụ static files |
-| **CI/CD** | GitHub Actions | Tự động test, build, deploy sau mỗi Sprint |
-| **Bảo mật & CDN** | Cloudflare | DNS, SSL miễn phí, chống DDoS |
-| **Cloud Server** | VPS Ubuntu — DigitalOcean / AWS EC2 | Tự quản lý Docker, tối ưu chi phí giai đoạn đầu |
-| **Monitoring** | Sentry + Uptime Robot | Theo dõi lỗi và uptime server |
+### Dịch vụ bên thứ ba (Third-party integrations)
+- **Thanh toán:** Ví điện tử MoMo Sandbox API.
+- **KYC xác thực:** FPT.AI OCR Reader & Face Matching API.
+- **Email:** Resend API / SMTP Spring Mail.
+- **AI Engine:** OpenAI API (GPT-4o/GPT-4o-mini) phục vụ Trợ lý Hợp đồng AI và Tìm kiếm ngữ nghĩa.
 
 ---
 
-## 🗺️ Lộ trình phát triển (Roadmap)
+## 📁 Cấu trúc thư mục Monorepo
 
 ```
-Phase 1 — MVP (Tháng 1–3)          Phase 2 — Growth (Tháng 4–6)
-─────────────────────────           ──────────────────────────────
-✅ User Auth + KYC cơ bản           💳 Thanh toán đặt cọc online
-✅ Đăng tin & Tìm kiếm phòng        📄 Hợp đồng điện tử
-✅ Bản đồ tìm phòng                 👥 Tìm bạn ở ghép
-✅ Chat realtime                    📰 Bảng tin cộng đồng
-✅ Review & Rating                  🤖 KYC tự động (API)
-✅ Admin Panel cơ bản               📊 Dashboard nâng cao
-✅ Report/Flag hệ thống             💰 Bật monetization
-
-Phase 3 — Scale (Tháng 7+)
-───────────────────────────
-📱 Mobile App (React Native)
-🧠 Recommendation Engine
-🌆 Mở rộng TP.HCM & Hà Nội
-📈 Gói Subscription chủ trọ
+RentSpace/
+├── backend/                       # Dự án Java Spring Boot
+│   ├── src/main/java/com/rentspace/
+│   │   ├── config/                # Cấu hình bảo mật, Swagger, WebSocket, AWS
+│   │   ├── controller/            # Lớp REST Controllers tiếp nhận HTTP requests
+│   │   ├── domain/                # Các module nghiệp vụ chính (kyc, listing, payment...)
+│   │   ├── dto/                   # Data Transfer Objects (Request/Response)
+│   │   ├── entity/                # Lớp thực thể ánh xạ JPA database
+│   │   ├── mapper/                # MapStruct mappers chuyển đổi DTO <-> Entity
+│   │   └── security/              # JWT Filters, Custom UserDetails
+│   ├── src/main/resources/
+│   │   ├── db/migration/          # Tập lệnh Flyway SQL migrations (V1 -> V39)
+│   │   └── application.yml        # Cấu hình thuộc tính Spring Boot
+│   └── pom.xml                    # Cấu hình dependency Maven
+│
+├── frontend/                      # Dự án Next.js App Router
+│   ├── src/
+│   │   ├── app/                   # Định tuyến App Router (App Pages & Layouts)
+│   │   │   ├── (auth)/            # Nhóm định tuyến Xác thực
+│   │   │   ├── app/               # Dashboard người dùng, chủ trọ & Admin
+│   │   │   └── api/auth/          # Endpoint NextAuth
+│   │   ├── components/            # Thư viện component tái sử dụng (ui & shared)
+│   │   ├── hooks/                 # Custom React hooks
+│   │   ├── lib/                   # Client API Axios, utils định dạng
+│   │   ├── stores/                # Các state store của Zustand
+│   │   └── types/                 # Định nghĩa kiểu TypeScript
+│   └── package.json               # Cấu hình dependency Node.js
+│
+├── nginx/                         # Cấu hình Nginx reverse proxy
+├── docker-compose.yml             # Khởi chạy môi trường Docker Local (DB, Redis)
+├── docker-compose.prod.yml        # Khởi chạy môi trường Docker Production đầy đủ
+├── sample_data.sql                # Dữ liệu mẫu (listings, users, reviews) để phát triển nhanh
+└── GEMINI.md                      # Tài liệu hướng dẫn dành riêng cho AI Agent
 ```
-
----
-
-## ⚖️ Tuân thủ pháp lý
-
-> ⚠️ Đây là phần quan trọng thường bị bỏ qua trong các dự án cá nhân. Cần tìm hiểu kỹ trước khi thu thập dữ liệu người dùng thực.
-
-| Lĩnh vực | Quy định liên quan | Hành động cần thực hiện |
-|---|---|---|
-| **Bảo vệ dữ liệu cá nhân** | Nghị định 13/2023/NĐ-CP | Có Chính sách bảo mật rõ ràng; xin consent khi thu thập CCCD |
-| **Thanh toán trung gian** | Quy định NHNN về ví điện tử | Tích hợp qua cổng được cấp phép (VNPay, MoMo) thay vì tự xây |
-| **Hợp đồng điện tử** | Luật Giao dịch điện tử 2023 | Hợp đồng cần đủ điều kiện pháp lý, xem xét chữ ký điện tử |
-| **Lưu trữ CCCD/thông tin định danh** | Luật An ninh mạng 2018 | Mã hoá dữ liệu nhạy cảm, giới hạn quyền truy cập nội bộ |
-| **Trách nhiệm nền tảng** | Nghị định 72/2013/NĐ-CP | Có quy trình xử lý nội dung vi phạm trong vòng 24 giờ |
 
 ---
 
 ## 🏁 Bắt đầu dự án (Getting Started)
 
-### Yêu cầu môi trường
+### Yêu cầu môi trường tối thiểu
+- **Java Development Kit (JDK):** Version 21.
+- **Node.js:** Version 20.x (LTS) trở lên.
+- **Docker & Docker Compose:** Đã được cài đặt và đang chạy.
 
+---
+
+### Bước 1: Clone Repository & Cấu hình môi trường
+1. Clone dự án về máy:
+   ```bash
+   git clone https://github.com/MaiLuong1906/RentSpace.git
+   cd RentSpace
+   ```
+2. Tạo file `.env` từ file mẫu ở thư mục gốc:
+   ```bash
+   cp .env.example .env
+   ```
+3. Mở file `.env` vừa tạo và điền đầy đủ các khóa API bảo mật (Database credentials, JWT secret, OpenAI key, FPT.AI credentials, Mapbox token, Client ID Google OAuth, v.v.).
+
+---
+
+### Bước 2: Khởi chạy cơ sở dữ liệu bổ trợ (Docker compose)
+Dự án sử dụng cơ sở dữ liệu PostgreSQL (tích hợp PostGIS) và Redis chạy trên container để đảm bảo môi trường đồng nhất.
 ```bash
-# Kiểm tra các công cụ cần thiết
-docker --version       # >= 24.x
-docker compose version # >= 2.x
-node --version         # >= 20.x (LTS)
-java --version         # >= 17 (LTS)
+# Khởi chạy Postgres & Redis dưới dạng daemon (background)
+docker compose up -d postgres redis
 ```
+*Lưu ý: PostgreSQL sẽ được ánh xạ qua cổng host **5433** để tránh xung đột với dịch vụ Postgres cục bộ của bạn.*
 
-### Khởi chạy môi trường phát triển
+---
 
-```bash
-# 1. Clone repository
-git clone https://github.com/MaiLuong1906/RentSpace.git
-cd RentSpace
+### Bước 3: Khởi chạy Backend (Spring Boot)
+1. Di chuyển vào thư mục backend:
+   ```bash
+   cd backend
+   ```
+2. Build dự án và khởi chạy ứng dụng Spring Boot thông qua Maven wrapper:
+   ```bash
+   # Dành cho Windows (PowerShell/CMD)
+   .\mvnw spring-boot:run
+   
+   # Dành cho Linux/macOS
+   ./mvnw spring-boot:run
+   ```
+3. Sau khi chạy thành công, API sẽ hoạt động tại: `http://localhost:8080`
+4. Bạn có thể truy cập Swagger UI để xem tài liệu API tại: `http://localhost:8080/swagger-ui/index.html`
 
-# 2. Sao chép file cấu hình môi trường
-cp .env.example .env
-# → Điền các giá trị vào file .env
+---
 
-# 3. Khởi động toàn bộ hệ thống bằng Docker Compose
-docker compose up -d
+### Bước 4: Khởi chạy Frontend (Next.js)
+1. Mở một terminal mới và di chuyển vào thư mục frontend:
+   ```bash
+   cd frontend
+   ```
+2. Cài đặt các gói phụ thuộc:
+   ```bash
+   npm install
+   ```
+3. Khởi chạy máy chủ phát triển (Development server):
+   ```bash
+   npm run dev
+   ```
+4. Truy cập giao diện người dùng tại địa chỉ trình duyệt: `http://localhost:3000`
 
-# 4. Kiểm tra trạng thái các container
-docker compose ps
-```
+---
 
-### Dịch vụ sau khi khởi chạy
-
-| Dịch vụ | URL | Ghi chú |
+### 🔍 Địa chỉ các dịch vụ sau khi chạy local
+| Dịch vụ | URL | Thông tin truy cập |
 |---|---|---|
-| Frontend (Next.js) | http://localhost:3000 | |
-| Backend API (Spring Boot) | http://localhost:8080 | |
-| API Docs (Swagger UI) | http://localhost:8080/swagger-ui | |
-| PostgreSQL | localhost:5432 | |
-| Redis | localhost:6379 | |
-| NGINX (Production proxy) | http://localhost:80 | |
+| **Frontend Web App** | [http://localhost:3000](http://localhost:3000) | Trải nghiệm giao diện người dùng |
+| **Backend REST APIs** | [http://localhost:8080](http://localhost:8080) | Cổng API cơ sở |
+| **API Docs (Swagger UI)** | [http://localhost:8080/swagger-ui/index.html](http://localhost:8080/swagger-ui/index.html) | Kiểm thử API trực tiếp |
+| **PostgreSQL Database** | `localhost:5433` | Database: `rentspace` |
+| **Redis Server** | `localhost:6379` | Cache & Rate Limiting |
 
 ---
 
-## 📁 Cấu trúc thư mục dự án
+## ⚖️ Tuân thủ pháp lý & Bảo mật
 
-```
-rentspace/
-├── frontend/               # Next.js + TypeScript
-│   ├── src/
-│   │   ├── app/            # Next.js App Router
-│   │   ├── components/     # Reusable UI components
-│   │   ├── hooks/          # Custom React hooks
-│   │   ├── lib/            # Utilities, API client
-│   │   └── types/          # TypeScript interfaces
-│   └── Dockerfile
-│
-├── backend/                # Java Spring Boot
-│   ├── src/main/java/com/rentspace/
-│   │   ├── config/         # Security, Swagger, WebSocket configs
-│   │   ├── domain/         # Domain-driven modules (user, listing...)
-│   │   ├── infrastructure/ # AWS S3, Email, JWT Token
-│   │   └── common/         # Global exceptions, responses
-│   └── Dockerfile
-│
-├── nginx/
-│   └── nginx.conf          # Reverse proxy config
-│
-├── docker-compose.yml      # Môi trường dev
-├── docker-compose.prod.yml # Môi trường production
-├── .github/
-│   └── workflows/
-│       └── ci-cd.yml       # GitHub Actions pipeline
-└── README.md
-```
+Ứng dụng RentSpace được thiết kế nghiêm túc tuân thủ các quy định hiện hành tại Việt Nam:
+1. **Nghị định 13/2023/NĐ-CP về Bảo vệ dữ liệu cá nhân (GDPR Việt Nam):**
+   - Mọi thông tin CCCD tải lên để eKYC đều được mã hóa lưu trữ an toàn hoặc chuyển tiếp trực tiếp đến cổng đối tác FPT.AI, không lưu trữ thông tin ID thô chưa xử lý.
+   - Người dùng có quyền yêu cầu xóa bỏ hoặc điều chỉnh thông tin cá nhân bất kỳ lúc nào.
+2. **Nghị định 72/2013/NĐ-CP về Quản lý dịch vụ Internet & thông tin trên mạng:**
+   - Hệ thống trang bị tính năng Báo cáo tin đăng vi phạm (Report/Flag). Tin đăng nhận quá 3 lượt báo cáo sẽ tự động bị ẩn khỏi trang tìm kiếm công khai và chuyển đến hàng đợi xử lý của quản trị viên (Admin queue).
+3. **An toàn thanh toán:**
+   - Giao dịch đặt cọc được giữ an toàn trên cổng trung gian thanh toán liên kết thay vì tự giữ tiền thủ công trái phép.
 
 ---
 
-## 🤝 Đóng góp (Contributing)
+## 🤝 Quy trình phát triển & Đóng góp
 
-Dự án hiện đang trong giai đoạn phát triển cá nhân. Mọi góp ý, issue hoặc pull request đều được hoan nghênh.
+Để đảm bảo chất lượng code cao nhất trên nhánh chính `main`, dự án áp dụng quy tắc kiểm thử nghiêm ngặt trước khi push:
+
+### ⚠️ Quy tắc kiểm tra bắt buộc (Pre-push Validation)
+Trước khi đẩy bất kỳ mã nguồn mới nào lên GitHub, bạn **phải** chạy thành công các lệnh kiểm thử cục bộ:
+1. **Backend validation (Kiểm tra biên dịch & Unit tests):**
+   ```bash
+   cd backend && ./mvnw clean compile test-compile
+   ```
+2. **Frontend validation (Kiểm tra ESLint & Lỗi TypeScript):**
+   ```bash
+   cd frontend && npm run lint
+   ```
+
+### 📝 Quy ước Commit Message
+Mọi commit phải tuân thủ chặt chẽ định dạng **Conventional Commits**:
+- `feat(scope): ...` khi thêm tính năng mới.
+- `fix(scope): ...` khi sửa lỗi.
+- `docs(scope): ...` khi cập nhật tài liệu hoặc README.
+- `chore(scope): ...` khi nâng cấp dependency hoặc tác vụ dọn dẹp cấu hình.
 
 ---
 
-## 📄 Giấy phép
-
-Dự án này hiện chưa có giấy phép mã nguồn mở. Mọi quyền được bảo lưu.
-
----
-
-*Cập nhật lần cuối: 2025 — Tài liệu này sẽ được cập nhật liên tục theo từng Sprint.*
+*Cập nhật lần cuối: Tháng 6/2026 — Tài liệu được đồng bộ hóa với hiện trạng thực tế của mã nguồn sau khi hoàn thành Phase 4.*

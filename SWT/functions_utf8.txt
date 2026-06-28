@@ -1,0 +1,40 @@
+--- All Functions in UnitTest.xlsx ---
+Row 11: No=1, Req=Login via Google, Class=AuthController, Fn==E11 & "_" & B11, Code=VTFP-01, Sheet=VTFP-01
+Row 12: No=2, Req=Login with Email/Password, Class=AuthController, Fn==E12 & "_" & B12, Code=VTFP-02, Sheet=VTFP-02
+Row 13: No=3, Req=Forgot Password, Class=AuthController, Fn==E13 & "_" & B13, Code=VTFP-03, Sheet=VTFP-03
+Row 14: No=4, Req=Logout, Class=AuthController, Fn==E14 & "_" & B14, Code=VTFP-04, Sheet=VTFP-04
+Row 15: No=5, Req=Sign Up, Class=UsersController, Fn==E15 & "_" & B15, Code=VTFP-05, Sheet=VTFP-05
+Row 16: No=6, Req=View Profile, Class=UsersController, Fn==E16 & "_" & B16, Code=VTFP-06, Sheet=VTFP-06
+Row 17: No=7, Req=Update Profile, Class=UsersController, Fn==E17 & "_" & B17, Code=VTFP-07, Sheet=VTFP-07
+Row 18: No=8, Req=Change Password, Class=UsersController, Fn==E18 & "_" & B18, Code=VTFP-08, Sheet=VTFP-08
+Row 19: No=9, Req=Search Room, Class=RoomController, Fn==E19 & "_" & B19, Code=VTFP-09, Sheet=VTFP-09
+Row 20: No=10, Req=View Room List, Class=RoomController, Fn==E20 & "_" & B20, Code=VTFP-10, Sheet=VTFP-10
+Row 21: No=11, Req=View Room Details, Class=RoomController, Fn==E21 & "_" & B21, Code=VTFP-11, Sheet=VTFP-11
+Row 22: No=12, Req=Seek AI Rental Advice, Class=RoomController, Fn==E22 & "_" & B22, Code=VTFP-12, Sheet=VTFP-12
+Row 23: No=13, Req=Schedule Room Viewing, Class=BookingController, Fn==E23 & "_" & B23, Code=VTFP-13, Sheet=VTFP-13
+Row 24: No=14, Req=Request Room Rental, Class=BookingController, Fn==E24 & "_" & B24, Code=VTFP-14, Sheet=VTFP-14
+Row 25: No=15, Req=Pay Online Deposit, Class=PaymentController, Fn==E25 & "_" & B25, Code=VTFP-15, Sheet=VTFP-15
+Row 26: No=16, Req=View Deposit History, Class=PaymentController, Fn==E26 & "_" & B26, Code=VTFP-16, Sheet=VTFP-16
+Row 27: No=17, Req=Sign Contract, Class=ContractController, Fn==E27 & "_" & B27, Code=VTFP-17, Sheet=VTFP-17
+Row 28: No=18, Req=Renew Contract, Class=ContractController, Fn==E28 & "_" & B28, Code=VTFP-18, Sheet=VTFP-18
+Row 29: No=19, Req=Cancel Contract, Class=ContractController, Fn==E29 & "_" & B29, Code=VTFP-19, Sheet=VTFP-19
+Row 30: No=20, Req=Submit Complaint, Class=SupportController, Fn==E30 & "_" & B30, Code=VTFP-20, Sheet=VTFP-20
+Row 31: No=21, Req=Chat with AI Assistant, Class=SupportController, Fn==E31 & "_" & B31, Code=VTFP-21, Sheet=VTFP-21
+Row 32: No=22, Req=Process Payment, Class=PaymentController, Fn==E32 & "_" & B32, Code=VTFP-22, Sheet=VTFP-22
+Row 33: No=23, Req=Refund Payment, Class=PaymentController, Fn==E33 & "_" & B33, Code=VTFP-23, Sheet=VTFP-23
+Row 34: No=24, Req=View Room List, Class=RoomController, Fn==E34 & "_" & B34, Code=VTFP-24, Sheet=VTFP-24
+Row 35: No=25, Req=Create Room Post, Class=PostController, Fn==E35 & "_" & B35, Code=VTFP-25, Sheet=VTFP-25
+Row 36: No=26, Req=Update Room Information, Class=PostController, Fn==E36 & "_" & B36, Code=VTFP-26, Sheet=VTFP-26
+Row 37: No=27, Req=Delete Room Post, Class=PostController, Fn==E37 & "_" & B37, Code=VTFP-27, Sheet=VTFP-27
+Row 38: No=28, Req=Check Rental Requests, Class=BookingController, Fn==E38 & "_" & B38, Code=VTFP-28, Sheet=VTFP-28
+Row 39: No=29, Req=Approve Rental Request, Class=BookingController, Fn==E39 & "_" & B39, Code=VTFP-29, Sheet=VTFP-29
+Row 40: No=30, Req=Reject Rental Request, Class=BookingController, Fn==E40 & "_" & B40, Code=VTFP-30, Sheet=VTFP-30
+Row 41: No=31, Req=Track Deposit Status, Class=PaymentController, Fn==E41 & "_" & B41, Code=VTFP-31, Sheet=VTFP-31
+Row 42: No=32, Req=Chat with Tenant, Class=ChatController, Fn==E42 & "_" & B42, Code=VTFP-32, Sheet=VTFP-32
+Row 43: No=33, Req=Handle Complaint, Class=SupportController, Fn==E43 & "_" & B43, Code=VTFP-33, Sheet=VTFP-33
+Row 44: No=34, Req=Sign Contract, Class=ContractController, Fn==E44 & "_" & B44, Code=VTFP-34, Sheet=VTFP-34
+Row 45: No=35, Req=View List Users, Class=UserController, Fn==E45 & "_" & B45, Code=VTFP-35, Sheet=VTFP-35
+Row 46: No=36, Req=Ban/Unban User, Class=UserController, Fn==E46 & "_" & B46, Code=VTFP-36, Sheet=VTFP-36
+Row 47: No=37, Req=Moderate New Posts, Class=PostController, Fn==E47 & "_" & B47, Code=VTFP-37, Sheet=VTFP-37
+Row 48: No=38, Req=Remove Violation Posts, Class=PostController, Fn==E48 & "_" & B48, Code=VTFP-38, Sheet=VTFP-38
+Row 49: No=39, Req=View Analytics Dashboard, Class=DashboardController, Fn==E49 & "_" & B49, Code=VTFP-39, Sheet=VTFP-39

@@ -4,12 +4,16 @@ node_modules/
 target/
 *.jar
 *.class
+SWT/agent/venv/
+SWT/agent/__pycache__/
+*.pyc
 
 # Environment files
 .env
 .env.local
 .env.production
 .env.prod
+SWT/agent/.env
 
 # Build outputs
 dist/
@@ -26,6 +30,7 @@ out/
 # OS
 .DS_Store
 Thumbs.db
+~$*
 
 # Logs
 *.log
